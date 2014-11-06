@@ -1,6 +1,6 @@
 === IRIS EMAIL CLIENT
 
-This is the Java 8 version of IRIS email client. The following features 
+This is the DeltaJ version of IRIS email client. The following features 
 are implemented in this version
 
  * Send and Receive e-mail messages
@@ -11,7 +11,7 @@ are implemented in this version
 === Import into Eclipse IDE
 
 This version was successfully compiled using Eclipse 
-Kepler and Java 8. You must clone the repository and 
+Kepler and Java 7. You must clone the repository and 
 import the projet into Eclipse using the maven plugin. 
 You need to install Java 8 support to Eclipse Kepler 
 (see: http://www.eclipse.org/downloads/java8/), and thus 
