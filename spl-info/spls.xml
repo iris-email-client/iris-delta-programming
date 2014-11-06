@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<spls xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../bin/spls.xsd">
+	<spl name="IrisDeltaJ">
+		<features>
+			<feature name ="core" />
+		</features>
+		<configurations>
+		</configurations>
+		<deltas>
+			<partition>
+				<modul delta="dModel" when="core" />
+				<modul delta="dException" when="core" />
+				<modul delta="dCommand" when="core" />
+				<modul delta="dCore" when="core" />
+			</partition>
+		</deltas>
+	</spl>
+</spls>

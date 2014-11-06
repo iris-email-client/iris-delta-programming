@@ -1,0 +1,20 @@
+SPL IrisDeltaJ {
+
+	Features = {core}
+
+	Deltas = {dModel, dException, dCommand, dCore}
+
+	Constraints {
+		// Put boolean expression representation of the feature model here. 
+	}
+
+	Partitions {
+		// Put mapping between deltas and feature configurations here. 
+		{dModel, dException, dCommand, dCore} when (core);
+	}
+
+	Products {
+		Simple = {core}; 
+	}  
+}  
+ 

@@ -4,15 +4,16 @@
 	<groupId>br.unb.cic.iris</groupId>
 	<artifactId>iris-parent</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>pom</packaging>
+	<packaging>jar</packaging>
 	<name>iris</name>
-	<description>Iris Email Client - java 7</description>
+	<description>Iris Email Client - Delta Programming</description>
 	<inceptionYear>2014</inceptionYear>
 	<url>https://github.com/iris-email-client/iris-base/tree/iris-base-j7</url>
 	<properties>
 		<skipTests>false</skipTests>
 		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
+		<iris.jar.name>iris</iris.jar.name>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 	</properties>
 	<issueManagement>
@@ -30,16 +31,8 @@
 		<url></url>
 	</ciManagement>
 	<developers>
-		<!-- <developer>
-			<id></id>
-			<name></name>
-			<email></email>
-			<organization></organization>
-			<roles>
-				<role>Developer</role>
-			</roles>
-			<timezone></timezone>
-		</developer> -->
+		<!-- <developer> <id></id> <name></name> <email></email> <organization></organization> 
+			<roles> <role>Developer</role> </roles> <timezone></timezone> </developer> -->
 	</developers>
 	<scm>
 		<connection>scm:git:https://github.com/iris-email-client/iris-base/tree/iris-base-j7</connection>
@@ -58,110 +51,101 @@
 			<comments></comments>
 		</license>
 	</licenses>
-	<dependencyManagement>
-		<dependencies>
-			<!-- java mail api -->
-			<dependency>
-				<groupId>javax.mail</groupId>
-				<artifactId>mail</artifactId>
-				<version>1.4.7</version>
-			</dependency>
-			<!-- hibernate -->
-			<dependency>
-				<groupId>org.hibernate</groupId>
-				<artifactId>hibernate-core</artifactId>
-				<version>4.3.6.Final</version>
-			</dependency>
-			<!-- sqlite driver -->
-			<dependency>
-				<groupId>org.xerial</groupId>
-				<artifactId>sqlite-jdbc</artifactId>
-				<version>3.8.6</version>
-			</dependency>
-			<!-- junit -->
-			<dependency>
-				<groupId>junit</groupId>
-				<artifactId>junit</artifactId>
-				<version>4.12-beta-2</version>
-				<scope>test</scope>
-			</dependency>
-			<!-- easy mock 
-			<dependency>
-				<groupId>org.easymock</groupId>
-				<artifactId>easymock</artifactId>
-				<version>3.2</version>
-				<scope>test</scope>
-			</dependency> -->
-		</dependencies>
-	</dependencyManagement>
 	<dependencies>
+		<!-- java mail api -->
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
+		<!-- hibernate -->
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.3.6.Final</version>
+		</dependency>
+		<!-- sqlite driver -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.8.6</version>
+		</dependency>
+		<!-- junit -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>4.12-beta-2</version>
+			<scope>test</scope>
 		</dependency>
-		
-		
-					<dependency>
-				<groupId>org.postgresql</groupId>
-				<artifactId>postgresql</artifactId>
-				<version>9.3-1102-jdbc41</version>
-			</dependency>
+		<!-- postgresql -->
+		<dependency>
+			<groupId>org.postgresql</groupId>
+			<artifactId>postgresql</artifactId>
+			<version>9.3-1102-jdbc41</version>
+		</dependency>
+		<!-- easy mock -->
+		<dependency>
+			<groupId>org.easymock</groupId>
+			<artifactId>easymock</artifactId>
+			<version>3.2</version>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 	<build>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-assembly-plugin</artifactId>
-					<version>2.4.1</version>
-					<executions>
-						<execution>
-							<id>make-assembly</id>
-							<phase>package</phase>
-							<goals>
-								<goal>single</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<encoding>${iris.encoding}</encoding>
-						<descriptorRefs>
-							<descriptorRef>jar-with-dependencies</descriptorRef>
-						</descriptorRefs>
-						<archive>
-							<manifest>
-								<mainClass>${irisMainClass}</mainClass>
-								<addClasspath>true</addClasspath>
-							</manifest>
-						</archive>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.2</version>
-					<configuration>
-						<encoding>${iris.encoding}</encoding>
-						<source>${compiler.version}</source>
-						<target>${compiler.version}</target>
-						<optimize>true</optimize>
-						<showDeprecation>false</showDeprecation>
-						<showWarnings>false</showWarnings>
-						<verbose>false</verbose>
-						<debug>false</debug>
-						<!-- <compilerArgument>-Xlint:cast,unchecked,fallthrough,finally,serial</compilerArgument> 
-							<staleMillis>10</staleMillis> -->
-					</configuration>
-				</plugin>
-			</plugins>
-		</pluginManagement>
+		<finalName>${iris.jar.name}</finalName>
+		<directory>target</directory>
+		<outputDirectory>target/classes</outputDirectory>
+		<testOutputDirectory>target/test-classes</testOutputDirectory>
+		<!-- <sourceDirectory>src/main/java</sourceDirectory> -->
+		<sourceDirectory>src-gen</sourceDirectory>
+		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
+		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4.1</version>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<encoding>${iris.encoding}</encoding>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<mainClass>${irisMainClass}</mainClass>
+							<addClasspath>true</addClasspath>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<configuration>
+					<encoding>${iris.encoding}</encoding>
+					<source>${compiler.version}</source>
+					<target>${compiler.version}</target>
+					<optimize>true</optimize>
+					<showDeprecation>false</showDeprecation>
+					<showWarnings>false</showWarnings>
+					<verbose>false</verbose>
+					<debug>false</debug>
+					<!-- <compilerArgument>-Xlint:cast,unchecked,fallthrough,finally,serial</compilerArgument> 
+						<staleMillis>10</staleMillis> -->
+				</configuration>
+			</plugin>
+		</plugins>
 	</build>
-	<modules>
-		<module>iris-core</module>
-		<module>iris-console</module>
-		<!-- <module>iris-gui</module> -->
-		<module>iris-console-teste1</module>
-	</modules>
 	<reporting>
 		<plugins>
 			<plugin>
@@ -182,9 +166,9 @@
 							<report>distribution-management</report>
 							<report>project-team</report>
 							<report>mailing-list</report>
-              				<report>cim</report>
-              				<report>issue-tracking</report>
-							<report>license</report> 
+							<report>cim</report>
+							<report>issue-tracking</report>
+							<report>license</report>
 							<report>scm</report>
 						</reports>
 					</reportSet>
@@ -215,22 +199,12 @@
 						<link>http://junit.sourceforge.net/javadoc/</link>
 						<link>http://docs.jboss.org/hibernate/orm/4.3/javadocs/</link>
 					</links>
-					<!-- <doclet>org.umlgraph.doclet.UmlGraphDoc</doclet>
-					<docletArtifact>
-						<groupId>org.umlgraph</groupId>
-						<artifactId>doclet</artifactId>
-						<version>5.6.6</version>
-					</docletArtifact>
-					<additionalparam>
-						-views -inferrel -inferdep -quiet -hide java*.*
-						-collpackages java.util.* -qualify
-						-postfixpackage
-						-nodefontsize 9
-						-nodefontpackagesize 7
-						-attributes -visibility -types -enumerations
-						-enumconstants
-					</additionalparam>
-          			<useStandardDocletOptions>true</useStandardDocletOptions>   -->
+					<!-- <doclet>org.umlgraph.doclet.UmlGraphDoc</doclet> <docletArtifact> 
+						<groupId>org.umlgraph</groupId> <artifactId>doclet</artifactId> <version>5.6.6</version> 
+						</docletArtifact> <additionalparam> -views -inferrel -inferdep -quiet -hide 
+						java*.* -collpackages java.util.* -qualify -postfixpackage -nodefontsize 
+						9 -nodefontpackagesize 7 -attributes -visibility -types -enumerations -enumconstants 
+						</additionalparam> <useStandardDocletOptions>true</useStandardDocletOptions> -->
 				</configuration>
 				<reportSets>
 					<reportSet>
@@ -245,13 +219,13 @@
 							<report>aggregate</report>
 						</reports>
 					</reportSet>
-				</reportSets> 
+				</reportSets>
 			</plugin>
 			<plugin>
-		        <groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-surefire-report-plugin</artifactId>
-		        <version>2.17</version>
-		      </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-report-plugin</artifactId>
+				<version>2.17</version>
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>findbugs-maven-plugin</artifactId>
@@ -290,14 +264,10 @@
 					<ccnLimit>12</ccnLimit>
 					<ncssLimit>90</ncssLimit>
 				</configuration>
-			</plugin> 			
-<!-- 				<plugin>
-				<artifactId>maven-checkstyle-plugin</artifactId>
-				<version>${maven-checkstyle-plugin.version}</version>
-				<configuration>
-					<configLocation>${checkstyle.configLocation}</configLocation>
-				</configuration>
-			</plugin> -->
+			</plugin>
+			<!-- <plugin> <artifactId>maven-checkstyle-plugin</artifactId> <version>${maven-checkstyle-plugin.version}</version> 
+				<configuration> <configLocation>${checkstyle.configLocation}</configLocation> 
+				</configuration> </plugin> -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jdepend-maven-plugin</artifactId>
@@ -352,26 +322,11 @@
 					</tagListOptions>
 				</configuration>
 			</plugin>
-			<!-- Uncomment after configuring SCM connection
-			<plugin>
-				<artifactId>maven-changelog-plugin</artifactId>
-				<version>2.2</version>
-				<reportSets>
-					<reportSet>
-						<id>All Reports</id>
-						<configuration>
-							<type>range</type>
-							<range>90</range>
-							<dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat>
-						</configuration>
-						<reports>
-							<report>changelog</report>
-							<report>file-activity</report>
-							<report>dev-activity</report>
-						</reports>
-					</reportSet>
-				</reportSets>
-			</plugin> -->
+			<!-- Uncomment after configuring SCM connection <plugin> <artifactId>maven-changelog-plugin</artifactId> 
+				<version>2.2</version> <reportSets> <reportSet> <id>All Reports</id> <configuration> 
+				<type>range</type> <range>90</range> <dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat> 
+				</configuration> <reports> <report>changelog</report> <report>file-activity</report> 
+				<report>dev-activity</report> </reports> </reportSet> </reportSets> </plugin> -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
@@ -384,17 +339,9 @@
 				</configuration>
 			</plugin>
 			<!-- Compare APIs to a previous version, uncomment when a release version 
-				exists 
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>clirr-maven-plugin</artifactId>
-				<version>2.6.1</version>
-				<inherited>true</inherited>
-				<configuration>
-					<minSeverity>info</minSeverity>
-				</configuration>
-			</plugin>
-			-->
+				exists <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>clirr-maven-plugin</artifactId> 
+				<version>2.6.1</version> <inherited>true</inherited> <configuration> <minSeverity>info</minSeverity> 
+				</configuration> </plugin> -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
@@ -409,12 +356,9 @@
 					</reportSet>
 				</reportSets>
 			</plugin>
-			<!-- <plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-linkcheck-plugin</artifactId>
-		        <version>1.2</version>
-			</plugin> -->
+			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-linkcheck-plugin</artifactId> 
+				<version>1.2</version> </plugin> -->
 		</plugins>
 	</reporting>
-	
+
 </project>
