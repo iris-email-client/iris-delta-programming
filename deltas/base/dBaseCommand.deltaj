@@ -1,2 +1,307 @@
 delta dBaseCommand {
+	adds {
+		package br.unb.cic.iris.command;
+		
+		import static br.unb.cic.iris.i18n.Message.message;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.exception.EmailMessageValidationException;
+		import br.unb.cic.iris.core.exception.EmailUncheckedException;
+		
+		public abstract class AbstractMailCommand implements MailCommand {
+			protected String[] parameters;
+		
+			@Override
+			public void setParameters(String... parameters) {
+				this.parameters = parameters;
+			}
+		
+			protected boolean validParameters() {
+				return parameters != null && parameters.length > 0;
+			}
+		
+			protected abstract void handleExecute() throws EmailException;
+		
+			public void execute() {
+				try {
+					handleExecute();
+				} catch (EmailUncheckedException eux) {
+					System.err.printf("%s: %s", message("error"), eux.getLocalizedMessage());
+				} catch (EmailMessageValidationException emvx) {
+					System.err.println(message("error.validation"));
+					for (String msg : emvx.getMessages()) {
+						System.err.println(" - " + msg);
+					}
+				} catch (EmailException ex) {
+					System.err.printf("%s: %s", message("error"), ex.getMessage());
+				} catch (Exception e) {
+					e.printStackTrace();
+				} catch (Throwable t) {
+					t.printStackTrace();
+				}
+			}
+		}		
+	}
+	
+	adds {
+		package br.unb.cic.iris.command;
+		
+		public interface CommandListener {
+		
+			public void commandAdded(MailCommand command);
+		
+		}		
+	}
+	
+	adds {
+		/*
+		 * CommandNotFoundException
+		 * -------------------------------------
+		 *  version: 0.0.1
+		 *  
+		 *  date: September, 2014
+		 *  
+		 *  authors: rbonifacio
+		 *  
+		 *  List of changes: (none)
+		 */
+		package br.unb.cic.iris.command;
+		
+		/**
+		 * Exception that must be thrown when the interpreter could not execute (find) a
+		 * user command.
+		 * 
+		 * @author ExceptionHandling
+		 */
+		public class CommandNotFoundException extends RuntimeException {
+		
+			private static final long serialVersionUID = 1L;
+		
+			// TODO: mover para package de excecoes?
+			public CommandNotFoundException() {
+			}
+		
+			public CommandNotFoundException(String msg) {
+				super(msg);
+			}
+		
+			public CommandNotFoundException(Throwable cause) {
+				super(cause);
+			}
+		}
+	}
+	
+	adds {
+		package br.unb.cic.iris.command;
+		
+		import java.util.List;
+		
+		import br.unb.cic.iris.core.exception.EmailException;
+		
+		public interface ICommandManager {
+		
+			// deve permitir adicao dinamica/estatica (tipo plugins)
+			public void addCommand(MailCommand command) throws EmailException;
+		
+			public MailCommand getCommand(String commandName) throws EmailException;
+		
+			// lista todos os comandos registrados
+			public List<MailCommand> listAll();
+		
+			public void addCommandListener(CommandListener listener);
+		
+			public void reload() throws Exception;
+			// TODO outras operacoes
+		
+		}		
+	}
+	
+	adds {
+		/*
+		 * MailCommand
+		 *--------------------------------------- 
+		 *  version: 0.0.1 
+		 *  date: September, 2014
+		 *  author: rbonifacio
+		 *  
+		 *  changes: (none)  
+		 */
+		package br.unb.cic.iris.command;
+		
+		/**
+		 * An interface for processing mail commands.
+		 * 
+		 * @author rbonifacio
+		 */
+		public interface MailCommand {
+			/**
+			 * Each command must provide an execute method. The execute method will be
+			 * triggered when the uses ask to.
+			 */
+			public void execute();
+		
+			public void setParameters(String... parameters);
+		
+			/**
+			 * Each command must provide an explain message, which should explain its
+			 * arguments and usage data.
+			 */
+			public void explain();
+		
+			public String getCommandName();
+		}
+		
+	}
+	
+	adds {
+		package br.unb.cic.iris.command.manager;
+		
+		import java.lang.reflect.Modifier;
+		import java.util.Iterator;
+		import java.util.Set;
+		
+		import br.unb.cic.iris.command.MailCommand;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.reflect.ClassFinder;
+		
+		public abstract class AbstractCommandManager extends BaseCommandManager {
+		
+			// disponibilizar esse metodo para os deltas se registrarem,
+			// e outros (possiveis) "plugins" (via merge de codigo)
+			// e acesso atraves do singleton
+			// protected abstract void initialize();
+		
+			public AbstractCommandManager() {
+				try {
+					loadClasspathCommands();
+				} catch (ClassNotFoundException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					System.exit(-1);
+				} catch (InstantiationException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					System.exit(-1);
+				} catch (IllegalAccessException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					System.exit(-1);
+				} catch (EmailException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					System.exit(-1);
+				}
+			}
+		
+			public void reload() throws Exception {
+				loadClasspathCommands();
+			}
+		
+			private void loadClasspathCommands() throws ClassNotFoundException,
+					InstantiationException, IllegalAccessException, EmailException {
+				System.out.println("Scanning commands ...");
+		
+				// commandMap = Collections.synchronizedMap(new HashMap<>());
+		
+				ClassFinder classFinder = new ClassFinder(MailCommand.class);
+				Set classesFound = classFinder.getClasses();
+				for (Iterator it = classesFound.iterator(); it.hasNext();) {
+					String clazzName = it.next().toString();
+		
+					Class c = Class.forName(clazzName);
+					if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers())) {
+						MailCommand command = (MailCommand) c.newInstance();
+						addCommand(command);
+					}
+				}
+		
+				System.out.println("Total commands found: " + listAll().size());
+			}
+		
+		}
+		
+	}
+	
+	adds {
+		package br.unb.cic.iris.command.manager;
+		
+		import static br.unb.cic.iris.i18n.Message.message;
+		
+		import java.util.HashSet;
+		import java.util.List;
+		import java.util.Set;
+		
+		import br.unb.cic.iris.command.CommandListener;
+		import br.unb.cic.iris.command.CommandNotFoundException;
+		import br.unb.cic.iris.command.ICommandManager;
+		import br.unb.cic.iris.command.MailCommand;
+		import br.unb.cic.iris.core.BaseManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		
+		public abstract class BaseCommandManager implements ICommandManager {
+			private BaseManager<MailCommand> manager = new BaseManager<MailCommand>();
+			private Set<CommandListener> commandListeners = new HashSet<CommandListener>();
+		
+			// metodo para complementar a adicao do command. opcional
+			// EX: um ambiente gui pode add um botao para esse command
+			protected abstract void handleAddCommand(MailCommand command);
+		
+			public void addCommand(MailCommand command) throws EmailException {
+				System.out.println("Adding command: " + command.getCommandName());
+				// TODO validar comando?
+				manager.add(command.getCommandName(), command);
+		
+				handleAddCommand(command);
+		
+				notifyListeners(command);
+			}
+		
+			public MailCommand getCommand(String commandName) throws EmailException {
+				MailCommand command = manager.get(commandName);
+				if (command == null) {
+					throw new EmailException(message("error.command.not.found", commandName));
+				}
+				return command;
+			}
+		
+			@Override
+			public List<MailCommand> listAll() {
+				return manager.getAll();
+			}
+		
+			public void addCommandListener(CommandListener listener) {
+				commandListeners.add(listener);
+			}
+		
+			private void notifyListeners(MailCommand command) {
+				// commandListeners.forEach(n -> n.commandAdded(command));
+				for (CommandListener listener : commandListeners) {
+					listener.commandAdded(command);
+				}
+			}
+		
+			@Override
+			public void reload() throws Exception {
+				// TODO manager.clear();
+			}
+		
+		}
+		
+	}
+	adds {
+		package br.unb.cic.iris.command.manager;
+		
+		import br.unb.cic.iris.command.MailCommand;
+		
+		public class SimpleCommandManager extends BaseCommandManager {
+		
+			// sera usado se usar command com composite, para gerenciar os subcomandos
+		
+			@Override
+			protected void handleAddCommand(MailCommand command) {
+				// TODO Auto-generated method stub
+		
+			}
+		
+		}		
+	}
 }
