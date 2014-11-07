@@ -1,0 +1,203 @@
+delta dBase {
+	adds{
+		package br.unb.cic.iris.core;
+
+		import java.util.Collections;
+		import java.util.HashMap;
+		import java.util.List;
+		import java.util.Map;
+		import java.util.Vector;
+		
+		public class BaseManager<T> {
+			private Map<String, Integer> map = Collections.synchronizedMap(new HashMap<String, Integer>());
+			private List<T> list = new Vector<T>();
+		
+			public void add(String key, T value) {
+				synchronized (list) {
+					map.put(key, list.size());
+					list.add(value);
+				}
+			}
+		
+			public T get(String key) {
+				return list.get(map.get(key));
+			}
+		
+			public List<T> getAll() {
+				return Collections.unmodifiableList(list);
+			}
+		
+			public void clear() {
+				map = Collections.synchronizedMap(new HashMap<String, Integer>());
+				list = new Vector<T>();
+			}
+		
+			public void print() {
+				for(T t: list){
+					System.out.println(t);
+				}
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.core;
+		
+		import java.io.File;
+		import java.io.FileInputStream;
+		import java.util.Properties;
+
+		public class Configuration {
+			public static final String PROVIDER_AUTH = "provider.auth";
+			public static final String PROVIDER_NAME = "provider.name";
+			public static final String PROVIDER_DESCRIPTION = "provider.description";
+			public static final String PROVIDER_TRANSPORT_PROTOCOL = "provider.transport.protocol";
+			public static final String PROVIDER_TRANSPORT_HOST = "provider.transport.host";
+			public static final String PROVIDER_TRANSPORT_PORT = "provider.transport.port";
+			public static final String PROVIDER_STORE_PROTOCOL = "provider.store.protocol";
+			public static final String PROVIDER_STORE_HOST = "provider.store.host";
+			public static final String PROVIDER_STORE_PORT = "provider.store.port";
+			public static final String PROVIDER_USER = "provider.user";
+			public static final String PROVIDER_PASSWORD = "provider.password";
+		
+			private Properties properties;
+		
+			public Configuration() {
+				properties = new Properties();
+				loadProperties();
+			}
+		
+			private void loadProperties() {
+				System.out.println("Loading properties ...");
+				String fileName = "default_provider.properties";
+				System.out.println("Load properties: " + fileName);
+				try {
+					properties.load(getClass().getResourceAsStream("/" + fileName));
+					System.out.println("Load properties: " + accountPropertyFile());
+					properties.load(new FileInputStream(new File(accountPropertyFile())));
+				} catch (Exception e) {
+					throw new RuntimeException("Could not open the configuration file "
+							+ fileName);
+				}
+			}
+		
+			public Properties getProperties() {
+				return properties;
+			}
+		
+			public static String accountPropertyFile() {
+				return System.getProperty("user.home") + "/.iris/account.properties";
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.i18n;
+
+		import java.util.ResourceBundle;
+		
+		public class Message {
+		
+			ResourceBundle rb;
+		
+			private static Message instance;
+		
+			public Message() {
+				rb = ResourceBundle.getBundle("MessageBundle");
+			}
+		
+			public static Message instance() {
+				if (instance == null) {
+					instance = new Message();
+				}
+				return instance;
+			}
+		
+			public String getMessage(String key) {
+				return rb.getString(key);
+			}
+		
+			public String getMessage(String key, Object... args) {
+				return String.format(getMessage(key), args);
+			}
+		
+			public static String message(String key) {
+				return Message.instance().getMessage(key);
+			}
+		
+			public static String message(String key, Object... args) {
+				return Message.instance().getMessage(key, args);
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.util;
+
+		import java.util.regex.Pattern;
+		
+		public class EmailValidator {
+			private static final String EMAIL_PATTERN = 
+				"^[_A-Za-z0-9-\\+]+(\\.[_A-Za-z0-9-]+)*@"
+				+ "[A-Za-z0-9-]+(\\.[A-Za-z0-9]+)*(\\.[A-Za-z]{2,})$";
+			
+			private static Pattern pattern = Pattern.compile(EMAIL_PATTERN);
+		 
+			/**
+			 * Validate email with regular expression
+			 * 
+			 * @param email
+			 *            email for validation
+			 * @return true valid email, false invalid email
+			 */
+			public static boolean validate(final String email) {
+				return pattern.matcher(email).matches();
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.util;
+
+		import java.util.Arrays;
+		import java.util.List;
+		
+		public class StringUtil {
+		
+			public static boolean notEmpty(String s) {
+				return s != null && !s.isEmpty();
+			}
+			
+			public static boolean isEmpty(String s){
+				return s == null || s.isEmpty();
+			}
+		
+			public static boolean notEmpty(String... parameters) {
+				return notEmpty(Arrays.asList(parameters));
+			}
+		
+			public static boolean notEmpty(List<String> parameters) {
+				boolean retValue = true;
+				for (String str : parameters) {
+					if (isEmpty(str)) {
+						retValue = false;
+						break;
+					}
+				}
+				return retValue;
+			}
+			
+			public static String paddle(String s, int size) {
+				String tmp  = null;
+				if(s.length() < size) {
+					for(int i = 0; i < size - s.length(); i++) {
+						tmp = s.concat(" ");
+					}
+				}
+				return tmp;
+			}
+		
+		}
+	}
+}

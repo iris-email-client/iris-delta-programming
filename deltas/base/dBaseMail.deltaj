@@ -1,0 +1,864 @@
+delta dBaseMail {
+	adds{
+		package br.unb.cic.iris.mail;
+
+		import java.util.List;
+		
+		import javax.mail.search.SearchTerm;
+		
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		public interface IEmailClient {
+		
+			/**
+			 * Send an email message
+			 * 
+			 * @param message
+			 * @throws EmailException
+			 */
+			public void send(EmailMessage message) throws EmailException;
+		
+			public List<IrisFolder> listFolders() throws EmailException;
+		
+			public List<EmailMessage> getMessages(String folder, SearchTerm searchTerm)
+					throws EmailException;
+			
+			public List<EmailMessage> getMessages(String folder) throws EmailException;
+		
+			// public TransportStrategy getTransportStrategy();
+			public List<String> validateEmailMessage(EmailMessage message);
+		
+			/**
+			 * Retrieves all messages from a given seqnum
+			 * 
+			 * @param seqnum
+			 * @return
+			 * @throws EmailException
+			 */
+			public List<EmailMessage> getMessages(String folder, int seqnum) throws EmailException;
+		
+			public List<EmailMessage> getMessages(String folder, int begin, int end) throws EmailException;
+			
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail;
+
+		import java.util.Properties;
+		
+		public interface EmailProvider extends Cloneable {
+		
+			public String getName();
+		
+			public String getDescription();
+		
+			public Properties getProperties();
+		
+			public String getTransportHost();
+		
+			public int getTransportPort();
+		
+			public String getTransportProtocol();
+		
+			public String getStoreHost();
+		
+			public int getStorePort();
+		
+			public String getStoreProtocol();
+		
+			public boolean isAuthenticationEnabled();
+		
+			public EmailProvider clone() throws CloneNotSupportedException;
+		
+			// TODO tirar daqui?
+			public String getUsername();
+		
+			public void setUsername(String username);
+		
+			public String getPassword();
+		
+			public void setPassword(String password);
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail;
+
+		import java.util.Properties;
+		import java.util.logging.Level;
+		import java.util.logging.Logger;
+		
+		import javax.mail.Authenticator;
+		import javax.mail.MessagingException;
+		import javax.mail.PasswordAuthentication;
+		import javax.mail.Service;
+		import javax.mail.Session;
+		import javax.mail.event.ConnectionEvent;
+		import javax.mail.event.ConnectionListener;
+		
+		public class EmailSession implements ConnectionListener {
+			private static Logger logger = Logger.getLogger(EmailSession.class.getName());
+			
+			private final String encoding;
+			private final Session session;
+			private final EmailProvider provider;
+		
+			public EmailSession(EmailProvider provider) {
+				this(provider, EmailClient.CHARACTER_ENCODING);
+			}
+		
+			public EmailSession(EmailProvider provider, String encoding) {
+				this.provider = provider;
+				this.encoding = encoding;
+				this.session = createMailSession();
+			}
+		
+			private Session createMailSession() {
+				logger.log(Level.FINE, "Creating mail session");
+				//System.out.println("creating mail session ...");
+		
+				Properties props = getProvider().getProperties();
+		
+				// System.out.println("props="+props);
+				// props.forEach((k, v) -> System.out.printf("   --> %s=%s%n",k,v));
+		
+				if (getProvider().isAuthenticationEnabled()) {
+					return Session.getInstance(props, new Authenticator() {
+						@Override
+						protected PasswordAuthentication getPasswordAuthentication() {
+							return new PasswordAuthentication(getProvider()
+									.getUsername(), getProvider().getPassword());
+						}
+					});
+				}
+		
+				return Session.getInstance(props);
+			}
+		
+			protected final void connect(Service service, String host, int port)
+					throws MessagingException {
+				System.out.println("Connecting ...");
+				service.connect(host, port, getProvider().getUsername(), getProvider()
+						.getPassword());
+			}
+		
+			protected Session getSession() {
+				return session;
+			}
+		
+			protected EmailProvider getProvider() {
+				return provider;
+			}
+		
+			protected String getEncoding() {
+				return encoding;
+			}
+		
+			@Override
+			public void opened(ConnectionEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Connected ...");
+			}
+		
+			@Override
+			public void disconnected(ConnectionEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Disconnected ...");
+			}
+		
+			@Override
+			public void closed(ConnectionEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Connection closed ...");
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail;
+
+		import static br.unb.cic.iris.i18n.Message.message;
+		import static br.unb.cic.iris.util.StringUtil.isEmpty;
+		import static br.unb.cic.iris.util.StringUtil.notEmpty;
+		
+		import java.io.UnsupportedEncodingException;
+		import java.util.ArrayList;
+		import java.util.Date;
+		import java.util.List;
+		
+		import javax.mail.Message;
+		import javax.mail.Message.RecipientType;
+		import javax.mail.MessagingException;
+		import javax.mail.Transport;
+		import javax.mail.event.TransportEvent;
+		import javax.mail.event.TransportListener;
+		import javax.mail.internet.InternetAddress;
+		import javax.mail.internet.MimeMessage;
+		
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.exception.EmailMessageValidationException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		
+		public class EmailSender implements TransportListener {
+			// private static final Logger log =
+			// Logger.getLogger(EmailSender.class.getName());
+		
+			private EmailSession session;
+			private EmailProvider provider;
+		
+			public EmailSender(EmailProvider provider, String encoding) {
+				this.provider = provider;
+				session = new EmailSession(provider, encoding);
+			}
+		
+			public void send(EmailMessage email) throws EmailException {
+				List<String> errorMessages = validateEmailMessage(email);
+				if (errorMessages.isEmpty()) {
+					try {
+						final Message message = createMessage(email);
+						message.saveChanges(); // some headers and id's will be set for
+						// this specific message
+		
+						Transport transport = createTransport();
+		
+						session.connect(transport, provider.getTransportHost(),
+								provider.getTransportPort());
+		
+						System.out.println("Sending message ...");
+						transport.sendMessage(message, message.getAllRecipients());
+		
+						transport.close();
+					} catch (final UnsupportedEncodingException e) {
+						throw new  EmailException(message("error.invalid.encoding", e.getMessage()));
+					} catch (final MessagingException e) {
+						throw new  EmailException(message("error.send.email", e.getMessage()));
+					}
+				} else {
+					throw new EmailMessageValidationException(errorMessages);
+				}
+			}
+		
+			// TODO criar classe validator separada
+			public static List<String> validateEmailMessage(EmailMessage message) {
+				List<String> errorMessages = new ArrayList<String>();
+		
+				
+				if (message == null) {
+					errorMessages.add(message("error.null.message"));
+				} else if (isEmpty(message.getFrom())) {
+					// TODO terminar
+					errorMessages.add(message("error.required.field",message("command.send.label.from")));
+				}
+		
+				return errorMessages;
+			}
+		
+			private Transport createTransport() throws MessagingException {
+				System.out.println("Creating transport: "
+						+ provider.getTransportProtocol());
+				Transport transport = session.getSession().getTransport(
+						provider.getTransportProtocol());
+				transport.addTransportListener(this);
+				transport.addConnectionListener(session);
+		
+				return transport;
+			}
+		
+			private Message createMessage(final EmailMessage email)
+					throws MessagingException, UnsupportedEncodingException {
+				final MimeMessage message = new MimeMessage(session.getSession());
+		
+				message.setSubject(email.getSubject(), session.getEncoding());
+				message.setFrom(new InternetAddress(email.getFrom(), session
+						.getEncoding()));
+				message.setRecipient(RecipientType.TO,
+						new InternetAddress(email.getTo()));
+				message.setText(email.getMessage(), session.getEncoding());
+		
+				if (notEmpty(email.getCc())) {
+					message.setRecipient(RecipientType.CC,
+							new InternetAddress(email.getCc()));
+				}
+				if (notEmpty(email.getBcc())) {
+					message.setRecipient(RecipientType.BCC,
+							new InternetAddress(email.getBcc()));
+				}
+		
+				message.setSentDate(new Date());
+				return message;
+			}
+		
+			@Override
+			public void messageDelivered(TransportEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Message delivered ... ");
+			}
+		
+			@Override
+			public void messageNotDelivered(TransportEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Message not delivered ... ");
+			}
+		
+			@Override
+			public void messagePartiallyDelivered(TransportEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Message partially delivered ... ");
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail;
+
+		import static br.unb.cic.iris.i18n.Message.message;
+		
+		import java.io.IOException;
+		import java.util.ArrayList;
+		import java.util.List;
+		
+		import javax.mail.Address;
+		import javax.mail.Folder;
+		import javax.mail.Message;
+		import javax.mail.Message.RecipientType;
+		import javax.mail.MessagingException;
+		import javax.mail.Store;
+		import javax.mail.event.FolderEvent;
+		import javax.mail.event.FolderListener;
+		import javax.mail.event.StoreEvent;
+		import javax.mail.event.StoreListener;
+		import javax.mail.internet.MimeMessage;
+		import javax.mail.search.SearchTerm;
+		
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		public class EmailReceiver implements StoreListener, FolderListener {
+			private Store store;
+			private EmailSession session;
+			private EmailProvider provider;
+		
+			public EmailReceiver(EmailProvider provider, String encoding) {
+				this.provider = provider;
+				session = new EmailSession(provider, encoding);
+			}
+		
+			public List<IrisFolder> listFolders() throws EmailException {
+				List<IrisFolder> folders = new ArrayList<IrisFolder>();
+				try {
+					Store store = getStore();
+					Folder defaultFolder = store.getDefaultFolder();
+					Folder[] externalFolders = defaultFolder.list();
+					for (Folder f : externalFolders) {
+						folders.add(new IrisFolder(f.getName()));
+					}
+				} catch (MessagingException e) {
+					throw new EmailException(message("error.list.folder"), e);
+				}
+				return folders;
+			}
+		
+			public List<EmailMessage> getMessages(String folderName,
+					SearchTerm searchTerm) throws EmailException {
+				List<EmailMessage> messages = new ArrayList<EmailMessage>();
+		
+				Folder folder = openFolder(folderName);
+				try {
+					Message messagesRetrieved[] = null;
+					if (searchTerm == null) {
+						// list all
+						messagesRetrieved = folder.getMessages();
+					} else {
+						// search mail
+						messagesRetrieved = folder.search(searchTerm);
+					}
+		
+					messages = convertToIrisMessage(messagesRetrieved);
+		
+					// TODO deixa o store aberto mesmo?
+					// store.close();
+				} catch (MessagingException e) {
+					//TODO fazer tratamento de excecoes em tudo
+					throw new EmailException(e.getMessage(), e);
+				} 
+		
+				return messages;
+			}
+			
+			public List<EmailMessage> getMessages(String folderName, int begin, int end) throws EmailException {
+				List<EmailMessage> messages = new ArrayList<EmailMessage>();
+				Folder folder = openFolder(folderName);
+				try {
+					Message messagesRetrieved[] = folder.getMessages(begin,end);
+					messages = convertToIrisMessage(messagesRetrieved);
+				} catch (MessagingException e) {
+					throw new EmailException(e.getMessage(), e);
+				} 
+				return messages;
+			}
+			
+			public List<EmailMessage> getMessages(String folderName, int seqnum) throws EmailException{
+				List<EmailMessage> messages = new ArrayList<EmailMessage>();
+				Folder folder = openFolder(folderName);
+				try {
+					List<Message> messagesList = new ArrayList<Message>();
+					int messageCount = folder.getMessageCount();
+					for(int i = seqnum; i <= messageCount; i++) {
+			            Message message = folder.getMessage(i);
+			            messagesList.add(message);
+			        }
+		
+					Message[] messagesRetrieved = toArray(messagesList);
+					messages = convertToIrisMessage(messagesRetrieved);
+				} catch (MessagingException e) {
+					throw new EmailException(e.getMessage(), e);
+				} 
+				return messages;
+			}
+		
+			private Message[] toArray(List<Message> messagesList){
+				return messagesList.toArray(new Message[messagesList.size()]);
+			}
+			
+			private List<EmailMessage> convertToIrisMessage(Message[] messagesRetrieved) throws EmailException {
+				List<EmailMessage> messages = new ArrayList<EmailMessage>();
+				int cont = 0;
+				int total = messagesRetrieved.length;
+				for (Message m : messagesRetrieved) {
+					try {
+						messages.add(convertToIrisMessage(m));
+						
+						// TODO arrumar ... problema com deltaj
+						/*if (total != 0) {
+							for (int i = 0; i < 15; i++) {
+								System.out.print('\b');
+							}
+							cont++;
+							System.out.print(((100 * cont) / total) + "% completed");
+						}*/
+					} catch (IOException e) {
+						throw new EmailException(e.getMessage(), e);
+					} catch (MessagingException e) {
+						throw new EmailException(e.getMessage(), e);
+					}
+				}
+				System.out.println();
+		
+				return messages;
+			}
+		
+			private Folder openFolder(String folderName) throws EmailException{
+				return openFolder(folderName, Folder.READ_ONLY);
+			}
+			private Folder openFolder(String folderName, int openType) throws EmailException{
+				try {
+					Folder folder = getStore().getFolder(folderName);
+					folder.open(openType);
+					
+					return folder;
+				} catch (MessagingException e) {
+					throw new EmailException(e.getMessage(), e);
+				} catch (EmailException e) {
+					throw new EmailException(e.getMessage(), e);
+				}
+			}
+			private EmailMessage convertToIrisMessage(Message message) throws IOException,
+					MessagingException {
+				MimeMessage m = (MimeMessage) message;
+				// System.out.println("Converting to iris: "+m.getSubject());
+				EmailMessage msg = new EmailMessage();
+				//msg.setUid(m.getMessageID());//TODO tratar null
+				msg.setBcc(convertAddressToString(m.getRecipients(RecipientType.BCC)));
+				msg.setCc(convertAddressToString(m.getRecipients(RecipientType.CC)));
+				msg.setTo(convertAddressToString(m.getRecipients(RecipientType.TO)));
+				msg.setFrom(convertAddressToString(m.getFrom()));
+				msg.setMessage(m.getContent().toString());
+				msg.setSubject(m.getSubject());
+				msg.setDate(m.getReceivedDate());
+				return msg;
+			}
+		
+			private String convertAddressToString(Address[] recipients) {
+				StringBuilder sb = new StringBuilder("");
+				if (recipients != null) {
+					for (Address a : recipients) {
+						sb.append(a.toString() + ", ");
+					}
+				}
+				return sb.toString();
+			}
+		
+			private Store createStoreAndConnect() throws MessagingException {
+				System.out.println("Creating store ...");
+				Store store = session.getSession()
+						.getStore(provider.getStoreProtocol());
+				store.addStoreListener(this);
+				store.addConnectionListener(session);
+		
+				session.connect(store, provider.getStoreHost(), provider.getStorePort());
+		
+				return store;
+			}
+			
+			public Store getStore() throws EmailException {
+				if (store == null) {
+					try {
+						store = createStoreAndConnect();
+					} catch (MessagingException e) {
+						throw new EmailException(e.getMessage(), e);
+					}
+				}
+				return store;
+			}
+		
+			public Store renew() throws EmailException {
+				if (store != null) {
+					try {
+						store.close();
+					} catch (MessagingException e) {
+						throw new EmailException(e.getMessage(), e);
+					}
+					store = null;
+				}
+				return getStore();
+			}
+		
+			@Override
+			public void notification(StoreEvent e) {
+				// TODO Auto-generated method stub
+				System.out.println("Notification: " + e.getMessage());
+			}
+		
+			@Override
+			public void folderCreated(FolderEvent e) {
+				// TODO Auto-generated method stub
+		
+			}
+		
+			@Override
+			public void folderDeleted(FolderEvent e) {
+				// TODO Auto-generated method stub
+		
+			}
+		
+			@Override
+			public void folderRenamed(FolderEvent e) {
+				// TODO Auto-generated method stub
+		
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail.provider;
+
+		import java.util.Properties;
+		
+		import br.unb.cic.iris.mail.EmailProvider;
+		
+		public abstract class AbstractEmailProvider implements EmailProvider {
+			private String name;
+			private String description;
+			private String transportProtocol;// smtps
+			private String transportHost;// smtp.gmail.com
+			private int transportPort; // 587
+			private String storeProtocol;// imaps
+			private String storeHost;// imap.gmail.com
+			private int storePort;// 993
+			private String username;
+			private String password;
+			private boolean authenticationEnabled = true;
+		
+			private Properties properties = new Properties();
+		
+			@Override
+			public Properties getProperties() {
+				return properties;
+			}
+		
+			public String getName() {
+				return name;
+			}
+		
+			protected void setName(String name) {
+				this.name = name;
+			}
+		
+			public String getDescription() {
+				return description;
+			}
+		
+			protected void setDescription(String description) {
+				this.description = description;
+			}
+		
+			public String getTransportProtocol() {
+				return transportProtocol;
+			}
+		
+			protected void setTransportProtocol(String transportProtocol) {
+				this.transportProtocol = transportProtocol;
+			}
+		
+			public String getStoreProtocol() {
+				return storeProtocol;
+			}
+		
+			protected void setStoreProtocol(String storeProtocol) {
+				this.storeProtocol = storeProtocol;
+			}
+		
+			public String getUsername() {
+				return username;
+			}
+		
+			public void setUsername(String username) {
+				this.username = username;
+			}
+		
+			public String getPassword() {
+				return password;
+			}
+		
+			public void setPassword(String password) {
+				this.password = password;
+			}
+		
+			@Override
+			public boolean isAuthenticationEnabled() {
+				return authenticationEnabled;
+			}
+		
+			protected void setAuthenticationEnabled(boolean authenticationEnabled) {
+				this.authenticationEnabled = authenticationEnabled;
+			}
+		
+			public String getTransportHost() {
+				return transportHost;
+			}
+		
+			protected void setTransportHost(String transportHost) {
+				this.transportHost = transportHost;
+			}
+		
+			public int getTransportPort() {
+				return transportPort;
+			}
+		
+			protected void setTransportPort(int transportPort) {
+				this.transportPort = transportPort;
+			}
+		
+			public String getStoreHost() {
+				return storeHost;
+			}
+		
+			protected void setStoreHost(String storeHost) {
+				this.storeHost = storeHost;
+			}
+		
+			public int getStorePort() {
+				return storePort;
+			}
+		
+			protected void setStorePort(int storePort) {
+				this.storePort = storePort;
+			}
+		
+			@Override
+			public EmailProvider clone() throws CloneNotSupportedException {
+				// TODO Auto-generated method stub
+				return null;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail.provider;
+
+		import java.util.List;
+		
+		import br.unb.cic.iris.core.BaseManager;
+		import br.unb.cic.iris.mail.EmailProvider;
+		
+		public class ProviderManager {
+			private static ProviderManager instance = new ProviderManager();
+		
+			private BaseManager<EmailProvider> manager;
+		
+			private ProviderManager() {
+				manager = new BaseManager<EmailProvider>();
+				addProvider(new GmailProvider());
+			}
+		
+			public static ProviderManager instance() {
+				return instance;
+			}
+		
+			@SuppressWarnings("boxing")
+			public void addProvider(EmailProvider provider) {
+				manager.add(provider.getName().trim(), provider);
+			}
+		
+			@SuppressWarnings("boxing")
+			public EmailProvider getProvider(String name) {
+				return manager.get(name);
+			}
+		
+			public List<EmailProvider> getProviders() {
+				return manager.getAll();
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail.provider;
+
+		import java.util.Properties;
+		
+		import br.unb.cic.iris.core.Configuration;
+		import br.unb.cic.iris.mail.EmailProvider;
+		
+		public class DefaultProvider extends AbstractEmailProvider {
+			private Properties properties = new Properties();
+		
+			public DefaultProvider(Properties generalProperties) {
+				parseConfiguration(generalProperties);
+				properties.putAll(generalProperties);
+			}
+		
+			private void parseConfiguration(Properties props) {
+				System.out.println("Parsing configuration ...");
+		
+				// TODO validar config ....
+		
+				setDescription(retrieveAndRemoveProperty(props, Configuration.PROVIDER_DESCRIPTION));
+				setName(retrieveAndRemoveProperty(props, Configuration.PROVIDER_NAME));
+		
+				setUsername(retrieveAndRemoveProperty(props, Configuration.PROVIDER_USER));
+				setPassword(retrieveAndRemoveProperty(props, Configuration.PROVIDER_PASSWORD));
+		
+				setStoreProtocol(retrieveAndRemoveProperty(props, Configuration.PROVIDER_STORE_PROTOCOL));
+				setStoreHost(retrieveAndRemoveProperty(props, Configuration.PROVIDER_STORE_HOST));
+				setStorePort(Integer.parseInt(retrieveAndRemoveProperty(props, Configuration.PROVIDER_STORE_PORT)));
+		
+				String auth = retrieveAndRemoveProperty(props, Configuration.PROVIDER_AUTH);
+				setAuthenticationEnabled("true".equalsIgnoreCase(auth) ? true : false);
+		
+				setTransportProtocol(retrieveAndRemoveProperty(props, Configuration.PROVIDER_TRANSPORT_PROTOCOL));
+				setTransportHost(retrieveAndRemoveProperty(props, Configuration.PROVIDER_TRANSPORT_HOST));
+				setTransportPort(Integer.parseInt(retrieveAndRemoveProperty(props, Configuration.PROVIDER_TRANSPORT_PORT)));
+			}
+		
+			// removes custom iris properties, left only java mail props ...
+			private static String retrieveAndRemoveProperty(Properties props, String key) {
+				String value = props.getProperty(key).trim();
+				props.remove(key);
+				return value;
+			}
+		
+			@Override
+			public Properties getProperties() {
+				return properties;
+			}
+		
+			@Override
+			public EmailProvider clone() throws CloneNotSupportedException {
+				return super.clone();
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.mail;
+
+		import java.util.List;
+		
+		import javax.mail.search.SearchTerm;
+		
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		import br.unb.cic.iris.mail.provider.GmailProvider;
+		import br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
+		import br.unb.cic.iris.util.EmailValidator;
+		
+		public class EmailClient implements IEmailClient {
+			public static final String CHARACTER_ENCODING = "UTF-8";
+		
+			private final EmailSender sender;
+			private final EmailReceiver receiver;
+		
+			public EmailClient(EmailProvider provider) {
+				this(provider, CHARACTER_ENCODING);
+			}
+		
+			public EmailClient(EmailProvider provider, String encoding) {
+				// TODO validar entradas
+				sender = new EmailSender(provider, encoding);
+				receiver = new EmailReceiver(provider, encoding);
+			}
+		
+			@Override
+			public void send(EmailMessage email) throws EmailException {
+				System.out.println("send message: " + email);
+					
+				//email.setTo(findAddress(email.getTo()));
+				//email.setCc(findAddress(email.getCc()));
+				//email.setBcc(findAddress(email.getBcc()));
+				
+				sender.send(email);
+			}
+		
+		/* incluir na feature de address book
+			private String findAddress(String email) throws EmailException {
+				if(email != null && !EmailValidator.validate(email)){
+					return AddressBookDAO.instance().find(email).getAddress();
+				}
+				return email;
+			}*/
+		
+			@Override
+			public List<IrisFolder> listFolders() throws EmailException {
+				System.out.println("listing folders ...");
+				return receiver.listFolders();
+			}
+			
+			@Override
+			public List<EmailMessage> getMessages(String folder) throws EmailException {
+				return getMessages(folder, null);
+			}
+		
+			@Override
+			public List<EmailMessage> getMessages(String folder, SearchTerm searchTerm) throws EmailException {
+				return receiver.getMessages(folder, searchTerm);
+			}
+		
+			@Override
+			public List<EmailMessage> getMessages(String folder, int seqnum) throws EmailException {
+				return receiver.getMessages(folder, seqnum);
+			}
+			
+			@Override
+			public List<EmailMessage> getMessages(String folder, int begin, int end)
+					throws EmailException {
+				return receiver.getMessages(folder, begin, end);
+			}
+		
+			@Override
+			public List<String> validateEmailMessage(EmailMessage message) {
+				// TODO ......
+				return sender.validateEmailMessage(message);
+			}
+			
+		}
+	}
+}

@@ -2,16 +2,18 @@
 <spls xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../bin/spls.xsd">
 	<spl name="IrisDeltaJ">
 		<features>
-			<feature name ="core" />
+			<feature name ="Base" />
 		</features>
 		<configurations>
 		</configurations>
 		<deltas>
 			<partition>
-				<modul delta="dModel" when="core" />
-				<modul delta="dException" when="core" />
-				<modul delta="dCommand" when="core" />
-				<modul delta="dCore" when="core" />
+				<modul delta="dBase" when="Base" />
+				<modul delta="dBaseCommand" when="Base" />
+				<modul delta="dBaseException" when="Base" />
+				<modul delta="dBaseModel" when="Base" />
+				<modul delta="dBasePersistence" when="Base" />
+				<modul delta="dBaseMail" when="Base" />
 			</partition>
 		</deltas>
 	</spl>

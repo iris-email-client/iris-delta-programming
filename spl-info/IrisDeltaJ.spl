@@ -14,7 +14,7 @@ SPL IrisDeltaJ {
 	}
 
 	Products {
-		Simple = {Base}; 
+		Simple = {Base};    
 	}  
 }  
  
