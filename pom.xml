@@ -8,7 +8,7 @@
 	<name>iris</name>
 	<description>Iris Email Client - Delta Programming</description>
 	<inceptionYear>2014</inceptionYear>
-	<url>https://github.com/iris-email-client/iris-base/tree/iris-base-j7</url>
+	<url>https://github.com/iris-email-client/iris-delta-programming</url>
 	<properties>
 		<skipTests>false</skipTests>
 		<compiler.version>1.7</compiler.version>
@@ -17,12 +17,13 @@
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 	</properties>
 	<issueManagement>
-		<system></system>
-		<url></url>
+	<system>GitHub Issues</system>
+		<url>https://github.com/iris-email-client/iris-delta-programming/issues</url>
 	</issueManagement>
 	<distributionManagement>
 		<site>
 			<id>apache.local</id>
+			<name>Local Apache</name>
 			<url>file:///var/www/html/iris/</url>
 		</site>
 	</distributionManagement>
@@ -31,13 +32,44 @@
 		<url></url>
 	</ciManagement>
 	<developers>
-		<!-- <developer> <id></id> <name></name> <email></email> <organization></organization> 
-			<roles> <role>Developer</role> </roles> <timezone></timezone> </developer> -->
+		<developer>
+			<id>1</id>
+			<name>Fausto Carvalho Marques Silva</name>
+			<email></email>
+			<url>https://github.com/faustocarva</url>
+			<organization></organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-3</timezone>
+		</developer> 
+		<developer>
+			<id>2</id>
+			<name>Marcos César de Oliveira</name>
+			<email></email>
+			<url>https://github.com/mcesarhm</url>
+			<organization></organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-3</timezone>
+		</developer> 
+		<developer>
+			<id>3</id>
+			<name>Pedro Henrique Teixeira Costa</name>
+			<email></email>
+			<url>https://github.com/phtcosta</url>
+			<organization></organization>
+			<roles>
+				<role>Developer</role>
+			</roles>
+			<timezone>-3</timezone>
+		</developer> 
 	</developers>
 	<scm>
-		<connection>scm:git:https://github.com/iris-email-client/iris-base/tree/iris-base-j7</connection>
-		<developerConnection>scm:git:https://github.com/iris-email-client/iris-base/tree/iris-base-j7</developerConnection>
-		<url>https://github.com/iris-email-client/iris-base/tree/iris-base-j7</url>
+		<connection>scm:git:https://github.com/iris-email-client/iris-delta-programming.git</connection>
+		<developerConnection>scm:git:git$github.com\;\https://github.com:iris-email-client/iris-delta-programming.git</developerConnection>
+		<url>https://github.com/iris-email-client/iris-delta-programming</url>
 	</scm>
 	<organization>
 		<name>Universidade de Brasília</name>
@@ -45,11 +77,11 @@
 	</organization>
 	<licenses>
 		<license>
-			<name>Apache License, Version 2.0</name>
-			<url>http://www.apache.org/licenses/LICENSE-2.0</url>
-			<distribution></distribution>
-			<comments></comments>
-		</license>
+            <name>Apache 2</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+            <distribution>repo</distribution>
+            <comments>A business-friendly OSS license</comments>
+        </license>
 	</licenses>
 	<dependencies>
 		<!-- java mail api -->
@@ -322,11 +354,26 @@
 					</tagListOptions>
 				</configuration>
 			</plugin>
-			<!-- Uncomment after configuring SCM connection <plugin> <artifactId>maven-changelog-plugin</artifactId> 
-				<version>2.2</version> <reportSets> <reportSet> <id>All Reports</id> <configuration> 
-				<type>range</type> <range>90</range> <dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat> 
-				</configuration> <reports> <report>changelog</report> <report>file-activity</report> 
-				<report>dev-activity</report> </reports> </reportSet> </reportSets> </plugin> -->
+			<!-- Uncomment after configuring SCM connection -->
+			<plugin>
+				<artifactId>maven-changelog-plugin</artifactId>
+				<version>2.2</version>
+				<reportSets>
+					<reportSet>
+						<id>All Reports</id>
+						<configuration>
+							<type>range</type>
+							<range>90</range>
+							<dateFormat>yyyy-MM-dd HH:mm:ss</dateFormat>
+						</configuration>
+						<reports>
+							<report>changelog</report>
+							<report>file-activity</report>
+							<report>dev-activity</report>
+						</reports>
+					</reportSet>
+				</reportSets>
+			</plugin> 
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
