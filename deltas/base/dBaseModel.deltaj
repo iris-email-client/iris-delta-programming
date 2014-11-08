@@ -1,2 +1,191 @@
 delta dBaseModel {
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		public enum Status {
+			CONNECTED, NOT_CONNECTED;
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		/**
+		 * An abstract class that represents both folders and elements. Note that this class is empty, it is only useful to
+		 * provide an hierarchy that comprises both folders and elements.
+		 * 
+		 * In addition, it is not possible to instantiate an object of this class.
+		 * 
+		 * @author rbonifacio
+		 */
+		public abstract class FolderContent {
+		
+			public FolderContent() {
+				this(null);
+			}
+		
+			public FolderContent(Integer id) {
+				super();
+				this.id = id;
+			}
+
+			private Integer id;
+		
+			public Integer getId() {
+				return id;
+			}
+		
+			public void setId(Integer id) {
+				this.id = id;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.core.model;
+		
+		import java.util.ArrayList;
+		import java.util.List;
+
+		public class IrisFolder extends FolderContent {
+			public static final String INBOX = "INBOX";
+			public static final String OUTBOX = "OUTBOX";
+			
+			private String name;
+			private List<FolderContent> contents;
+		
+			public IrisFolder() {
+				this(null,"");
+			}
+			
+			public IrisFolder(String name) {
+				this(null,name);
+			}
+		
+			public IrisFolder(Integer id, String name) {
+				super(id);
+				this.name = name;
+				contents = new ArrayList<FolderContent>();
+			}
+		
+			public String getName() {
+				return name;
+			}
+		
+			public void setName(String name) {
+				this.name = name;
+			}
+		
+			public void addElement(FolderContent e) {
+				contents.add(e);
+			}
+		
+			public List<FolderContent> getContents() {
+				return contents;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.core.model;
+		
+		import java.util.Date;
+
+		public class EmailMessage extends FolderContent {
+			private String from;
+			private String to;
+			private String cc;
+			private String bcc;
+			private String subject;
+			private String message;
+			private Date date;
+			private IrisFolder folder;
+			
+		
+			public EmailMessage() {
+			}
+		
+			public EmailMessage(String to, String subject, String message) {
+				this(null, to, subject, message);
+			}
+		
+			public EmailMessage(String from, String to, String subject, String message) {
+				this(from, to, null, null, subject, message);
+			}
+		
+			public EmailMessage(String from, String to, String cc, String bcc,
+					String subject, String message) {
+				this.from = from;
+				this.to = to;
+				this.cc = cc;
+				this.bcc = bcc;
+				this.subject = subject;
+				this.message = message;
+			}
+			
+			public Date getDate() {
+				return date;
+			}
+		
+			public void setDate(Date date) {
+				this.date = date;
+			}
+		
+			public void setTo(String to) {
+				this.to = to;
+			}
+		
+			public void setCc(String cc) {
+				this.cc = cc;
+			}
+		
+			public void setBcc(String bcc) {
+				this.bcc = bcc;
+			}
+		
+			public void setSubject(String subject) {
+				this.subject = subject;
+			}
+		
+			public void setMessage(String message) {
+				this.message = message;
+			}
+		
+			public String getFrom() {
+				return from;
+			}
+		
+			public void setFrom(String from) {
+				this.from = from;
+			}
+		
+			public String getTo() {
+				return to;
+			}
+		
+			public String getCc() {
+				return cc;
+			}
+		
+			public String getBcc() {
+				return bcc;
+			}
+		
+			public String getSubject() {
+				return subject;
+			}
+		
+			public String getMessage() {
+				return message;
+			}
+		
+			public IrisFolder getFolder() {
+				return folder;
+			}
+		
+			public void setFolder(IrisFolder folder) {
+				this.folder = folder;
+			}
+		}
+	}
 }

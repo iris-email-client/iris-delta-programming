@@ -1,20 +1,31 @@
 SPL IrisDeltaJ {
 
-	Features = {Base}
+	Features = {Base, RelationalDB, Console, AddressBook}
 
-	Deltas = {dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail}
+	Deltas = {dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence,
+	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dConsole,
+	dAddressBook, dAddressBookSqlite, dAddressBookConsole}
 
 	Constraints {
-		// Put boolean expression representation of the feature model here. 
+	// Put boolean expression representation of the feature model here. 
 	}
 
 	Partitions {
-		// Put mapping between deltas and feature configurations here. 
-		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail} when (Base);		
+	// Put mapping between deltas and feature configurations here. 
+		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail,
+		dGmailProvider, dBaseFacade} when (Base);
+
+		{dPersistenceSqlite} when (RelationalDB);
+
+		{dConsole} when (Console);
+		//TODO como trocar no caso de ser nao-relacional?
+		{dAddressBook, dAddressBookSqlite, dAddressBookConsole} when (AddressBook);
+
 	}
 
 	Products {
-		Simple = {Base};    
-	}  
-}  
+		Simple = {Base, RelationalDB, Console};
+		SimpleAddressBook = {Base, RelationalDB, Console, AddressBook};
+	}
+} 
  

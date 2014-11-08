@@ -14,6 +14,7 @@
 		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
 		<iris.jar.name>iris</iris.jar.name>
+		<iris.main.class>irisdeltaj.simpleaddressbook.br.unb.cic.iris.MainProgram</iris.main.class>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 	</properties>
 	<issueManagement>
@@ -153,7 +154,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>${irisMainClass}</mainClass>
+							<mainClass>${iris.main.class}</mainClass>
 							<addClasspath>true</addClasspath>
 						</manifest>
 					</archive>

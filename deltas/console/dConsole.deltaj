@@ -1,0 +1,575 @@
+delta dConsole{
+	adds{
+		package br.unb.cic.iris;
+		
+		import br.unb.cic.iris.i18n.MessageBundle;
+		
+		import java.util.Scanner;
+		
+		import br.unb.cic.iris.command.console.ConsoleCommandManager;
+		import br.unb.cic.iris.core.SystemFacade;
+		
+		public class MainProgram {
+			Scanner sc;
+		
+			public MainProgram() {
+				sc = new Scanner(System.in);
+			}
+		
+			public static void main(String args[]) {
+				MainProgram m = new MainProgram();
+				//eager loading/starting the system
+				SystemFacade.instance();
+				ConsoleCommandManager.singleton().runCommand("");
+				
+				m.mainMenu();
+				m.readCommand();
+			}
+		
+			private void mainMenu() {
+				System.out.println(MessageBundle.message("interpreter"));
+				System.out.println(MessageBundle.message("version"));
+				System.out.println(MessageBundle.message("help"));
+			}
+		
+			private void readCommand() {
+				try {
+					System.out.print(MessageBundle.message("prompt"));
+					String cmd = sc.nextLine().trim();
+					ConsoleCommandManager.singleton().runCommand(cmd);
+				} catch (RuntimeException e) {
+					System.err.println(MessageBundle.message("error") + e.getLocalizedMessage());
+				}
+				readCommand();
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import br.unb.cic.iris.i18n.MessageBundle;
+		
+		import br.unb.cic.iris.util.StringUtil;
+		import br.unb.cic.iris.command.MailCommand;
+		import br.unb.cic.iris.command.manager.AbstractCommandManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.exception.EmailMessageValidationException;
+		import br.unb.cic.iris.core.exception.EmailUncheckedException;
+		
+		import java.util.List;
+		import java.util.ArrayList;
+		
+		public class ConsoleCommandManager extends AbstractCommandManager {
+			private static ConsoleCommandManager singleton = new ConsoleCommandManager();
+		
+			private ConsoleCommandManager() {
+			}
+		
+			public static ConsoleCommandManager singleton() {
+				return singleton;
+			}
+		
+			public static void run(String cmd) {
+				ConsoleCommandManager.singleton().runCommand(cmd);
+			}
+		
+			public void runCommand(String cmd) {
+				if (StringUtil.notEmpty(cmd)) {
+					try {
+						MailCommand command = createCommand(cmd.trim());
+						command.execute();
+					} catch (EmailUncheckedException eux) {
+						System.err.printf("%s: %s", MessageBundle.message("error"), eux.getLocalizedMessage());
+					} catch (EmailMessageValidationException emvx) {
+						System.err.println(MessageBundle.message("error.validation"));
+						for(String msg: emvx.getMessages()){
+							System.err.println(" - "+msg);
+						}
+					} catch (EmailException ex) {
+						System.err.printf("%s: %s", MessageBundle.message("error"), ex.getMessage());
+					} catch (Exception e) {
+						e.printStackTrace();
+					} catch (Throwable t){
+						t.printStackTrace();
+					}
+				}
+			}
+		
+			private MailCommand createCommand(String cmd) throws EmailException {
+				String[] split = cmd.split(" ");
+				MailCommand command = null;
+				if (split.length > 1) {
+					command = getCommand(split[0].trim());
+					command.setParameters(getParameters(split));
+				} else {
+					command = getCommand(cmd);
+				}
+				return command;
+			}
+		
+			private static List<String> getParameters(String[] split) {
+				List<String> parameters = new ArrayList<String>();
+				for(int i = 1; i < split.length; i++) {
+					parameters.add(split[i].trim());
+				}
+				return parameters;
+			}
+		
+			@Override
+			protected void handleAddCommand(MailCommand command) {
+				// empty, no need to specific actions
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import java.util.Scanner;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.mail.EmailProvider;
+		import br.unb.cic.iris.mail.provider.ProviderManager;
+		
+		public class ConsoleConnectCommand extends AbstractMailCommand {
+			public static final String COMMAND_NAME = "connect";
+		
+			/*
+			 * (non-Javadoc)
+			 * 
+			 * @see br.unb.cic.iris.command.MailCommand#explain()
+			 */
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME,	message("command.connect.explain"));
+			}
+		
+			@Override
+			public void handleExecute() {
+				Scanner sc = new Scanner(System.in);
+		
+				String providerStr = read(sc, "command.connect.label.provider");
+				EmailProvider provider = ProviderManager.instance().getProvider(providerStr);
+				System.out.println("Prodiver recovered: " + provider.getName());
+				// TODO validar provider antes de ler o resto
+		
+				String username = read(sc, "command.connect.label.username");
+				String password = read(sc, "command.connect.label.password");
+		
+				provider.setUsername(username);
+				provider.setPassword(password);
+		
+				SystemFacade.instance().connect(provider);
+			}
+		
+			private static String read(Scanner sc, String question) {
+				askQuestion(question);
+				return sc.nextLine();
+			}
+		
+			private static void askQuestion(String message) {
+				System.out.printf("%s: ", message(message));
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import java.text.DateFormat;
+		import java.text.SimpleDateFormat;
+		import java.util.List;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		
+		public class ConsoleGetMessagesCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "get";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME, message("command.list.folders.explain"));
+			}
+		
+			@Override
+			public void handleExecute() throws EmailException {
+				if (validParameters()) {
+					String folder = parameters.get(0);
+					System.out.println("Retrieving messages from folder: " + folder);
+		
+					// TODO tratar parametros --> parse para Flags/SearchTerm
+					DateFormat formatter = new SimpleDateFormat("dd/MMM/yy 'at' HH:mm");
+					List<EmailMessage> messages = SystemFacade.instance().getMessages(folder);
+					System.out.println("Total messages: " + messages.size());
+					for (EmailMessage msg : messages) {
+						System.out.printf("%s - %s \t- %s%n", formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
+					}
+				} else {
+					// TODO
+				}
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.command.MailCommand;
+		
+		/**
+		 * A simple mail command that explains how to use the other commands.
+		 * 
+		 * @author rbonifacio
+		 */
+		public class ConsoleHelpCommand extends AbstractMailCommand {
+			static final String COMMAND_HELP = "help";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_HELP,	message("command.help.explain"));
+			}
+		
+			@Override
+			public void handleExecute() {
+				for (MailCommand c : ConsoleCommandManager.singleton().listAll()) {
+					c.explain();
+				}
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_HELP;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import java.util.List;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		public class ConsoleListFoldersCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "ls";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME, message("command.list.folders.explain"));
+			}
+		
+			@Override
+			public void handleExecute() throws EmailException {
+				List<IrisFolder> irisFolders = SystemFacade.instance().listFolders();
+				for (IrisFolder folder : irisFolders) {
+					System.out.printf(" + %s%n", folder.getName());
+				}
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.mail.EmailProvider;
+		import br.unb.cic.iris.mail.provider.ProviderManager;
+		
+		public class ConsoleListProvidersCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "lp";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME, message("command.list.providers.explain"));
+			}
+		
+			@Override
+			public void handleExecute() {
+				for (EmailProvider provider : ProviderManager.instance().getProviders()) {
+					System.out.printf("%s - %s%n", provider.getName(), provider.getDescription());
+				}
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		
+		public class ConsoleQuitCommand extends AbstractMailCommand {
+			public static final String COMMAND_QUIT = "quit";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_QUIT,
+						message("command.quit.explain"));
+			}
+		
+			@Override
+			public void handleExecute() {
+				System.out.println(message("quit"));
+				System.exit(0);
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_QUIT;
+			}
+		}
+	}
+	
+	adds{
+		/*
+		 * ConsoleSendMessageCommand.java
+		 * ---------------------------------
+		 *  version: 0.0.1
+		 *  date: Sep 8, 2014
+		 *  author: rbonifacio
+		 *  list of changes: (none) 
+		 */
+		package br.unb.cic.iris.command.console;
+		
+		import java.util.Scanner;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		
+		/**
+		 * 
+		 * @author rbonifacio
+		 */
+		public class ConsoleSendMessageCommand extends AbstractMailCommand {
+			public static final String COMMAND_SEND = "send";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_SEND, message("command.send.explain"));
+			}
+		
+			@Override
+			public void handleExecute() throws EmailException {
+				EmailMessage m = createMessage();
+				SystemFacade.instance().send(m);
+			}
+		
+			private EmailMessage createMessage() {
+				Scanner sc = new Scanner(System.in);
+		
+				String from = SystemFacade.instance().getProvider().getUsername();
+				System.out.printf("%s: %s%n", message("command.send.label.from"), from);
+		
+				String to = read(sc, "command.send.label.to");
+				String cc = read(sc, "command.send.label.cc");
+				String bcc = read(sc, "command.send.label.bcc");
+				String subject = read(sc, "command.send.label.subject");
+				String content = read(sc, "command.send.label.content");
+		
+				return new EmailMessage(from, to, cc, bcc, subject, content);
+			}
+			
+			private static String read(Scanner sc, String question) {
+				askQuestion(question);
+				return sc.nextLine();
+			}
+		
+			private static void askQuestion(String message) {
+				System.out.printf("%s: ", message(message));
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_SEND;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.model.Status;
+		import br.unb.cic.iris.mail.EmailProvider;
+		
+		public class ConsoleStatusCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "status";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME,
+						message("command.status.explain"));
+			}
+		
+			@Override
+			public void handleExecute() {
+				Status status = SystemFacade.instance().getStatus();
+				System.out.println("System status: " + status);
+				if (Status.CONNECTED == status) {
+					EmailProvider provider = SystemFacade.instance().getProvider();
+					System.out.println(" - Provider: " + provider.getName());
+					System.out.println(" - Username: " + provider.getUsername());
+				}
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import java.util.List;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
+		
+		public class DownloadMessagesConsoleCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "download";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME, message("command.download.explain"));
+			}
+		
+			@Override
+			public void handleExecute() throws EmailException {
+				String folder = IrisFolder.INBOX;
+				if (validParameters()) {
+					folder = parameters.get(0);
+				}
+		
+				System.out.println("Downloading messages from/to folder: " + folder);
+		
+				SystemFacade.instance().downloadMessages(folder);
+		
+				//just to test ... TODO remove for production
+				List<EmailMessage> list = EmailDAO.instance().findAll();
+				for(EmailMessage msg: list){
+					System.out.println("---> "+msg.getFrom()+" -- "+msg.getSubject());
+				}
+		
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import java.net.URLClassLoader;
+		import java.util.Scanner;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.command.MailCommand;
+		import br.unb.cic.iris.reflect.JarFileLoader;
+
+		public class LoadConsoleCommand extends AbstractMailCommand {
+			public static final String COMMAND_LOAD = "load";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_LOAD,
+						"Testando carga dinamica de command");
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_LOAD;
+			}
+		
+			@Override
+			public void handleExecute() {
+				showClassPath();
+		
+				Scanner sc = new Scanner(System.in);
+		
+				System.out.println("Jar file path: ");
+				String jarPath = sc.nextLine();
+		
+				try {
+					URLClassLoader loader = (URLClassLoader) getClass().getClassLoader();
+						JarFileLoader l = new JarFileLoader(loader.getURLs());
+						//TODO close
+		
+					l.addFile(jarPath);
+		
+					System.setProperty(
+							"java.class.path",
+							System.getProperty("java.class.path")
+									+ System.getProperty("path.separator") + jarPath);
+		
+					showClassPath();
+		
+					// TODO escanear o jar para encontrar commands
+		
+					// l.addURL(new URL("file:C:/Temp/xyz.jar"));
+					// apenas teste por enquanto ...
+					Class c = l
+							.loadClass("br.unb.cic.iris.teste.ConsoleHelloWorldCommand");
+					System.out.println(c.getName());
+		
+					ConsoleCommandManager.singleton().addCommand(
+							(MailCommand) c.newInstance());
+		
+					// System.out.println("\n\n\n\n\nreloading commands ...");
+		
+					// ConsoleCommandManager.singleton().reload();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+		
+			}
+		
+			private static void showClassPath() {
+				String classpath = System.getProperty("java.class.path");
+				System.out.println("classpath=" + classpath);
+			}
+		}
+	}
+}

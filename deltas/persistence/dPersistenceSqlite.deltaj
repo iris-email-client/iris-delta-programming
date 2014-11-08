@@ -1,0 +1,525 @@
+delta dPersistenceSqlite {
+	adds {
+		package br.unb.cic.iris.persistence.sqlite3;
+		
+		import java.lang.reflect.ParameterizedType;
+		import java.util.List;
+		
+		import org.hibernate.HibernateException;
+		import org.hibernate.Query;
+		import org.hibernate.Session;
+		import org.hibernate.criterion.MatchMode;
+		
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.util.HibernateUtil;
+		
+		public abstract class AbstractDAO<T> {
+			private Class<T> clazz;
+			protected Session session;
+			
+			public AbstractDAO(){
+				clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+			}
+			
+			public void saveOrUpdate(T obj) throws DBException {
+		        try {
+		            startSession();
+		            session.saveOrUpdate(obj);
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		    }
+			
+			public void delete(T t) throws DBException {
+				try {
+		            startSession();
+		            session.delete(t);
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+			}
+			
+			public T findById(Long id) throws DBException {
+		        T obj = null;
+		        try {
+		            startSession();
+		            obj = (T) session.load(clazz, id);
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		        return obj;
+		    }
+		
+		    public List<T> findAll() throws DBException {
+		        List<T> objects = null;
+		        try {
+		            startSession();
+		            Query query = session.createQuery("from " + clazz.getName());
+		            objects = query.list();
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		        return objects;
+		    }
+		
+			public List<T> findByExample(T filtro, MatchMode matchMode, boolean ignoreCase){
+				org.hibernate.criterion.Example example = org.hibernate.criterion.Example.create(filtro);
+		
+				if(matchMode != null){
+					example = example.enableLike(matchMode);
+				}
+		
+				if(ignoreCase){
+					example = example.ignoreCase();
+				}
+		
+				return session.createCriteria(clazz).add(example).list();
+			}
+			
+			protected void handleException(Exception e) throws DBException {
+				session.getTransaction().rollback();
+		        throw new DBException(e.getMessage(), e);
+		    }
+		
+		    protected void startSession() throws HibernateException {
+		        session = HibernateUtil.getSessionFactory().openSession();
+		        session.beginTransaction();
+		    }
+		    
+			protected void closeSession() {
+				if(session != null && session.isOpen()) {
+					session.flush();
+					session.close();
+				}
+			}
+		}		
+	}
+	
+	adds {
+		/*
+		 * EmailDAO.java
+		 * ---------------------------------
+		 *  version: 0.0.1
+		 *  date: Sep 18, 2014
+		 *  author: rbonifacio
+		 *  list of changes: (none) 
+		 */
+		package br.unb.cic.iris.persistence.sqlite3;
+		
+		import java.util.Date;
+		import java.util.List;
+		
+		import org.hibernate.HibernateException;
+		
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.AddressBookEntry;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.persistence.IEmailDAO;
+		
+		/**
+		 * An implementation of @see br.unb.cic.iris.persistence.EmailDAO using the SQLite databaese.
+		 * 
+		 * @author rbonifacio
+		 *
+		 */
+		public final class EmailDAO extends AbstractDAO<EmailMessage> implements IEmailDAO {
+			private static final String FIND_MAX_DATE = "select max(e.date) FROM EmailMessage e";
+			// select o from LoadFileHistory o where o.finishDate > :today
+		
+			/* the single instance of EmailDAO */
+			private static EmailDAO instance = new EmailDAO();
+		
+			/* private constructor, according to the singleton pattern */
+			private EmailDAO() {
+			}
+		
+			/**
+			 * Retrieves the singleton instance of EmailDAO.
+			 * 
+			 * @return the singleton instance of EmailDAO
+			 */
+			public static EmailDAO instance() {
+				return instance;
+			}
+		
+			@Override
+			public void saveMessage(EmailMessage message) throws DBException {
+				super.saveOrUpdate(message);
+			}
+		
+			@Override
+			public Date lastMessageReceived() throws DBException {
+				Date date = null;
+				try {
+					startSession();
+					date = (Date) session.createQuery(FIND_MAX_DATE).uniqueResult();
+				} finally {
+					closeSession();
+				}
+				return date;
+			}
+		
+		}		
+	}
+	
+	adds {
+		package br.unb.cic.iris.persistence.sqlite3;
+		
+		import br.unb.cic.iris.i18n.MessageBundle;
+		
+		import java.util.List;
+		
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		import br.unb.cic.iris.persistence.IFolderDAO;
+		
+		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
+			private static final String FIND_BY_NAME = "FROM IrisFolder f " + "where f.name = :pName";
+		
+			public IrisFolder findByName(String folderName) throws DBException {
+				try {
+					startSession();
+					List<IrisFolder> entries = session.createQuery(FIND_BY_NAME).setParameter("pName", folderName).list();
+		
+					if (entries != null && entries.size() == 1) {
+						return entries.get(0);
+					}
+					return null;
+				} catch (Exception e) {
+					throw new DBException(MessageBundle.message("error.folder.not.found", folderName), e);
+				} finally {
+					closeSession();
+				}
+			}
+		}		
+	}
+	
+	adds{
+		/*
+		 * The author disclaims copyright to this source code.  In place of
+		 * a legal notice, here is a blessing:
+		 *
+		 *    May you do good and not evil.
+		 *    May you find forgiveness for yourself and forgive others.
+		 *    May you share freely, never taking more than you give.
+		 *
+		 */
+		package org.hibernate.dialect;
+		
+		import java.sql.Types;
+		
+		import org.hibernate.dialect.Dialect;
+		import org.hibernate.dialect.function.AbstractAnsiTrimEmulationFunction;
+		import org.hibernate.dialect.function.NoArgSQLFunction;
+		import org.hibernate.dialect.function.SQLFunction;
+		import org.hibernate.dialect.function.SQLFunctionTemplate;
+		import org.hibernate.dialect.function.StandardSQLFunction;
+		import org.hibernate.dialect.function.VarArgsSQLFunction;
+		import org.hibernate.type.StandardBasicTypes;
+		
+		public class SQLiteDialect extends Dialect {
+		  public SQLiteDialect() {
+		    registerColumnType(Types.BIT, "boolean");
+		    registerColumnType(Types.TINYINT, "tinyint");
+		    registerColumnType(Types.SMALLINT, "smallint");
+		    registerColumnType(Types.INTEGER, "integer");
+		    registerColumnType(Types.BIGINT, "bigint");
+		    registerColumnType(Types.FLOAT, "float");
+		    registerColumnType(Types.REAL, "real");
+		    registerColumnType(Types.DOUBLE, "double");
+		    registerColumnType(Types.NUMERIC, "numeric($p, $s)");
+		    registerColumnType(Types.DECIMAL, "decimal");
+		    registerColumnType(Types.CHAR, "char");
+		    registerColumnType(Types.VARCHAR, "varchar($l)");
+		    registerColumnType(Types.LONGVARCHAR, "longvarchar");
+		    registerColumnType(Types.DATE, "date");
+		    registerColumnType(Types.TIME, "time");
+		    registerColumnType(Types.TIMESTAMP, "datetime");
+		    registerColumnType(Types.BINARY, "blob");
+		    registerColumnType(Types.VARBINARY, "blob");
+		    registerColumnType(Types.LONGVARBINARY, "blob");
+		    registerColumnType(Types.BLOB, "blob");
+		    registerColumnType(Types.CLOB, "clob");
+		    registerColumnType(Types.BOOLEAN, "boolean");
+		
+		    registerFunction( "concat", new VarArgsSQLFunction(StandardBasicTypes.STRING, "", "||", "") );
+		    registerFunction( "mod", new SQLFunctionTemplate(StandardBasicTypes.INTEGER, "?1 % ?2" ) );
+		    registerFunction( "quote", new StandardSQLFunction("quote", StandardBasicTypes.STRING) );
+		    registerFunction( "random", new NoArgSQLFunction("random", StandardBasicTypes.INTEGER) );
+		    registerFunction( "round", new StandardSQLFunction("round") );
+		    registerFunction( "substr", new StandardSQLFunction("substr", StandardBasicTypes.STRING) );
+		    registerFunction( "trim", new AbstractAnsiTrimEmulationFunction() {
+		        protected SQLFunction resolveBothSpaceTrimFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1)");
+		        }
+		
+		        protected SQLFunction resolveBothSpaceTrimFromFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?2)");
+		        }
+		
+		        protected SQLFunction resolveLeadingSpaceTrimFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "ltrim(?1)");
+		        }
+		
+		        protected SQLFunction resolveTrailingSpaceTrimFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "rtrim(?1)");
+		        }
+		
+		        protected SQLFunction resolveBothTrimFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "trim(?1, ?2)");
+		        }
+		
+		        protected SQLFunction resolveLeadingTrimFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "ltrim(?1, ?2)");
+		        }
+		
+		        protected SQLFunction resolveTrailingTrimFunction() {
+		          return new SQLFunctionTemplate(StandardBasicTypes.STRING, "rtrim(?1, ?2)");
+		        }
+		    } );
+		  }
+		
+		  @Override
+		  public boolean supportsIdentityColumns() {
+		    return true;
+		  }
+		
+		  /*
+		  public boolean supportsInsertSelectIdentity() {
+		    return true; // As specified in NHibernate dialect
+		  }
+		  */
+		
+		  @Override
+		  public boolean hasDataTypeInIdentityColumn() {
+		    return false; // As specified in NHibernate dialect
+		  }
+		
+		  /*
+		  public String appendIdentitySelectToInsert(String insertString) {
+		    return new StringBuffer(insertString.length()+30). // As specified in NHibernate dialect
+		      append(insertString).
+		      append("; ").append(getIdentitySelectString()).
+		      toString();
+		  }
+		  */
+		
+		  @Override
+		  public String getIdentityColumnString() {
+		    // return "integer primary key autoincrement";
+		    return "integer";
+		  }
+		
+		  @Override
+		  public String getIdentitySelectString() {
+		    return "select last_insert_rowid()";
+		  }
+		
+		  @Override
+		  public boolean supportsLimit() {
+		    return true;
+		  }
+		
+		  @Override
+		  public boolean bindLimitParametersInReverseOrder() {
+		    return true;
+		  }
+		
+		  @Override
+		  protected String getLimitString(String query, boolean hasOffset) {
+		    return query + (hasOffset ? " limit ? offset ?" : " limit ?");
+		  }
+		
+		  @Override
+		  public boolean supportsTemporaryTables() {
+		    return true;
+		  }
+		
+		  @Override
+		  public String getCreateTemporaryTableString() {
+		    return "create temporary table if not exists";
+		  }
+		
+		  @Override
+		  public Boolean performTemporaryTableDDLInIsolation() {
+		    return Boolean.FALSE;
+		  }
+		
+		  /*
+		  @Override
+		  public boolean dropTemporaryTableAfterUse() {
+		    return true; // temporary tables are only dropped when the connection is closed. If the connection is pooled...
+		  }
+		  */
+		
+		  @Override
+		  public boolean supportsCurrentTimestampSelection() {
+		    return true;
+		  }
+		
+		  @Override
+		  public boolean isCurrentTimestampSelectStringCallable() {
+		    return false;
+		  }
+		
+		  @Override
+		  public String getCurrentTimestampSelectString() {
+		    return "select current_timestamp";
+		  }
+		
+		 
+		//  @Override
+		//  public SQLExceptionConverter buildSQLExceptionConverter() {
+		//    return new SQLExceptionConverter() {
+		//      @Override
+		//      public JDBCException convert(SQLException sqlException, String message, String sql) {
+		//        final int errorCode = JDBCExceptionHelper.extractErrorCode(sqlException);
+		//        if (errorCode == SQLITE_CONSTRAINT) {
+		//          final String constraintName = EXTRACTER.extractConstraintName(sqlException);
+		//          return new ConstraintViolationException(message, sqlException, sql, constraintName);
+		//        } else if (errorCode == SQLITE_TOOBIG || errorCode == SQLITE_MISMATCH) {
+		//          return new DataException(message, sqlException, sql);
+		//        } else if (errorCode == SQLITE_BUSY || errorCode == SQLITE_LOCKED) {
+		//          return new LockAcquisitionException(message, sqlException, sql);
+		//        } else if ((errorCode >= SQLITE_IOERR && errorCode <= SQLITE_PROTOCOL) || errorCode == SQLITE_NOTADB) {
+		//          return new JDBCConnectionException(message, sqlException, sql);
+		//        }
+		//        return new GenericJDBCException(message, sqlException, sql);
+		//      }
+		//    };
+		//  }
+		
+		//  public static final ViolatedConstraintNameExtracter EXTRACTER = new TemplatedViolatedConstraintNameExtracter() {
+		//    public String extractConstraintName(SQLException sqle) {
+		//      return extractUsingTemplate( "constraint ", " failed", sqle.getMessage() );
+		//    }
+		//  };
+		
+		  @Override
+		  public boolean supportsUnionAll() {
+		    return true;
+		  }
+		
+		  @Override
+		  public boolean hasAlterTable() {
+		    return false; // As specified in NHibernate dialect
+		  }
+		
+		  @Override
+		  public boolean dropConstraints() {
+		    return false;
+		  }
+		
+		  /*
+		  public String getAddColumnString() {
+		    return "add column";
+		  }
+		  */
+		
+		  @Override
+		  public String getForUpdateString() {
+		    return "";
+		  }
+		
+		  @Override
+		  public boolean supportsOuterJoinForUpdate() {
+		    return false;
+		  }
+		
+		  @Override
+		  public String getDropForeignKeyString() {
+		    throw new UnsupportedOperationException("No drop foreign key syntax supported by SQLiteDialect");
+		  }
+		
+		  @Override
+		  public String getAddForeignKeyConstraintString(String constraintName,
+		      String[] foreignKey, String referencedTable, String[] primaryKey,
+		      boolean referencesPrimaryKey) {
+		    throw new UnsupportedOperationException("No add foreign key syntax supported by SQLiteDialect");
+		  }
+		
+		  @Override
+		  public String getAddPrimaryKeyConstraintString(String constraintName) {
+		    throw new UnsupportedOperationException("No add primary key syntax supported by SQLiteDialect");
+		  }
+		
+		  @Override
+		  public boolean supportsIfExistsBeforeTableName() {
+		    return true;
+		  }
+		
+		  /*
+		  public boolean supportsCascadeDelete() {
+		    return true;
+		  }
+		  */
+		
+		  /* not case insensitive for unicode characters by default (ICU extension needed)
+		  public boolean supportsCaseInsensitiveLike() {
+		    return true;
+		  }
+		  */
+		
+		  @Override
+		  public boolean supportsTupleDistinctCounts() {
+		    return false;
+		  }
+		
+		  @Override
+		  public String getSelectGUIDString() {
+		    return "select hex(randomblob(16))";
+		  }
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.util;
+
+		import java.util.Properties;
+		
+		import org.hibernate.SessionFactory;
+		import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
+		import org.hibernate.cfg.Configuration;
+		import org.hibernate.service.ServiceRegistry;
+		
+		public class HibernateUtil {
+		
+			private static final SessionFactory sessionFactory = buildSessionFactory();
+		
+			private static SessionFactory buildSessionFactory() {
+				try {
+					Configuration configuration = new Configuration();  
+			        configuration.configure();  
+			         
+			        Properties properties = configuration.getProperties();
+			         
+			        ServiceRegistry serviceRegistry = new StandardServiceRegistryBuilder().applySettings(properties).build();
+			        return configuration.buildSessionFactory(serviceRegistry); 
+				}
+				catch(Throwable t) {
+					throw new ExceptionInInitializerError(t);
+				}
+			}
+			
+			public static SessionFactory getSessionFactory() {
+				return sessionFactory;
+			}
+			
+			public static void shutdown() {
+				getSessionFactory().close();
+			}	
+		}
+	}
+}

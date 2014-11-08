@@ -3,6 +3,9 @@
 	<spl name="IrisDeltaJ">
 		<features>
 			<feature name ="Base" />
+			<feature name ="RelationalDB" />
+			<feature name ="Console" />
+			<feature name ="AddressBook" />
 		</features>
 		<configurations>
 		</configurations>
@@ -14,6 +17,19 @@
 				<modul delta="dBaseModel" when="Base" />
 				<modul delta="dBasePersistence" when="Base" />
 				<modul delta="dBaseMail" when="Base" />
+				<modul delta="dGmailProvider" when="Base" />
+				<modul delta="dBaseFacade" when="Base" />
+			</partition>
+			<partition>
+				<modul delta="dPersistenceSqlite" when="RelationalDB" />
+			</partition>
+			<partition>
+				<modul delta="dConsole" when="Console" />
+			</partition>
+			<partition>
+				<modul delta="dAddressBook" when="AddressBook" />
+				<modul delta="dAddressBookSqlite" when="AddressBook" />
+				<modul delta="dAddressBookConsole" when="AddressBook" />
 			</partition>
 		</deltas>
 	</spl>

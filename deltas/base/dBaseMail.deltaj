@@ -182,9 +182,8 @@ delta dBaseMail {
 	adds{
 		package br.unb.cic.iris.mail;
 
-		import static br.unb.cic.iris.i18n.Message.message;
-		import static br.unb.cic.iris.util.StringUtil.isEmpty;
-		import static br.unb.cic.iris.util.StringUtil.notEmpty;
+		import br.unb.cic.iris.i18n.MessageBundle;
+		import br.unb.cic.iris.util.StringUtil;
 		
 		import java.io.UnsupportedEncodingException;
 		import java.util.ArrayList;
@@ -234,9 +233,9 @@ delta dBaseMail {
 		
 						transport.close();
 					} catch (final UnsupportedEncodingException e) {
-						throw new  EmailException(message("error.invalid.encoding", e.getMessage()));
+						throw new  EmailException(MessageBundle.message("error.invalid.encoding", e.getMessage()));
 					} catch (final MessagingException e) {
-						throw new  EmailException(message("error.send.email", e.getMessage()));
+						throw new  EmailException(MessageBundle.message("error.send.email", e.getMessage()));
 					}
 				} else {
 					throw new EmailMessageValidationException(errorMessages);
@@ -249,10 +248,10 @@ delta dBaseMail {
 		
 				
 				if (message == null) {
-					errorMessages.add(message("error.null.message"));
-				} else if (isEmpty(message.getFrom())) {
+					errorMessages.add(MessageBundle.message("error.null.message"));
+				} else if (StringUtil.isEmpty(message.getFrom())) {
 					// TODO terminar
-					errorMessages.add(message("error.required.field",message("command.send.label.from")));
+					errorMessages.add(MessageBundle.message("error.required.field",MessageBundle.message("command.send.label.from")));
 				}
 		
 				return errorMessages;
@@ -274,19 +273,15 @@ delta dBaseMail {
 				final MimeMessage message = new MimeMessage(session.getSession());
 		
 				message.setSubject(email.getSubject(), session.getEncoding());
-				message.setFrom(new InternetAddress(email.getFrom(), session
-						.getEncoding()));
-				message.setRecipient(RecipientType.TO,
-						new InternetAddress(email.getTo()));
+				message.setFrom(new InternetAddress(email.getFrom(), session.getEncoding()));
+				message.setRecipient(RecipientType.TO, new InternetAddress(email.getTo()));
 				message.setText(email.getMessage(), session.getEncoding());
 		
-				if (notEmpty(email.getCc())) {
-					message.setRecipient(RecipientType.CC,
-							new InternetAddress(email.getCc()));
+				if (StringUtil.notEmpty(email.getCc())) {
+					message.setRecipient(RecipientType.CC, new InternetAddress(email.getCc()));
 				}
-				if (notEmpty(email.getBcc())) {
-					message.setRecipient(RecipientType.BCC,
-							new InternetAddress(email.getBcc()));
+				if (StringUtil.notEmpty(email.getBcc())) {
+					message.setRecipient(RecipientType.BCC, new InternetAddress(email.getBcc()));
 				}
 		
 				message.setSentDate(new Date());
@@ -317,7 +312,7 @@ delta dBaseMail {
 	adds{
 		package br.unb.cic.iris.mail;
 
-		import static br.unb.cic.iris.i18n.Message.message;
+		import br.unb.cic.iris.i18n.MessageBundle;
 		
 		import java.io.IOException;
 		import java.util.ArrayList;
@@ -360,7 +355,7 @@ delta dBaseMail {
 						folders.add(new IrisFolder(f.getName()));
 					}
 				} catch (MessagingException e) {
-					throw new EmailException(message("error.list.folder"), e);
+					throw new EmailException(MessageBundle.message("error.list.folder"), e);
 				}
 				return folders;
 			}
