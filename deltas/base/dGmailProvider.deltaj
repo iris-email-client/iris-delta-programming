@@ -119,4 +119,11 @@ delta dGmailProvider {
 			}
 		}
 	}
+	modifies br.unb.cic.iris.mail.provider.ProviderManager {
+		adds	import br.unb.cic.iris.mail.provider.GmailProvider;
+		modifies doAddProviders() {
+			original();
+			addProvider(new GmailProvider());			
+		}
+	}
 }

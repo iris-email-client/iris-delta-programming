@@ -3,11 +3,18 @@
 	<spl name="IrisDeltaJ">
 		<features>
 			<feature name ="Base" />
+			<feature name ="Persistence" />
 			<feature name ="RelationalDB" />
+			<feature name ="TextualDB" />
+			<feature name ="UI" />
 			<feature name ="Console" />
+			<feature name ="Window" />
 			<feature name ="AddressBook" />
 		</features>
 		<configurations>
+			<configuration formula="Base AND Persistence AND UI" />
+			<configuration formula="Persistence AND (RelationalDB XOR TextualDB)" />
+			<configuration formula="UI AND (Console XOR Window)" />
 		</configurations>
 		<deltas>
 			<partition>
