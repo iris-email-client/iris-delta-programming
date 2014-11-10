@@ -14,7 +14,7 @@
         <property name="connection.username"></property>
         <property name="connection.password"></property>    -->
     
-        <property name="hibernate.hbm2ddl.auto">update</property>    
+        <property name="hibernate.hbm2ddl.auto">create</property>    
         
         <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="connection.driver_class">org.postgresql.Driver</property>
@@ -22,7 +22,8 @@
         <property name="connection.username">pedro</property>
         <property name="connection.password">123</property>
 	
-   <!--      <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.AddressBookEntry" />
+        
+<!--        <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.AddressBookEntry" />
         <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.EmailMessage" />
         <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.IrisFolder" /> -->
              

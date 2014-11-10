@@ -1,10 +1,24 @@
 delta dAddressBook {
 	adds{
 		package br.unb.cic.iris.core.model;
+		
+		import javax.persistence.Column;
+		import javax.persistence.Entity;
+		import javax.persistence.GeneratedValue;
+		import javax.persistence.Id;
+		import javax.persistence.Table;
 
+		@Entity
+		@Table(name="TB_ADDRESS_BOOK")
 		public class AddressBookEntry {
+			@Id
+			@GeneratedValue
 			private Long id;
+			
+			@Column(unique=true)
 			private String nick;
+			
+			@Column
 			private String address;
 			
 			public AddressBookEntry() {}
@@ -37,6 +51,13 @@ delta dAddressBook {
 			public void setAddress(String address) {
 				this.address = address;
 			}
+		}
+	}
+	modifies br.unb.cic.iris.util.HibernateUtil {
+		adds import br.unb.cic.iris.core.model.AddressBookEntry;
+		modifies configureClasses() {
+			classList.add(AddressBookEntry.class);
+			original();
 		}
 	}
 	adds{

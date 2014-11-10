@@ -1,4 +1,99 @@
 delta dPersistenceSqlite {
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		import javax.persistence.Entity;
+		import javax.persistence.Inheritance;
+		import javax.persistence.InheritanceType;
+		import javax.persistence.Table;
+		
+		@Entity
+		@Table(name = "TB_FOLDER_CONTENT")
+		@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+		public abstract class AbstractFolderContent { }
+	}
+	modifies br.unb.cic.iris.core.model.FolderContent {
+		adds import javax.persistence.GeneratedValue;
+		adds import javax.persistence.GenerationType;
+		adds import javax.persistence.Id;
+		adds superclass AbstractFolderContent;
+		 
+		removes id;
+		adds @Id @GeneratedValue(strategy = GenerationType.TABLE) private Integer id;
+	}
+	
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		import javax.persistence.Entity;
+		import javax.persistence.Table;
+		
+		@Entity
+		@Table(name = "TB_FOLDER")
+		public abstract class AbstractIrisFolder extends FolderContent { 
+			public AbstractIrisFolder(Integer id){
+				super(id);
+			}
+		}
+	}
+	modifies br.unb.cic.iris.core.model.IrisFolder {
+		adds import javax.persistence.CascadeType;
+		adds import javax.persistence.Column;
+		adds import javax.persistence.FetchType;
+		adds import javax.persistence.OneToMany;
+		adds superclass AbstractIrisFolder;
+		 
+		removes name;
+		adds @Column(name="NAME", unique=true) private String name;
+	
+		removes contents;
+		adds @OneToMany(cascade=CascadeType.ALL, fetch = FetchType.LAZY) private List<FolderContent> contents;
+	}
+	
+	
+	adds{
+		package br.unb.cic.iris.core.model;
+		
+		import javax.persistence.Entity;
+		import javax.persistence.Table;
+		@Entity
+		@Table(name = "TB_MESSAGE")
+		public class AbstractEmailMessage extends FolderContent { }
+	}
+	
+	modifies br.unb.cic.iris.core.model.EmailMessage {
+		adds import javax.persistence.Column;
+		adds import javax.persistence.FetchType;
+		adds import javax.persistence.JoinColumn;
+		adds import javax.persistence.ManyToOne;
+		adds superclass AbstractEmailMessage;
+		 
+		removes from; 
+		adds @Column(name="MSG_FROM") private String from;
+		
+		removes to;
+		adds @Column(name="RECIPIENT") private String to;
+		
+		removes cc;
+		adds @Column(name="CC_RECIPIENT") private String cc;
+		
+		removes bcc;
+		adds @Column(name="BCC_RECIPIENT") private String bcc;
+		
+		removes subject;
+		adds @Column(name="SUBJECT") private String subject;
+		
+		removes message;
+		adds @Column(name="MESSAGE_CONTENT") private String message;
+		
+		removes date;
+		adds @Column(name="DATE") private Date date;
+		
+		removes folder;
+		adds @ManyToOne(fetch = FetchType.LAZY) @JoinColumn(name = "FOLDER_ID", nullable = false) private IrisFolder folder;
+	}
+	
+	
 	adds {
 		package br.unb.cic.iris.persistence.sqlite3;
 		
@@ -487,6 +582,8 @@ delta dPersistenceSqlite {
 	adds{
 		package br.unb.cic.iris.util;
 
+		import java.util.ArrayList;
+		import java.util.List;
 		import java.util.Properties;
 		
 		import org.hibernate.SessionFactory;
@@ -494,13 +591,22 @@ delta dPersistenceSqlite {
 		import org.hibernate.cfg.Configuration;
 		import org.hibernate.service.ServiceRegistry;
 		
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.FolderContent;
+		import br.unb.cic.iris.core.model.IrisFolder;
+
 		public class HibernateUtil {
 		
 			private static final SessionFactory sessionFactory = buildSessionFactory();
 		
 			private static SessionFactory buildSessionFactory() {
+				classList = new ArrayList<Class>();
+				configureClasses();
 				try {
 					Configuration configuration = new Configuration();  
+					for(Class clazz: classList){
+						configuration.addAnnotatedClass(clazz);
+					}
 			        configuration.configure();  
 			         
 			        Properties properties = configuration.getProperties();
@@ -511,6 +617,14 @@ delta dPersistenceSqlite {
 				catch(Throwable t) {
 					throw new ExceptionInInitializerError(t);
 				}
+			}
+			
+			private static List<Class> classList;
+			
+			public static void configureClasses(){
+				classList.add(FolderContent.class);
+				classList.add(IrisFolder.class);
+				classList.add(EmailMessage.class);
 			}
 			
 			public static SessionFactory getSessionFactory() {
