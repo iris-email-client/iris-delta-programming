@@ -1,0 +1,439 @@
+delta dPersistenceLucene {
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		public abstract class FolderContent { 
+			public FolderContent() {
+				this(null);
+			}
+		
+			public FolderContent(Integer id) {
+				super();
+				this.id = id;
+			}
+
+			private Integer id;
+		
+			public Integer getId() {
+				return id;
+			}
+		
+			public void setId(Integer id) {
+				this.id = id;
+			}
+		}
+	}
+	
+	removes br.unb.cic.iris.core.model.IrisFolder;
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		import java.util.ArrayList;
+		import java.util.List;
+		
+		public class IrisFolder extends FolderContent { 
+			public static final String INBOX = "INBOX";
+			public static final String OUTBOX = "OUTBOX";
+			
+			private String name;
+			
+			private List<FolderContent> contents;
+		
+			public IrisFolder() {
+				this(null,"");
+			}
+			
+			public IrisFolder(String name) {
+				this(null,name);
+			}
+		
+			public IrisFolder(Integer id, String name) {
+				super(id);
+				this.name = name;
+				contents = new ArrayList<FolderContent>();
+			}
+		
+			public String getName() {
+				return name;
+			}
+		
+			public void setName(String name) {
+				this.name = name;
+			}
+		
+			public void addElement(FolderContent e) {
+				contents.add(e);
+			}
+		
+			public List<FolderContent> getContents() {
+				return contents;
+			}
+		}
+	}	
+	
+	adds{
+		package br.unb.cic.iris.core.model;
+		
+		import java.util.Date;
+
+		public class EmailMessage extends FolderContent { 
+			private String from;
+			
+			private String to;
+			
+			private String cc;
+			
+			private String bcc;
+			
+			private String subject;
+			
+			private String message;
+			
+			private Date date;
+			
+			private IrisFolder folder;
+			
+			public EmailMessage() {
+			}
+		
+			public EmailMessage(String to, String subject, String message) {
+				this(null, to, subject, message);
+			}
+		
+			public EmailMessage(String from, String to, String subject, String message) {
+				this(from, to, null, null, subject, message);
+			}
+		
+			public EmailMessage(String from, String to, String cc, String bcc,
+					String subject, String message) {
+				this.from = from;
+				this.to = to;
+				this.cc = cc;
+				this.bcc = bcc;
+				this.subject = subject;
+				this.message = message;
+			}
+			
+			public Date getDate() {
+				return date;
+			}
+		
+			public void setDate(Date date) {
+				this.date = date;
+			}
+		
+			public void setTo(String to) {
+				this.to = to;
+			}
+		
+			public void setCc(String cc) {
+				this.cc = cc;
+			}
+		
+			public void setBcc(String bcc) {
+				this.bcc = bcc;
+			}
+		
+			public void setSubject(String subject) {
+				this.subject = subject;
+			}
+		
+			public void setMessage(String message) {
+				this.message = message;
+			}
+		
+			public String getFrom() {
+				return from;
+			}
+		
+			public void setFrom(String from) {
+				this.from = from;
+			}
+		
+			public String getTo() {
+				return to;
+			}
+		
+			public String getCc() {
+				return cc;
+			}
+		
+			public String getBcc() {
+				return bcc;
+			}
+		
+			public String getSubject() {
+				return subject;
+			}
+		
+			public String getMessage() {
+				return message;
+			}
+		
+			public IrisFolder getFolder() {
+				return folder;
+			}
+		
+			public void setFolder(IrisFolder folder) {
+				this.folder = folder;
+			}
+		}
+	}
+
+	/*
+	adds {
+		package br.unb.cic.iris.persistence.sqlite3;
+		
+		import java.lang.reflect.ParameterizedType;
+		import java.util.List;
+		
+		import org.hibernate.HibernateException;
+		import org.hibernate.Query;
+		import org.hibernate.Session;
+		import org.hibernate.criterion.MatchMode;
+		
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.util.HibernateUtil;
+		
+		public abstract class AbstractDAO<T> {
+			private Class<T> clazz;
+			protected Session session;
+			
+			public AbstractDAO(){
+				clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+			}
+			
+			public void saveOrUpdate(T obj) throws DBException {
+		        try {
+		            startSession();
+		            session.saveOrUpdate(obj);
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		    }
+			
+			public void delete(T t) throws DBException {
+				try {
+		            startSession();
+		            session.delete(t);
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+			}
+			
+			public T findById(Long id) throws DBException {
+		        T obj = null;
+		        try {
+		            startSession();
+		            obj = (T) session.load(clazz, id);
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		        return obj;
+		    }
+		
+		    public List<T> findAll() throws DBException {
+		        List<T> objects = null;
+		        try {
+		            startSession();
+		            Query query = session.createQuery("from " + clazz.getName());
+		            objects = query.list();
+		            session.getTransaction().commit();
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		        return objects;
+		    }
+		
+			public List<T> findByExample(T filtro, MatchMode matchMode, boolean ignoreCase){
+				org.hibernate.criterion.Example example = org.hibernate.criterion.Example.create(filtro);
+		
+				if(matchMode != null){
+					example = example.enableLike(matchMode);
+				}
+		
+				if(ignoreCase){
+					example = example.ignoreCase();
+				}
+		
+				return session.createCriteria(clazz).add(example).list();
+			}
+			
+			protected void handleException(Exception e) throws DBException {
+				session.getTransaction().rollback();
+		        throw new DBException(e.getMessage(), e);
+		    }
+		
+		    protected void startSession() throws HibernateException {
+		        session = HibernateUtil.getSessionFactory().openSession();
+		        session.beginTransaction();
+		    }
+		    
+			protected void closeSession() {
+				if(session != null && session.isOpen()) {
+					session.flush();
+					session.close();
+				}
+			}
+		}		
+	}
+	*/
+	adds {
+		package br.unb.cic.iris.persistence.lucene;
+		
+		import java.io.File;
+		import java.io.IOException;
+		import java.util.Date;
+		import java.util.List;
+				
+		import org.apache.lucene.analysis.Analyzer;
+		import org.apache.lucene.analysis.standard.StandardAnalyzer;
+		import org.apache.lucene.document.Document;
+		import org.apache.lucene.document.Field;
+		import org.apache.lucene.document.IntField;
+		import org.apache.lucene.document.TextField;
+		import org.apache.lucene.index.DirectoryReader;
+		import org.apache.lucene.index.IndexWriter;
+		import org.apache.lucene.index.IndexWriterConfig;
+		import org.apache.lucene.queryparser.classic.QueryParser;
+		import org.apache.lucene.search.IndexSearcher;
+		import org.apache.lucene.search.Query;
+		import org.apache.lucene.search.ScoreDoc;
+		import org.apache.lucene.store.Directory;
+		import org.apache.lucene.store.FSDirectory;
+		import org.apache.lucene.util.Version;
+
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.persistence.IEmailDAO;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		/**
+		 * An implementation of @see br.unb.cic.iris.persistence.EmailDAO using Lucene.
+		 *
+		 */
+		public final class EmailDAO /*extends AbstractDAO<EmailMessage>*/ implements IEmailDAO {
+			//private static final String FIND_MAX_DATE = "select max(e.date) FROM EmailMessage e";
+			// select o from LoadFileHistory o where o.finishDate > :today
+		
+			/* the single instance of EmailDAO */
+			private static EmailDAO instance = new EmailDAO();
+		
+			/* private constructor, according to the singleton pattern */
+			private EmailDAO() {
+			}
+		
+			/**
+			 * Retrieves the singleton instance of EmailDAO.
+			 * 
+			 * @return the singleton instance of EmailDAO
+			 */
+			public static EmailDAO instance() {
+				return instance;
+			}
+		
+			@Override
+			public void saveMessage(EmailMessage message) throws DBException {
+				Document doc = new Document();
+				doc.add(new Field("bcc", message.getBcc(), TextField.TYPE_STORED));
+				doc.add(new Field("cc", message.getCc(), TextField.TYPE_STORED));
+				doc.add(new Field("date", message.getDate().toString(), TextField.TYPE_STORED));
+				doc.add(new IntField("folder", message.getFolder().getId(), IntField.TYPE_STORED));
+				doc.add(new Field("from", message.getFrom(), TextField.TYPE_STORED));
+				doc.add(new Field("message", message.getMessage(), TextField.TYPE_STORED));
+				doc.add(new Field("subject", message.getSubject(), TextField.TYPE_STORED));
+				doc.add(new Field("to", message.getTo(), TextField.TYPE_STORED));
+				saveDocument(doc);
+			}
+		
+			@Override
+			public Date lastMessageReceived() throws DBException {
+				/*
+				Date date = null;
+				try {
+					startSession();
+					date = (Date) session.createQuery(FIND_MAX_DATE).uniqueResult();
+				} finally {
+					closeSession();
+				}
+				return date;
+				*/
+				return null;
+			}
+			
+			protected void saveDocument(Document doc) throws DBException {
+				try {
+					Analyzer analyzer = new StandardAnalyzer();
+					Directory directory = FSDirectory.open(new File(System.getProperty("user.home") + "/.iris/lucene_idx"));
+					IndexWriterConfig config = new IndexWriterConfig(Version.LATEST, analyzer);
+					IndexWriter iwriter = new IndexWriter(directory, config);
+					iwriter.addDocument(doc);
+					iwriter.close();				
+					directory.close();
+				} catch (IOException e) {
+					throw new DBException("An error ocurred while saving e-mail message.", e);
+				}				
+			}
+			
+			public static void main(String[] args) throws DBException {
+				EmailMessage message = new EmailMessage();
+				message.setFrom("alexandrelucchesi@gmail.com");
+				message.setTo("rbonifacio123@gmail.com");
+				message.setCc("jeremiasmg@gmail.com");
+				message.setBcc("somebcc@gmail.com");
+				message.setSubject("Alexandre Lucchesi");
+				message.setMessage("Testing Lucene. :-)");
+				message.setDate(new Date());
+				message.setFolder(new IrisFolder(19, "UnB"));
+				EmailDAO emailDAO = new EmailDAO();
+				emailDAO.saveMessage(message);
+			}
+		
+		}		
+	}
+	/*
+	adds {
+		package br.unb.cic.iris.persistence.sqlite3;
+		
+		import br.unb.cic.iris.i18n.MessageBundle;
+		
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		import br.unb.cic.iris.persistence.IFolderDAO;
+
+		import org.hibernate.Criteria;
+		import org.hibernate.criterion.Restrictions;
+		
+		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
+			public IrisFolder findByName(String folderName) throws DBException {
+			try {
+				startSession();
+				Criteria criteria = session.createCriteria(IrisFolder.class);
+				criteria.add(Restrictions.eq("name", folderName));
+				return (IrisFolder) criteria.uniqueResult();
+			}
+			catch(Exception e) {
+				throw new DBException(MessageBundle.message("error.folder.not.found",
+						folderName), e);
+			}
+			finally {
+				closeSession();
+			}
+		}
+		}		
+	}
+	*/
+	
+
+}

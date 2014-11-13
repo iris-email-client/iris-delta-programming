@@ -6,6 +6,7 @@
 			<feature name ="Persistence" />
 			<feature name ="RelationalDB" />
 			<feature name ="TextualDB" />
+			<feature name ="LuceneDB" />
 			<feature name ="UI" />
 			<feature name ="Console" />
 			<feature name ="Window" />
@@ -13,7 +14,7 @@
 		</features>
 		<configurations>
 			<configuration formula="Base AND Persistence AND UI" />
-			<configuration formula="Persistence AND (RelationalDB XOR TextualDB)" />
+			<configuration formula="Persistence AND (RelationalDB XOR TextualDB XOR LuceneDB)" />
 			<configuration formula="UI AND (Console XOR Window)" />
 		</configurations>
 		<deltas>
@@ -29,6 +30,9 @@
 			</partition>
 			<partition>
 				<modul delta="dPersistenceSqlite" when="RelationalDB" />
+			</partition>
+			<partition>
+				<modul delta="dPersistenceLucene" when="LuceneDB" />
 			</partition>
 			<partition>
 				<modul delta="dConsole" when="Console" />

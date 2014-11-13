@@ -1,15 +1,15 @@
 SPL IrisDeltaJ {
 
-	Features = {Base, Persistence, RelationalDB, TextualDB, UI, Console, Window, AddressBook}
+	Features = {Base, Persistence, RelationalDB, TextualDB, LuceneDB, UI, Console, Window, AddressBook}
 
 	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
-	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dConsole,
+	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dPersistenceLucene, dConsole,
 	dAddressBook, dAddressBookSqlite, dAddressBookConsole}
 
 	Constraints {
 	// Put boolean expression representation of the feature model here.
 		Base & Persistence & UI; 
-		Persistence & (RelationalDB ^ TextualDB);
+		Persistence & (RelationalDB ^ TextualDB ^ LuceneDB);
 		UI & (Console ^ Window);
 	}
 
@@ -19,6 +19,8 @@ SPL IrisDeltaJ {
 		dGmailProvider, dBaseFacade} when (Base);
 
 		{dPersistenceSqlite} when (RelationalDB);
+		
+		{dPersistenceLucene} when (LuceneDB);
 
 		{dConsole} when (Console);
 		
@@ -30,6 +32,7 @@ SPL IrisDeltaJ {
 	Products {
 		Simple = {Base, RelationalDB, Console};
 		SimpleAddressBook = {Base, RelationalDB, Console, AddressBook};
+		SimpleLucene = {Base, LuceneDB, Console};
 	}
 } 
  
