@@ -136,12 +136,7 @@ delta dConsole{
 		
 		public class ConsoleConnectCommand extends AbstractMailCommand {
 			public static final String COMMAND_NAME = "connect";
-		
-			/*
-			 * (non-Javadoc)
-			 * 
-			 * @see br.unb.cic.iris.command.MailCommand#explain()
-			 */
+
 			@Override
 			public void explain() {
 				System.out.printf("(%s) - %s %n", COMMAND_NAME,	message("command.connect.explain"));
@@ -178,48 +173,100 @@ delta dConsole{
 			public String getCommandName() {
 				return COMMAND_NAME;
 			}
-		
 		}
 	}
 	
 	adds{
 		package br.unb.cic.iris.command.console;
 		
-		import java.text.DateFormat;
-		import java.text.SimpleDateFormat;
-		import java.util.List;
-		
 		import br.unb.cic.iris.command.AbstractMailCommand;
-		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.FolderManager;
 		import br.unb.cic.iris.core.exception.EmailException;
-		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
 		
-		public class ConsoleGetMessagesCommand extends AbstractMailCommand {
-			static final String COMMAND_NAME = "get";
+		public class CurrentFolderConsoleCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "pwd";
 		
 			@Override
 			public void explain() {
-				System.out.printf("(%s) - %s %n", COMMAND_NAME, message("command.list.folders.explain"));
+				System.out.println("(pwd) - show current folder)");
 			}
 		
 			@Override
 			public void handleExecute() throws EmailException {
-				if (validParameters()) {
-					String folder = parameters.get(0);
-					System.out.println("Retrieving messages from folder: " + folder);
+				System.out.println(FolderManager.instance().getCurrentFolderName());
+			}
 		
-					// TODO tratar parametros --> parse para Flags/SearchTerm
-					DateFormat formatter = new SimpleDateFormat("dd/MMM/yy 'at' HH:mm");
-					List<EmailMessage> messages = SystemFacade.instance().getMessages(folder);
-					System.out.println("Total messages: " + messages.size());
-					for (EmailMessage msg : messages) {
-						System.out.printf("%s - %s \t- %s%n", formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
-					}
-				} else {
-					// TODO
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.FolderManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		public class ChangeFolderConsoleCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "cd";
+		
+			@Override
+			public void explain() {
+				System.out.println("(cd) - change current folder)");
+			}
+		
+			@Override
+			public void handleExecute() throws EmailException {
+				if(validParameters()){
+					Integer id = Integer.parseInt(parameters.get(0));
+					FolderManager.instance().changeToFolder(id);
+					//String folder = FolderManager.instance().getCurrentFolderName();
+					//System.out.println(folder);
+				}else{
+					//TODO
 				}
 			}
 		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.FolderManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		import java.text.DateFormat;
+		import java.text.SimpleDateFormat;
+		import java.util.List;
+
+		public class ConsoleListMessagesCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "ls";
+			DateFormat formatter = new SimpleDateFormat("dd/MMM/yy 'at' HH:mm");
+			
+			@Override
+			public void explain() {
+				System.out.println("(ls) - list messages from current folder (local database)");
+			}
+			@Override
+			public void handleExecute() throws EmailException {
+				List<EmailMessage> messages = FolderManager.instance().listFolderMessages();
+				for(EmailMessage msg : messages) {
+					System.out.printf("%s - %s \t- %s%n", formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
+				}
+			}
 			@Override
 			public String getCommandName() {
 				return COMMAND_NAME;
@@ -266,12 +313,12 @@ delta dConsole{
 		import java.util.List;
 		
 		import br.unb.cic.iris.command.AbstractMailCommand;
-		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.FolderManager;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public class ConsoleListFoldersCommand extends AbstractMailCommand {
-			static final String COMMAND_NAME = "ls";
+			static final String COMMAND_NAME = "lf";
 		
 			@Override
 			public void explain() {
@@ -280,7 +327,40 @@ delta dConsole{
 		
 			@Override
 			public void handleExecute() throws EmailException {
-				List<IrisFolder> irisFolders = SystemFacade.instance().listFolders();
+				List<IrisFolder> irisFolders = FolderManager.instance().listFolders();
+				for (IrisFolder folder : irisFolders) {
+					System.out.printf("%d - %s%n", folder.getId(), folder.getName());
+				}
+			}
+		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import java.util.List;
+		
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		
+		public class ConsoleListRemoteFoldersCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "lr";
+		
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_NAME, "List remote folders");
+			}
+		
+			@Override
+			public void handleExecute() throws EmailException {
+				List<IrisFolder> irisFolders = SystemFacade.instance().listRemoteFolders();
 				for (IrisFolder folder : irisFolders) {
 					System.out.printf(" + %s%n", folder.getName());
 				}
@@ -420,9 +500,11 @@ delta dConsole{
 		package br.unb.cic.iris.command.console;
 
 		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.FolderManager;
 		import br.unb.cic.iris.core.SystemFacade;
 		import br.unb.cic.iris.core.model.Status;
 		import br.unb.cic.iris.mail.EmailProvider;
+		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public class ConsoleStatusCommand extends AbstractMailCommand {
 			static final String COMMAND_NAME = "status";
@@ -437,6 +519,7 @@ delta dConsole{
 			public void handleExecute() {
 				Status status = SystemFacade.instance().getStatus();
 				System.out.println("System status: " + status);
+				System.out.println("Current folder: " + FolderManager.instance().getCurrentFolderName());
 				if (Status.CONNECTED == status) {
 					EmailProvider provider = SystemFacade.instance().getProvider();
 					System.out.println(" - Provider: " + provider.getName());

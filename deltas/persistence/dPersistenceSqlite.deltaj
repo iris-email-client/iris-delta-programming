@@ -31,7 +31,7 @@ delta dPersistenceSqlite {
 			}
 		
 			public void setId(Integer id) {
-				this.id = id;
+				this.id = id; 
 			}
 		}
 	}
@@ -128,6 +128,8 @@ delta dPersistenceSqlite {
 		import javax.persistence.JoinColumn;
 		import javax.persistence.ManyToOne;
 		import javax.persistence.Table;
+		import javax.persistence.Temporal;
+		import javax.persistence.TemporalType;
 		
 		@Entity
 		@Table(name = "TB_MESSAGE")
@@ -150,6 +152,7 @@ delta dPersistenceSqlite {
 			@Column(name="MESSAGE_CONTENT")
 			private String message;
 			
+			@Temporal(TemporalType.TIMESTAMP)
 			@Column(name="DATE")
 			private Date date;
 			
@@ -160,23 +163,30 @@ delta dPersistenceSqlite {
 		
 			public EmailMessage() {
 			}
-		
 			public EmailMessage(String to, String subject, String message) {
 				this(null, to, subject, message);
 			}
-		
+			public EmailMessage(String from, String to, String subject, String message,
+				Date date, IrisFolder folder) {
+				this(from, to, null, null, subject, message, date, folder);
+			}
 			public EmailMessage(String from, String to, String subject, String message) {
 				this(from, to, null, null, subject, message);
 			}
-		
-			public EmailMessage(String from, String to, String cc, String bcc,
-					String subject, String message) {
+			public EmailMessage(String from, String to, String cc, String bcc, String
+				subject, String message) {
+				this(null, to, cc, bcc, subject, message, null,  null);
+			}
+			public EmailMessage(String from, String to, String cc, String bcc, String
+				subject, String message, Date date, IrisFolder folder) {
 				this.from = from;
 				this.to = to;
 				this.cc = cc;
 				this.bcc = bcc;
 				this.subject = subject;
 				this.message = message;
+				this.date = date;
+				this.folder = folder;
 			}
 			
 			public Date getDate() {
@@ -241,6 +251,11 @@ delta dPersistenceSqlite {
 		
 			public void setFolder(IrisFolder folder) {
 				this.folder = folder;
+			}
+			
+			@Override
+			public String toString() {
+				return String.format("%d - %s - %s - %s", getId(), getFrom(), getSubject(), getDate());
 			}
 		}
 	}
@@ -337,6 +352,22 @@ delta dPersistenceSqlite {
 		        }
 		        return obj;
 		    }
+		    
+		    public T findById(Integer id) throws DBException {
+		        T obj = null;
+		        try {
+		            startSession();
+		            System.out.println("Session: "+session);
+		            obj = (T) session.load(clazz, id);
+		            session.getTransaction().commit();
+		            return obj;
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		        return obj;
+		    }
 		
 		    public List<T> findAll() throws DBException {
 		        List<T> objects = null;
@@ -400,12 +431,16 @@ delta dPersistenceSqlite {
 		import java.util.Date;
 		import java.util.List;
 		
+		import org.hibernate.Criteria;
+		import org.hibernate.criterion.Restrictions;
 		import org.hibernate.HibernateException;
 		
 		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.model.AddressBookEntry;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.persistence.IEmailDAO;
+		
+		
 		
 		/**
 		 * An implementation of @see br.unb.cic.iris.persistence.EmailDAO using the SQLite databaese.
@@ -450,6 +485,18 @@ delta dPersistenceSqlite {
 				return date;
 			}
 		
+			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
+				try {
+					startSession();
+					Criteria criteria = session.createCriteria(EmailMessage.class)
+							.createCriteria("folder").add(Restrictions.idEq(idFolder));
+					return ( List<EmailMessage> ) criteria.list();
+				} catch(Exception e) {
+					throw new DBException( "Error listing messages from fodler: "+idFolder, e);
+				} finally {
+					closeSession();
+				}
+			}
 		}		
 	}
 	
@@ -466,18 +513,27 @@ delta dPersistenceSqlite {
 		import org.hibernate.criterion.Restrictions;
 		
 		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
+			private static FolderDAO instance;
+			
+			private FolderDAO(){ }
+			
+			public static FolderDAO instance(){
+				if(instance == null){
+					instance = new FolderDAO();
+				}
+				return instance;
+			}
+			
 			public IrisFolder findByName(String folderName) throws DBException {
 			try {
 				startSession();
 				Criteria criteria = session.createCriteria(IrisFolder.class);
 				criteria.add(Restrictions.eq("name", folderName));
 				return (IrisFolder) criteria.uniqueResult();
-			}
-			catch(Exception e) {
+			} catch(Exception e) {
 				throw new DBException(MessageBundle.message("error.folder.not.found",
 						folderName), e);
-			}
-			finally {
+			} finally {
 				closeSession();
 			}
 		}

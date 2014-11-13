@@ -15,6 +15,7 @@ delta dBaseFacade {
 
 		import br.unb.cic.iris.core.model.Status;
 		import br.unb.cic.iris.i18n.MessageBundle;		
+		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 		import br.unb.cic.iris.core.model.AddressBookEntry;
@@ -64,16 +65,35 @@ delta dBaseFacade {
 			public void send(EmailMessage message) throws EmailException {
 				verifyConnection();
 				client.send(message);
-				
+				message.setDate(new Date());
+				saveMessage(message);
+			}
+			
+			private void saveMessage(EmailMessage message) throws DBException{
+				saveMessage(message, IrisFolder.OUTBOX);
+			}
+			private void saveMessage(EmailMessage message, String folderName) throws DBException{
 				IEmailDAO dao = EmailDAO.instance();
-				IrisFolder folderOutbox = new FolderDAO().findByName(IrisFolder.OUTBOX);
-				message.setFolder(folderOutbox);
+				IrisFolder folder = FolderDAO.instance().findByName(folderName);
+				message.setFolder(folder);
 				dao.saveMessage(message);
 			}
 		
 			public List<IrisFolder> listFolders() throws EmailException {
+				return FolderDAO.instance().findAll();
+			}
+			
+			public List<IrisFolder> listRemoteFolders() throws EmailException {
 				verifyConnection();
 				return client.listFolders();
+			}
+			
+			public List<EmailMessage> listFolderMessages(Integer folderId) throws EmailException {
+				return EmailDAO.instance().listMessages(folderId);
+			}
+			
+			public EmailMessage getMessage(Long id) throws EmailException {
+				return EmailDAO.instance().findById(id);
 			}
 			
 			public void downloadMessages(String folder) throws EmailException {
@@ -83,6 +103,7 @@ delta dBaseFacade {
 				IEmailDAO dao = EmailDAO.instance();
 				
 				Date lastMessageReceived = dao.lastMessageReceived();
+				System.out.println("**************************** lastMessageReceived="+lastMessageReceived);
 				if(lastMessageReceived != null){
 					// search for newer messages (relative to lastMessageReceived)
 					searchTerm = new ReceivedDateTerm(ComparisonTerm.GT, lastMessageReceived);
@@ -93,10 +114,7 @@ delta dBaseFacade {
 				
 				//persist messages
 				for(EmailMessage message: messages) {
-					IrisFolder folderEntity = new FolderDAO().findByName(folder);
-					//folderEntity.addElement(message);
-					message.setFolder(folderEntity);
-					dao.saveMessage(message);
+					saveMessage(message, folder);
 				}
 			}
 			
@@ -159,6 +177,59 @@ delta dBaseFacade {
 		
 			public List<AddressBookEntry> listAddressBook() throws EmailException {
 				return AddressBookDAO.instance().findAll();
+			}
+		}
+	}
+	
+	adds {
+		package br.unb.cic.iris.core;
+
+
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.exception.EmailUncheckedException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
+		import br.unb.cic.iris.persistence.sqlite3.FolderDAO;
+		
+		import java.util.List;
+		
+		public final class FolderManager {
+			private static final FolderManager instance = new FolderManager();
+			private Integer currentFolderId = null;
+			private FolderManager() {
+			}
+			public static FolderManager instance() {
+				return instance;
+			}
+			public String getCurrentFolderName() {
+				if(currentFolderId == null) {
+					return "ROOT";
+				}
+				try {
+					return FolderDAO.instance().findById(currentFolderId).getName();
+				} catch (DBException e) {
+					throw new EmailUncheckedException(e.getMessage(),e);
+				}
+			}
+			public void changeToFolder(Integer folderId) throws DBException {
+				IrisFolder folder = FolderDAO.instance().findById(folderId);
+				if(folder != null) {
+					currentFolderId = folderId;
+				}
+			}
+			public List<IrisFolder> listFolders() throws EmailException {
+				return FolderDAO.instance().findAll();
+			}
+			public List<EmailMessage> listFolderMessages() throws EmailException {
+				if(currentFolderId == null){
+					return new java.util.ArrayList<EmailMessage>();
+				}
+				return EmailDAO.instance().listMessages(currentFolderId);
+			}
+			public EmailMessage getMessage(Long id) throws EmailException {
+				return EmailDAO.instance().findById(id);
 			}
 		}
 	}
