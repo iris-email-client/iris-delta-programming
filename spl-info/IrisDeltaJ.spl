@@ -2,7 +2,7 @@ SPL IrisDeltaJ {
 
 	Features = {Base, Persistence, RelationalDB, TextualDB, UI, Console, Window, AddressBook}
 
-	Deltas = {dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence,
+	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
 	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dConsole,
 	dAddressBook, dAddressBookSqlite, dAddressBookConsole}
 

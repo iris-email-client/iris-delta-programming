@@ -181,9 +181,6 @@ delta dBaseMail {
 	
 	adds{
 		package br.unb.cic.iris.mail;
-
-		import br.unb.cic.iris.i18n.MessageBundle;
-		import br.unb.cic.iris.util.StringUtil;
 		
 		import java.io.UnsupportedEncodingException;
 		import java.util.ArrayList;
@@ -198,7 +195,9 @@ delta dBaseMail {
 		import javax.mail.event.TransportListener;
 		import javax.mail.internet.InternetAddress;
 		import javax.mail.internet.MimeMessage;
-		
+
+		import br.unb.cic.iris.i18n.MessageBundle;
+		import br.unb.cic.iris.util.StringUtil;		
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailMessageValidationException;
 		import br.unb.cic.iris.core.model.EmailMessage;
@@ -311,8 +310,6 @@ delta dBaseMail {
 	
 	adds{
 		package br.unb.cic.iris.mail;
-
-		import br.unb.cic.iris.i18n.MessageBundle;
 		
 		import java.io.IOException;
 		import java.util.ArrayList;
@@ -330,7 +327,8 @@ delta dBaseMail {
 		import javax.mail.event.StoreListener;
 		import javax.mail.internet.MimeMessage;
 		import javax.mail.search.SearchTerm;
-		
+
+		import br.unb.cic.iris.i18n.MessageBundle;		
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.IrisFolder;

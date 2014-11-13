@@ -2,8 +2,6 @@ delta dBaseFacade {
 	adds {
 		package br.unb.cic.iris.core;
 
-		import br.unb.cic.iris.core.model.Status;
-		import br.unb.cic.iris.i18n.MessageBundle;
 		
 		import java.util.Date;
 		import java.util.List;
@@ -14,7 +12,9 @@ delta dBaseFacade {
 		import javax.mail.search.FlagTerm;
 		import javax.mail.search.ReceivedDateTerm;
 		import javax.mail.search.SearchTerm;
-		
+
+		import br.unb.cic.iris.core.model.Status;
+		import br.unb.cic.iris.i18n.MessageBundle;		
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 		import br.unb.cic.iris.core.model.AddressBookEntry;

@@ -34,6 +34,7 @@ delta dBaseCommand {
 			public String getCommandName();
 		}
 	}
+
 	adds {
 		package br.unb.cic.iris.command;
 		
@@ -290,6 +291,7 @@ delta dBaseCommand {
 		}
 		
 	}
+
 	adds {
 		package br.unb.cic.iris.command.manager;
 		
@@ -596,6 +598,7 @@ delta dBaseCommand {
 			}
 		}
 	}
+
 	adds{
 		package br.unb.cic.iris.reflect;
 
