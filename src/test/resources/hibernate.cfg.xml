@@ -4,8 +4,8 @@
 "http://hibernate.sourceforge.net/hibernate-configuration-3.0.dtd">
 <hibernate-configuration>
     <session-factory>
-        <property name="show_sql">false</property>
-        <property name="format_sql">false</property>
+        <property name="show_sql">true</property>
+        <property name="format_sql">true</property>
         
         <!-- 
         <property name="dialect">org.hibernate.dialect.SQLiteDialect</property>
@@ -18,14 +18,14 @@
         
         <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="connection.driver_class">org.postgresql.Driver</property>
-        <property name="connection.url">jdbc:postgresql://localhost:5432/bd_iris</property>
+        <property name="connection.url">jdbc:postgresql://localhost:5432/bd_iris_test</property>
         <property name="connection.username">pedro</property>
         <property name="connection.password">123</property>
 	
         
-<!--        <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.AddressBookEntry" />
+        <!-- <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.AddressBookEntry" />
         <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.EmailMessage" />
-        <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.IrisFolder" /> -->
+        <mapping class="irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.IrisFolder" />  -->
              
     </session-factory>
 </hibernate-configuration>

@@ -408,5 +408,48 @@
 				<version>1.2</version> </plugin> -->
 		</plugins>
 	</reporting>
-
+	<!-- <profiles>
+		<profile>
+			<id>db</id>
+			<activation>
+				<property>
+			        <name>db</name>
+			      </property>
+			</activation>
+			<properties>
+				<skipTests>true</skipTests>
+			</properties>
+			<build>
+				<plugins>
+				To run the plugin you just need a hibernate tool configuration 
+				("jdbcconfiguration", "configuration", "annotationconfiguration", "jpaconfiguration") 
+				inside a "hibernatetool" element in the configuration section of the plugin.
+					<plugin>
+						<groupId>org.codehaus.mojo</groupId>
+						<artifactId>hibernate3-maven-plugin</artifactId>
+						<version>3.0</version>
+						<configuration>
+							<hibernatetool>
+								<annotationconfiguration />
+							</hibernatetool>
+						</configuration>
+						<executions>
+		                    <execution>
+		                        <id>Generate hbm.xml mappings</id>
+		                        <phase>generate-sources</phase>
+		                        <configuration>
+									<hibernatetool>
+										<annotationconfiguration />
+									</hibernatetool>
+								</configuration>
+		                        <goals>
+		                            <goal>hbm2ddl</goal>
+		                        </goals>
+		                    </execution>
+		                </executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles> -->
 </project>
