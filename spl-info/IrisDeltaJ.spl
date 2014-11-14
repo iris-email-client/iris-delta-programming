@@ -19,11 +19,12 @@ SPL IrisDeltaJ {
 		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail,
 		dGmailProvider, dBaseFacade} when (Base);
 
+		{dConsole} when (Console);
+
 		{dPersistenceSqlite} when (RelationalDB);
 		
 		{dPersistenceLucene} when (LuceneDB);
 
-		{dConsole} when (Console);
 		
 		//TODO como trocar no caso de ser nao-relacional?
 		{dAddressBook, dAddressBookFacade, dAddressBookSqlite, dAddressBookConsole, dTestAddressBookDAO, dTestFolderDAO} when (AddressBook);

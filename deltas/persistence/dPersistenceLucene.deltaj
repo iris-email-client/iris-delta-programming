@@ -1,4 +1,8 @@
 delta dPersistenceLucene {
+	modifies br.unb.cic.iris.command.console.DownloadMessagesConsoleCommand {
+		adds import br.unb.cic.iris.persistence.lucene.EmailDAO;		
+	}
+	
 	adds{
 		package br.unb.cic.iris.core.model;
 

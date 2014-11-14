@@ -28,13 +28,13 @@
 				<modul delta="dBaseFacade" when="Base" />
 			</partition>
 			<partition>
+				<modul delta="dConsole" when="Console" />
+			</partition>
+			<partition>
 				<modul delta="dPersistenceSqlite" when="RelationalDB" />
 			</partition>
 			<partition>
 				<modul delta="dPersistenceLucene" when="LuceneDB" />
-			</partition>
-			<partition>
-				<modul delta="dConsole" when="Console" />
 			</partition>
 			<partition>
 				<modul delta="dAddressBook" when="AddressBook" />

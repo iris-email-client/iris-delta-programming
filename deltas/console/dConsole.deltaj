@@ -544,7 +544,6 @@ delta dConsole{
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.IrisFolder;
-		import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
 		
 		public class DownloadMessagesConsoleCommand extends AbstractMailCommand {
 			static final String COMMAND_NAME = "download";
