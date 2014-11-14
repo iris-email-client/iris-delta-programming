@@ -18,7 +18,7 @@
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 	</properties>
 	<issueManagement>
-	<system>GitHub Issues</system>
+		<system>GitHub Issues</system>
 		<url>https://github.com/iris-email-client/iris-delta-programming/issues</url>
 	</issueManagement>
 	<distributionManagement>
@@ -43,7 +43,7 @@
 				<role>Developer</role>
 			</roles>
 			<timezone>-3</timezone>
-		</developer> 
+		</developer>
 		<developer>
 			<id>2</id>
 			<name>Marcos César de Oliveira</name>
@@ -54,7 +54,7 @@
 				<role>Developer</role>
 			</roles>
 			<timezone>-3</timezone>
-		</developer> 
+		</developer>
 		<developer>
 			<id>3</id>
 			<name>Pedro Henrique Teixeira Costa</name>
@@ -65,7 +65,7 @@
 				<role>Developer</role>
 			</roles>
 			<timezone>-3</timezone>
-		</developer> 
+		</developer>
 	</developers>
 	<scm>
 		<connection>scm:git:https://github.com/iris-email-client/iris-delta-programming.git</connection>
@@ -78,11 +78,11 @@
 	</organization>
 	<licenses>
 		<license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
-        </license>
+			<name>Apache 2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
 	</licenses>
 	<dependencies>
 		<!-- java mail api -->
@@ -123,6 +123,23 @@
 			<version>3.2</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- Lucene -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<finalName>${iris.jar.name}</finalName>
@@ -374,7 +391,7 @@
 						</reports>
 					</reportSet>
 				</reportSets>
-			</plugin> 
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
@@ -408,48 +425,16 @@
 				<version>1.2</version> </plugin> -->
 		</plugins>
 	</reporting>
-	<!-- <profiles>
-		<profile>
-			<id>db</id>
-			<activation>
-				<property>
-			        <name>db</name>
-			      </property>
-			</activation>
-			<properties>
-				<skipTests>true</skipTests>
-			</properties>
-			<build>
-				<plugins>
-				To run the plugin you just need a hibernate tool configuration 
-				("jdbcconfiguration", "configuration", "annotationconfiguration", "jpaconfiguration") 
-				inside a "hibernatetool" element in the configuration section of the plugin.
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>hibernate3-maven-plugin</artifactId>
-						<version>3.0</version>
-						<configuration>
-							<hibernatetool>
-								<annotationconfiguration />
-							</hibernatetool>
-						</configuration>
-						<executions>
-		                    <execution>
-		                        <id>Generate hbm.xml mappings</id>
-		                        <phase>generate-sources</phase>
-		                        <configuration>
-									<hibernatetool>
-										<annotationconfiguration />
-									</hibernatetool>
-								</configuration>
-		                        <goals>
-		                            <goal>hbm2ddl</goal>
-		                        </goals>
-		                    </execution>
-		                </executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles> -->
+	<!-- <profiles> <profile> <id>db</id> <activation> <property> <name>db</name> 
+		</property> </activation> <properties> <skipTests>true</skipTests> </properties> 
+		<build> <plugins> To run the plugin you just need a hibernate tool configuration 
+		("jdbcconfiguration", "configuration", "annotationconfiguration", "jpaconfiguration") 
+		inside a "hibernatetool" element in the configuration section of the plugin. 
+		<plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>hibernate3-maven-plugin</artifactId> 
+		<version>3.0</version> <configuration> <hibernatetool> <annotationconfiguration 
+		/> </hibernatetool> </configuration> <executions> <execution> <id>Generate 
+		hbm.xml mappings</id> <phase>generate-sources</phase> <configuration> <hibernatetool> 
+		<annotationconfiguration /> </hibernatetool> </configuration> <goals> <goal>hbm2ddl</goal> 
+		</goals> </execution> </executions> </plugin> </plugins> </build> </profile> 
+		</profiles> -->
 </project>
