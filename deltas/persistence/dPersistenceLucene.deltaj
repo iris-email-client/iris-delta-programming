@@ -2,6 +2,14 @@ delta dPersistenceLucene {
 	modifies br.unb.cic.iris.command.console.DownloadMessagesConsoleCommand {
 		adds import br.unb.cic.iris.persistence.lucene.EmailDAO;		
 	}
+	modifies br.unb.cic.iris.core.FolderManager{
+		adds import br.unb.cic.iris.persistence.lucene.EmailDAO;
+		adds import br.unb.cic.iris.persistence.lucene.FolderDAO;		
+	}
+	modifies br.unb.cic.iris.core.SystemFacade {
+		adds import br.unb.cic.iris.persistence.lucene.EmailDAO;
+		adds import br.unb.cic.iris.persistence.lucene.FolderDAO;		
+	}
 	
 	adds{
 		package br.unb.cic.iris.core.model;
@@ -27,54 +35,7 @@ delta dPersistenceLucene {
 			}
 		}
 	}
-	
-	removes br.unb.cic.iris.core.model.IrisFolder;
-	adds{
-		package br.unb.cic.iris.core.model;
-
-		import java.util.ArrayList;
-		import java.util.List;
 		
-		public class IrisFolder extends FolderContent { 
-			public static final String INBOX = "INBOX";
-			public static final String OUTBOX = "OUTBOX";
-			
-			private String name;
-			
-			private List<FolderContent> contents;
-		
-			public IrisFolder() {
-				this(null,"");
-			}
-			
-			public IrisFolder(String name) {
-				this(null,name);
-			}
-		
-			public IrisFolder(Integer id, String name) {
-				super(id);
-				this.name = name;
-				contents = new ArrayList<FolderContent>();
-			}
-		
-			public String getName() {
-				return name;
-			}
-		
-			public void setName(String name) {
-				this.name = name;
-			}
-		
-			public void addElement(FolderContent e) {
-				contents.add(e);
-			}
-		
-			public List<FolderContent> getContents() {
-				return contents;
-			}
-		}
-	}	
-	
 	adds{
 		package br.unb.cic.iris.core.model;
 		
@@ -376,6 +337,18 @@ delta dPersistenceLucene {
 				return null;
 			}
 			
+			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
+				return null;
+			}
+			
+			public List<EmailMessage> findAll() throws DBException {
+				return null;
+			}
+			
+			public EmailMessage findById(Long id) throws DBException {
+				return null;
+			}
+			
 			protected void saveDocument(Document doc) throws DBException {
 				try {
 					Analyzer analyzer = new StandardAnalyzer();
@@ -406,38 +379,43 @@ delta dPersistenceLucene {
 		
 		}		
 	}
-	/*
+
 	adds {
-		package br.unb.cic.iris.persistence.sqlite3;
+		package br.unb.cic.iris.persistence.lucene;
+		
+		import java.util.List;
 		
 		import br.unb.cic.iris.i18n.MessageBundle;
 		
 		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		import br.unb.cic.iris.persistence.IFolderDAO;
-
-		import org.hibernate.Criteria;
-		import org.hibernate.criterion.Restrictions;
 		
-		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
+		public class FolderDAO /*extends AbstractDAO<IrisFolder>*/ implements IFolderDAO {
+
+			private static FolderDAO instance;
+			
+			private FolderDAO(){ }
+			
+			public static FolderDAO instance(){
+				if(instance == null){
+					instance = new FolderDAO();
+				}
+				return instance;
+			}
+
 			public IrisFolder findByName(String folderName) throws DBException {
-			try {
-				startSession();
-				Criteria criteria = session.createCriteria(IrisFolder.class);
-				criteria.add(Restrictions.eq("name", folderName));
-				return (IrisFolder) criteria.uniqueResult();
+				return null;
 			}
-			catch(Exception e) {
-				throw new DBException(MessageBundle.message("error.folder.not.found",
-						folderName), e);
+
+			public List<IrisFolder> findAll() throws DBException {
+				return null;
 			}
-			finally {
-				closeSession();
+			
+			public IrisFolder findById(Integer id) throws DBException {
+				return null;
 			}
-		}
-		}		
-	}
-	*/
-	
+		}	
+	}	
 
 }
