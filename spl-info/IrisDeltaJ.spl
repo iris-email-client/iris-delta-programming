@@ -3,8 +3,9 @@ SPL IrisDeltaJ {
 	Features = {Base, Persistence, RelationalDB, TextualDB, LuceneDB, UI, Console, Window, AddressBook}
 
 	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
-	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dPersistenceLucene, dConsole,
-	dAddressBook, dAddressBookSqlite, dAddressBookConsole}
+	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dPersistenceLucene, 
+	dConsole, dAddressBook, dAddressBookFacade, dAddressBookSqlite, dAddressBookConsole, 
+	dAddressBookSqlite, dTestAddressBookDAO, dTestFolderDAO}
 
 	Constraints {
 	// Put boolean expression representation of the feature model here.
@@ -25,7 +26,7 @@ SPL IrisDeltaJ {
 		{dConsole} when (Console);
 		
 		//TODO como trocar no caso de ser nao-relacional?
-		{dAddressBook, dAddressBookSqlite, dAddressBookConsole} when (AddressBook);
+		{dAddressBook, dAddressBookFacade, dAddressBookSqlite, dAddressBookConsole, dTestAddressBookDAO, dTestFolderDAO} when (AddressBook);
 
 	}
 

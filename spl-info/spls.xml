@@ -39,8 +39,11 @@
 			</partition>
 			<partition>
 				<modul delta="dAddressBook" when="AddressBook" />
+				<modul delta="dAddressBookFacade" when="AddressBook" />
 				<modul delta="dAddressBookSqlite" when="AddressBook" />
 				<modul delta="dAddressBookConsole" when="AddressBook" />
+				<modul delta="dTestAddressBookDAO" when="AddressBook" />
+				<modul delta="dTestFolderDAO" when="AddressBook" />
 			</partition>
 		</deltas>
 	</spl>
