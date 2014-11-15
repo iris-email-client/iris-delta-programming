@@ -143,6 +143,7 @@ delta dPersistenceLucene {
 		import org.apache.lucene.index.DirectoryReader;
 		import org.apache.lucene.index.IndexWriter;
 		import org.apache.lucene.index.IndexWriterConfig;
+		import org.apache.lucene.index.IndexReader;
 		import org.apache.lucene.index.Term;
 		import org.apache.lucene.index.AtomicReaderContext;
 		import org.apache.lucene.search.BooleanClause.Occur;
@@ -179,7 +180,40 @@ delta dPersistenceLucene {
 		
 			/* the single instance of EmailDAO */
 			private static EmailDAO instance = new EmailDAO();
-		
+
+			private class EmailMessageCollector extends Collector {
+				
+				private IndexSearcher searcher;
+
+				private List<EmailMessage> result;
+				
+				public EmailMessageCollector(IndexSearcher searcher, List<EmailMessage> result) {
+					this.searcher = searcher;
+					this.result = result;
+				}
+
+				public void setScorer(Scorer scorer) {
+				}
+			   				
+				public boolean acceptsDocsOutOfOrder() {
+					return true;
+				}
+			 
+				public void collect(int doc) {
+					try {
+						Document d = searcher.doc(doc);
+						result.add(messageFromDocument(doc, d));							
+					} catch (IOException e) {
+						throw new RuntimeException(e);
+					} catch (ParseException e) {
+						throw new RuntimeException(e);
+					}
+				}
+			 
+				public void setNextReader(AtomicReaderContext context) throws IOException {
+				}				
+			}
+
 			/* private constructor, according to the singleton pattern */
 			private EmailDAO() {
 			}
@@ -235,45 +269,15 @@ delta dPersistenceLucene {
 			}
 			
 			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
-				final List<EmailMessage> result = new ArrayList<EmailMessage>();
+				List<EmailMessage> result = new ArrayList<EmailMessage>();
 				try {						
 					Query typeQuery = new TermQuery(new Term("type", "email"));
 					Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
 					BooleanQuery query = new BooleanQuery();
 					query.add(typeQuery, Occur.MUST);
 					query.add(folderQuery, Occur.MUST);
-					final IndexSearcher searcher = IndexManager.getSearcher();
-					Collector collector = new Collector() {
-						public void setScorer(Scorer scorer) {
-						}
-					   				
-						public boolean acceptsDocsOutOfOrder() {
-							return true;
-						}
-					 
-						public void collect(int doc) {
-							try {
-								Document d = searcher.doc(doc);
-								EmailMessage m = new EmailMessage();
-								m.setFrom(d.get("from"));
-								m.setTo(d.get("to"));
-								m.setCc(d.get("cc"));
-								m.setBcc(d.get("bcc"));
-								m.setSubject(d.get("subject"));
-								m.setMessage(d.get("message"));
-								m.setDate(DateTools.stringToDate(d.get("date")));	
-								result.add(m);							
-							} catch (IOException e) {
-								throw new RuntimeException(e);
-							} catch (ParseException e) {
-								throw new RuntimeException(e);
-							}
-						}
-					 
-						public void setNextReader(AtomicReaderContext context) throws IOException {
-						}					
-					};
-					searcher.search(query, collector);
+					IndexSearcher searcher = IndexManager.getSearcher();
+					searcher.search(query, new EmailMessageCollector(searcher, result));
 				} catch (IOException e) {
 					throw new DBException("An error occurred while retrieving messages on folder", e);
 				}
@@ -281,11 +285,43 @@ delta dPersistenceLucene {
 			}
 			
 			public List<EmailMessage> findAll() throws DBException {
-				return null;
+				List<EmailMessage> result = new ArrayList<EmailMessage>();
+				try {						
+					Query query = new TermQuery(new Term("type", "email"));
+					IndexSearcher searcher = IndexManager.getSearcher();
+					searcher.search(query, new EmailMessageCollector(searcher, result));
+				} catch (IOException e) {
+					throw new DBException("An error occurred while retrieving all messages", e);
+				}
+				return result;
 			}
 			
 			public EmailMessage findById(Long id) throws DBException {
-				return null;
+				try {
+					IndexReader reader = IndexManager.getReader();
+					Document doc = reader.document(id.intValue());
+					return messageFromDocument(id.intValue(), doc);
+				} catch (IOException e) {
+					throw new DBException("An error occurred while retrieving message by id", e);
+				} catch (ParseException e) {
+					throw new DBException("An error occurred while retrieving message by id", e);
+				}
+			}
+			
+			protected EmailMessage messageFromDocument(int doc, Document d) throws ParseException {
+				EmailMessage m = new EmailMessage();
+				m.setId(doc);
+				m.setFrom(d.get("from"));
+				m.setTo(d.get("to"));
+				m.setCc(d.get("cc"));
+				m.setBcc(d.get("bcc"));
+				m.setSubject(d.get("subject"));
+				m.setMessage(d.get("message"));
+				m.setDate(DateTools.stringToDate(d.get("date")));
+				IrisFolder f = new IrisFolder();
+				f.setId((int) Long.parseLong(d.get("folderId")));
+				m.setFolder(f);	
+				return m;				
 			}
 			
 			protected void saveDocument(Document doc) throws DBException {
@@ -311,6 +347,9 @@ delta dPersistenceLucene {
 				EmailDAO emailDAO = new EmailDAO();
 				emailDAO.saveMessage(message);
 				System.out.println(emailDAO.listMessages(19));
+				System.out.println(emailDAO.findAll());
+				System.out.println(emailDAO.findById((long) emailDAO.findAll().iterator().next().getId()));
+				System.out.println(emailDAO.findById((long) emailDAO.findAll().iterator().next().getId()).getSubject());
 			}
 		
 		}		
@@ -443,7 +482,7 @@ delta dPersistenceLucene {
 				return writer;
 			}
 		
-			private static IndexReader getReader() throws IOException {
+			static IndexReader getReader() throws IOException {
 				if (reader == null) {
 					reader = DirectoryReader.open(getIndex());
 				} else {
