@@ -24,6 +24,8 @@ delta dPersistenceLucene {
 		import org.apache.lucene.index.IndexReader;
 		import org.apache.lucene.index.IndexWriter;
 		import org.apache.lucene.index.Term;
+		import org.apache.lucene.search.BooleanClause.Occur;
+		import org.apache.lucene.search.BooleanQuery;
 		import org.apache.lucene.search.Collector;
 		import org.apache.lucene.search.IndexSearcher;
 		import org.apache.lucene.search.TermQuery;
@@ -86,9 +88,25 @@ delta dPersistenceLucene {
 					writer.addDocument(doc);
 					writer.commit();
 				} catch (IOException e) {
-					throw new DBException("An error occurred while saving e-mail message.", e);
+					throw new DBException("An error occurred while saving " + type + ".", e);
 				}
 			}
+			
+			protected List<T> findByTerms(Query[] queries) throws DBException {
+				List<T> result = new ArrayList<T>();
+				try {						
+					BooleanQuery query = new BooleanQuery();
+					for (Query q : queries) {
+						query.add(q, Occur.MUST);
+					}
+					IndexSearcher searcher = IndexManager.getSearcher();
+					searcher.search(query, new TCollector(searcher, result));
+				} catch (IOException e) {
+					throw new DBException(e.getMessage(), e);
+				}
+				return result;
+			}
+			
 
 			protected abstract T fromDocument(int id, Document doc) throws Exception;
 
@@ -212,19 +230,9 @@ delta dPersistenceLucene {
 			}
 			
 			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
-				List<EmailMessage> result = new ArrayList<EmailMessage>();
-				try {						
-					Query typeQuery = new TermQuery(new Term("type", "email"));
-					Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
-					BooleanQuery query = new BooleanQuery();
-					query.add(typeQuery, Occur.MUST);
-					query.add(folderQuery, Occur.MUST);
-					IndexSearcher searcher = IndexManager.getSearcher();
-					searcher.search(query, new TCollector(searcher, result));
-				} catch (IOException e) {
-					throw new DBException("An error occurred while retrieving messages on folder", e);
-				}
-				return result;
+				Query typeQuery = new TermQuery(new Term("type", "email"));
+				Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
+				return findByTerms(new Query[] { typeQuery, folderQuery });
 			}
 
 			protected EmailMessage fromDocument(int doc, Document d) throws ParseException {
@@ -305,19 +313,11 @@ delta dPersistenceLucene {
 
 			public IrisFolder findByName(String folderName) throws DBException {
 				List<IrisFolder> result = new ArrayList<IrisFolder>();
-				try {						
-					Query typeQuery = new TermQuery(new Term("type", "folder"));
-					Query nameQuery = new TermQuery(new Term("name", folderName));
-					BooleanQuery query = new BooleanQuery();
-					query.add(typeQuery, Occur.MUST);
-					query.add(nameQuery, Occur.MUST);
-					IndexSearcher searcher = IndexManager.getSearcher();
-					searcher.search(query, new TCollector(searcher, result));
-					if (result.isEmpty()) {
-						throw new DBException("Folder name not found", null);
-					}
-				} catch (IOException e) {
-					throw new DBException("An error occurred while retrieving folder by name", e);
+				Query typeQuery = new TermQuery(new Term("type", "folder"));
+				Query nameQuery = new TermQuery(new Term("name", folderName));
+				result = findByTerms(new Query[] { typeQuery, nameQuery });
+				if (result.isEmpty()) {
+					throw new DBException("Folder name not found", null);
 				}
 				return result.iterator().next();
 			}
