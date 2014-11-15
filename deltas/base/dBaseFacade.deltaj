@@ -188,13 +188,13 @@ delta dBaseFacade {
 					return "ROOT";
 				}
 				try {
-					return FolderDAO.instance().findById(currentFolderId).getName();
+					return FolderDAO.instance().findById((long) currentFolderId).getName();
 				} catch (DBException e) {
 					throw new EmailUncheckedException(e.getMessage(),e);
 				}
 			}
 			public void changeToFolder(Integer folderId) throws DBException {
-				IrisFolder folder = FolderDAO.instance().findById(folderId);
+				IrisFolder folder = FolderDAO.instance().findById((long) folderId);
 				if(folder != null) {
 					currentFolderId = folderId;
 				}

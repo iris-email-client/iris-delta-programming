@@ -11,115 +11,90 @@ delta dPersistenceLucene {
 		adds import br.unb.cic.iris.persistence.lucene.FolderDAO;		
 	}
 
-	/*
 	adds {
-		package br.unb.cic.iris.persistence.sqlite3;
+		package br.unb.cic.iris.persistence.lucene;
 		
+		import java.io.IOException;
 		import java.lang.reflect.ParameterizedType;
+		import java.text.ParseException;
+		import java.util.ArrayList;
 		import java.util.List;
 		
-		import org.hibernate.HibernateException;
-		import org.hibernate.Query;
-		import org.hibernate.Session;
-		import org.hibernate.criterion.MatchMode;
+		import org.apache.lucene.document.Document;
+		import org.apache.lucene.index.IndexReader;
+		import org.apache.lucene.index.IndexWriter;
+		import org.apache.lucene.index.Term;
+		import org.apache.lucene.search.Collector;
+		import org.apache.lucene.search.IndexSearcher;
+		import org.apache.lucene.search.TermQuery;
+		import org.apache.lucene.search.Query;
 		
 		import br.unb.cic.iris.core.exception.DBException;
-		import br.unb.cic.iris.util.HibernateUtil;
 		
 		public abstract class AbstractDAO<T> {
+
 			private Class<T> clazz;
-			protected Session session;
+			
+			protected String type;
+
+			protected class TCollector extends AbstractCollector {
+				
+				private IndexSearcher searcher;
+
+				private List<T> result;
+				
+				public TCollector(IndexSearcher searcher, List<T> result) {
+					this.searcher = searcher;
+					this.result = result;
+				}
+
+				public void tryCollect(int doc) throws Exception {
+					Document d = searcher.doc(doc);
+					result.add(fromDocument(doc, d));
+				}
+			}
 			
 			public AbstractDAO(){
 				clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 			}
-			
-			public void saveOrUpdate(T obj) throws DBException {
-		        try {
-		            startSession();
-		            session.saveOrUpdate(obj);
-		            session.getTransaction().commit();
-		        } catch (HibernateException e) {
-		            handleException(e);
-		        } finally {
-		        	closeSession();
-		        }
-		    }
-			
-			public void delete(T t) throws DBException {
-				try {
-		            startSession();
-		            session.delete(t);
-		            session.getTransaction().commit();
-		        } catch (HibernateException e) {
-		            handleException(e);
-		        } finally {
-		        	closeSession();
-		        }
+
+			public List<T> findAll() throws DBException {
+				List<T> result = new ArrayList<T>();
+				try {						
+					Query query = new TermQuery(new Term("type", type));
+					IndexSearcher searcher = IndexManager.getSearcher();
+					searcher.search(query, new TCollector(searcher, result));
+				} catch (IOException e) {
+					throw new DBException("An error occurred while retrieving all " + clazz.getName() + "s", e);
+				}
+				return result;
 			}
 			
 			public T findById(Long id) throws DBException {
-		        T obj = null;
-		        try {
-		            startSession();
-		            obj = (T) session.load(clazz, id);
-		            session.getTransaction().commit();
-		        } catch (HibernateException e) {
-		            handleException(e);
-		        } finally {
-		        	closeSession();
-		        }
-		        return obj;
-		    }
-		
-		    public List<T> findAll() throws DBException {
-		        List<T> objects = null;
-		        try {
-		            startSession();
-		            Query query = session.createQuery("from " + clazz.getName());
-		            objects = query.list();
-		            session.getTransaction().commit();
-		        } catch (HibernateException e) {
-		            handleException(e);
-		        } finally {
-		        	closeSession();
-		        }
-		        return objects;
-		    }
-		
-			public List<T> findByExample(T filtro, MatchMode matchMode, boolean ignoreCase){
-				org.hibernate.criterion.Example example = org.hibernate.criterion.Example.create(filtro);
-		
-				if(matchMode != null){
-					example = example.enableLike(matchMode);
+				try {
+					IndexReader reader = IndexManager.getReader();
+					Document doc = reader.document(id.intValue());
+					return fromDocument(id.intValue(), doc);
+				} catch (Exception e) {
+					throw new DBException("An error occurred while retrieving by id", e);
 				}
-		
-				if(ignoreCase){
-					example = example.ignoreCase();
-				}
-		
-				return session.createCriteria(clazz).add(example).list();
 			}
 			
-			protected void handleException(Exception e) throws DBException {
-				session.getTransaction().rollback();
-		        throw new DBException(e.getMessage(), e);
-		    }
-		
-		    protected void startSession() throws HibernateException {
-		        session = HibernateUtil.getSessionFactory().openSession();
-		        session.beginTransaction();
-		    }
-		    
-			protected void closeSession() {
-				if(session != null && session.isOpen()) {
-					session.flush();
-					session.close();
+			protected void saveDocument(Document doc) throws DBException {
+				try {
+					IndexWriter writer = IndexManager.getWriter();
+					writer.addDocument(doc);
+					writer.commit();
+				} catch (IOException e) {
+					throw new DBException("An error occurred while saving e-mail message.", e);
 				}
 			}
+
+			protected abstract T fromDocument(int id, Document doc) throws Exception;
+
 		}		
 	}
-	*/
+
 	adds {
 		package br.unb.cic.iris.persistence.lucene;
 		
@@ -176,46 +151,14 @@ delta dPersistenceLucene {
 		 * An implementation of @see br.unb.cic.iris.persistence.EmailDAO using Lucene.
 		 *
 		 */
-		public final class EmailDAO /*extends AbstractDAO<EmailMessage>*/ implements IEmailDAO {
+		public final class EmailDAO extends AbstractDAO<EmailMessage> implements IEmailDAO {
 		
 			/* the single instance of EmailDAO */
 			private static EmailDAO instance = new EmailDAO();
 
-			private class EmailMessageCollector extends Collector {
-				
-				private IndexSearcher searcher;
-
-				private List<EmailMessage> result;
-				
-				public EmailMessageCollector(IndexSearcher searcher, List<EmailMessage> result) {
-					this.searcher = searcher;
-					this.result = result;
-				}
-
-				public void setScorer(Scorer scorer) {
-				}
-			   				
-				public boolean acceptsDocsOutOfOrder() {
-					return true;
-				}
-			 
-				public void collect(int doc) {
-					try {
-						Document d = searcher.doc(doc);
-						result.add(messageFromDocument(doc, d));							
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					} catch (ParseException e) {
-						throw new RuntimeException(e);
-					}
-				}
-			 
-				public void setNextReader(AtomicReaderContext context) throws IOException {
-				}				
-			}
-
 			/* private constructor, according to the singleton pattern */
 			private EmailDAO() {
+				this.type = "email";
 			}
 		
 			/**
@@ -277,38 +220,14 @@ delta dPersistenceLucene {
 					query.add(typeQuery, Occur.MUST);
 					query.add(folderQuery, Occur.MUST);
 					IndexSearcher searcher = IndexManager.getSearcher();
-					searcher.search(query, new EmailMessageCollector(searcher, result));
+					searcher.search(query, new TCollector(searcher, result));
 				} catch (IOException e) {
 					throw new DBException("An error occurred while retrieving messages on folder", e);
 				}
 				return result;
 			}
-			
-			public List<EmailMessage> findAll() throws DBException {
-				List<EmailMessage> result = new ArrayList<EmailMessage>();
-				try {						
-					Query query = new TermQuery(new Term("type", "email"));
-					IndexSearcher searcher = IndexManager.getSearcher();
-					searcher.search(query, new EmailMessageCollector(searcher, result));
-				} catch (IOException e) {
-					throw new DBException("An error occurred while retrieving all messages", e);
-				}
-				return result;
-			}
-			
-			public EmailMessage findById(Long id) throws DBException {
-				try {
-					IndexReader reader = IndexManager.getReader();
-					Document doc = reader.document(id.intValue());
-					return messageFromDocument(id.intValue(), doc);
-				} catch (IOException e) {
-					throw new DBException("An error occurred while retrieving message by id", e);
-				} catch (ParseException e) {
-					throw new DBException("An error occurred while retrieving message by id", e);
-				}
-			}
-			
-			protected EmailMessage messageFromDocument(int doc, Document d) throws ParseException {
+
+			protected EmailMessage fromDocument(int doc, Document d) throws ParseException {
 				EmailMessage m = new EmailMessage();
 				m.setId(doc);
 				m.setFrom(d.get("from"));
@@ -322,16 +241,6 @@ delta dPersistenceLucene {
 				f.setId((int) Long.parseLong(d.get("folderId")));
 				m.setFolder(f);	
 				return m;				
-			}
-			
-			protected void saveDocument(Document doc) throws DBException {
-				try {
-					IndexWriter writer = IndexManager.getWriter();
-					writer.addDocument(doc);
-					writer.commit();
-				} catch (IOException e) {
-					throw new DBException("An error occurred while saving e-mail message.", e);
-				}
 			}
 			
 			public static void main(String[] args) throws DBException {
@@ -357,8 +266,21 @@ delta dPersistenceLucene {
 
 	adds {
 		package br.unb.cic.iris.persistence.lucene;
+
+		import java.io.IOException;
 		
+		import java.text.ParseException;
+		
+		import java.util.ArrayList;
 		import java.util.List;
+		
+		import org.apache.lucene.document.Document;
+		import org.apache.lucene.index.Term;
+		import org.apache.lucene.search.Query;
+		import org.apache.lucene.search.BooleanClause.Occur;
+		import org.apache.lucene.search.BooleanQuery;
+		import org.apache.lucene.search.IndexSearcher;
+		import org.apache.lucene.search.TermQuery;
 		
 		import br.unb.cic.iris.i18n.MessageBundle;
 		
@@ -366,11 +288,13 @@ delta dPersistenceLucene {
 		import br.unb.cic.iris.core.model.IrisFolder;
 		import br.unb.cic.iris.persistence.IFolderDAO;
 		
-		public class FolderDAO /*extends AbstractDAO<IrisFolder>*/ implements IFolderDAO {
+		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
 
 			private static FolderDAO instance;
 			
-			private FolderDAO(){ }
+			private FolderDAO() { 
+				this.type = "folder";
+			}
 			
 			public static FolderDAO instance(){
 				if(instance == null){
@@ -380,16 +304,31 @@ delta dPersistenceLucene {
 			}
 
 			public IrisFolder findByName(String folderName) throws DBException {
-				return null;
+				List<IrisFolder> result = new ArrayList<IrisFolder>();
+				try {						
+					Query typeQuery = new TermQuery(new Term("type", "folder"));
+					Query nameQuery = new TermQuery(new Term("name", folderName));
+					BooleanQuery query = new BooleanQuery();
+					query.add(typeQuery, Occur.MUST);
+					query.add(nameQuery, Occur.MUST);
+					IndexSearcher searcher = IndexManager.getSearcher();
+					searcher.search(query, new TCollector(searcher, result));
+					if (result.isEmpty()) {
+						throw new DBException("Folder name not found", null);
+					}
+				} catch (IOException e) {
+					throw new DBException("An error occurred while retrieving folder by name", e);
+				}
+				return result.iterator().next();
 			}
 
-			public List<IrisFolder> findAll() throws DBException {
-				return null;
+			protected IrisFolder fromDocument(int doc, Document d) throws ParseException {
+				IrisFolder f = new IrisFolder();
+				f.setId(doc);
+				f.setName(d.get("name"));
+				return f;				
 			}
-			
-			public IrisFolder findById(Integer id) throws DBException {
-				return null;
-			}
+
 		}	
 	}	
 	
@@ -503,6 +442,42 @@ delta dPersistenceLucene {
 			}
 		
 		}		
+	}
+	
+	adds {
+
+		package br.unb.cic.iris.persistence.lucene;
+		
+		import java.io.IOException;
+		import java.text.ParseException;
+		
+		import org.apache.lucene.index.AtomicReaderContext;
+		import org.apache.lucene.search.Collector;
+		import org.apache.lucene.search.Scorer;
+
+		public abstract class AbstractCollector extends Collector {
+
+			public void setScorer(Scorer scorer) {
+			}
+		   				
+			public boolean acceptsDocsOutOfOrder() {
+				return true;
+			}
+		 
+			public void collect(int doc) {
+				try {
+					tryCollect(doc);
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+			}
+		
+			abstract void tryCollect(int doc) throws Exception;			
+		 
+			public void setNextReader(AtomicReaderContext context) throws IOException {
+			}				
+		}
+		
 	}
 
 }
