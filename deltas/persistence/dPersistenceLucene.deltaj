@@ -149,6 +149,7 @@ delta dPersistenceLucene {
 		import org.apache.lucene.search.BooleanQuery;
 		import org.apache.lucene.search.Collector;
 		import org.apache.lucene.search.IndexSearcher;
+		import org.apache.lucene.search.NumericRangeQuery;
 		import org.apache.lucene.search.Query;
 		import org.apache.lucene.search.Scorer;
 		import org.apache.lucene.search.Sort;
@@ -163,6 +164,7 @@ delta dPersistenceLucene {
 		import org.apache.lucene.store.Directory;
 		import org.apache.lucene.store.FSDirectory;
 		import org.apache.lucene.util.Version;
+		import org.apache.lucene.util.NumericUtils;
 
 		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.model.EmailMessage;
@@ -233,10 +235,10 @@ delta dPersistenceLucene {
 			}
 			
 			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
-				List<EmailMessage> result = new ArrayList<EmailMessage>();
+				final List<EmailMessage> result = new ArrayList<EmailMessage>();
 				try {						
 					Query typeQuery = new TermQuery(new Term("type", "email"));
-					Query folderQuery = new TermQuery(new Term("folderId", String.valueOf(idFolder.longValue())));
+					Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
 					BooleanQuery query = new BooleanQuery();
 					query.add(typeQuery, Occur.MUST);
 					query.add(folderQuery, Occur.MUST);
@@ -259,7 +261,8 @@ delta dPersistenceLucene {
 								m.setBcc(d.get("bcc"));
 								m.setSubject(d.get("subject"));
 								m.setMessage(d.get("message"));
-								m.setDate(DateTools.stringToDate(d.get("date")));								
+								m.setDate(DateTools.stringToDate(d.get("date")));	
+								result.add(m);							
 							} catch (IOException e) {
 								throw new RuntimeException(e);
 							} catch (ParseException e) {
@@ -307,6 +310,7 @@ delta dPersistenceLucene {
 				message.setFolder(new IrisFolder(19, "UnB"));
 				EmailDAO emailDAO = new EmailDAO();
 				emailDAO.saveMessage(message);
+				System.out.println(emailDAO.listMessages(19));
 			}
 		
 		}		
