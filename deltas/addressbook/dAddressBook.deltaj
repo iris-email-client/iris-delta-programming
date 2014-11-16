@@ -53,13 +53,6 @@ delta dAddressBook {
 			}
 		}
 	}
-	modifies br.unb.cic.iris.util.HibernateUtil {
-		adds import br.unb.cic.iris.core.model.AddressBookEntry;
-		modifies configureClasses() {
-			classList.add(AddressBookEntry.class);
-			original();
-		}
-	}
 	adds{
 		package br.unb.cic.iris.persistence;
 
