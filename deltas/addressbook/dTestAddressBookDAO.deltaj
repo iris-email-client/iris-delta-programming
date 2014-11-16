@@ -1,15 +1,13 @@
 delta dTestAddressBookDAO {
 
 	adds {
-		package br.unb.cic.iris.core;
+		package br.unb.cic.iris.core.test;
 
-		import
-		irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.AddressBookEntry;
-		import irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.EmailMessage;
-		import irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.FolderContent;
-		import irisdeltaj.simpleaddressbook.br.unb.cic.iris.core.model.IrisFolder;
-		import
-		irisdeltaj.simpleaddressbook.br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
+		import br.unb.cic.iris.core.model.AddressBookEntry;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.FolderContent;
+		import br.unb.cic.iris.core.model.IrisFolder;
+		import br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
 
 		import org.hibernate.SessionFactory;
 		import org.hibernate.cfg.AnnotationConfiguration;

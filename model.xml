@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+	<featureModel chosenLayoutAlgorithm="1">
+		<struct>
+			<and abstract="true" mandatory="true" name="irisdeltaprogramming">
+				<feature name="Base"/>
+				<or mandatory="true" name="Persistence">
+					<feature mandatory="true" name="Relational"/>
+					<feature mandatory="true" name="Textual"/>
+				</or>
+				<feature name="AddressBook"/>
+				<or mandatory="true" name="UI">
+					<feature mandatory="true" name="Console"/>
+					<feature abstract="true" mandatory="true" name="GUI"/>
+				</or>
+			</and>
+		</struct>
+		<constraints/>
+		<calculations Auto="true" Constraints="true" Features="true" Redundant="true" Tautology="true"/>
+		<comments/>
+		<featureOrder userDefined="false"/>
+	</featureModel>

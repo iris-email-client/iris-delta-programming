@@ -565,10 +565,10 @@ delta dConsole{
 				SystemFacade.instance().downloadMessages(folder);
 		
 				//just to test ... TODO remove for production
-				List<EmailMessage> list = EmailDAO.instance().findAll();
-				for(EmailMessage msg: list){
-					System.out.println("---> "+msg.getFrom()+" -- "+msg.getSubject());
-				}
+//				List<EmailMessage> list = EmailDAO.instance().findAll();
+//				for(EmailMessage msg: list){
+//					System.out.println("---> "+msg.getFrom()+" -- "+msg.getSubject());
+//				}
 		
 			}
 		

@@ -1,7 +1,4 @@
 delta dPersistenceSqlite {
-	modifies br.unb.cic.iris.command.console.DownloadMessagesConsoleCommand {
-		adds import br.unb.cic.iris.persistence.sqlite3.EmailDAO;		
-	}
 	modifies br.unb.cic.iris.core.FolderManager{
 		adds import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
 		adds import br.unb.cic.iris.persistence.sqlite3.FolderDAO;		

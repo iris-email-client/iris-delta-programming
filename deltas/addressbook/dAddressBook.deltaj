@@ -80,5 +80,5 @@ delta dAddressBook {
 			
 			public void delete(String nick) throws DBException;
 		}
-	}
+	}	
 }

@@ -1,4 +1,4 @@
-delta dAddressBookSqlite {
+delta dAddressBookRelational {
 	adds{
 		package br.unb.cic.iris.persistence.sqlite3;
 
@@ -58,5 +58,5 @@ delta dAddressBookSqlite {
 				}
 			}
 		}
-	}
+	}	
 }
