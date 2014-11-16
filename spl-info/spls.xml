@@ -29,6 +29,7 @@
 			</partition>
 			<partition>
 				<modul delta="dPersistenceSqlite" when="RelationalDB" />
+				<modul delta="dTestFolderDAO" when="RelationalDB" />
 			</partition>
 			<partition>
 				<modul delta="dPersistenceLucene" when="LuceneDB" />

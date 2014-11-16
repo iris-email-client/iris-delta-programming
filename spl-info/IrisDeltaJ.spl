@@ -19,7 +19,7 @@ SPL IrisDeltaJ {
 		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail,
 		dGmailProvider, dBaseFacade} when (Base);
 
-		{dPersistenceSqlite} when (RelationalDB);
+		{dPersistenceSqlite, dTestFolderDAO} when (RelationalDB);
 		
 		{dPersistenceLucene} when (LuceneDB);
 
