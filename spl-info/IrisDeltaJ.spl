@@ -3,7 +3,7 @@ SPL IrisDeltaJ {
 	Features = {Base, Persistence, RelationalDB, LuceneDB, UI, Console, Window, AddressBook}
 
 	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
-	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceSqlite, dPersistenceLucene, 
+	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceRelational, dPersistenceLucene, 
 	dAddressBook, dAddressBookRelational, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, 
 	dTestAddressBookDAO, dTestFolderDAO, dConsole}
 
@@ -19,7 +19,7 @@ SPL IrisDeltaJ {
 		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail,
 		dGmailProvider, dBaseFacade} when (Base);
 
-		{dPersistenceSqlite, dTestFolderDAO} when (RelationalDB);
+		{dPersistenceRelational, dTestFolderDAO} when (RelationalDB);
 		
 		{dPersistenceLucene} when (LuceneDB);
 
@@ -35,6 +35,6 @@ SPL IrisDeltaJ {
 		SimpleRelationalAddressBook = {Base, RelationalDB, AddressBook, Console};
 		SimpleLucene = {Base, LuceneDB, Console};
 		SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};		
-	}
+	} 
 } 
  

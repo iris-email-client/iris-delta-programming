@@ -1,5 +1,5 @@
 delta dAddressBookRelational {
-	modifies br.unb.cic.iris.persistence.HibernateUtil {
+	modifies br.unb.cic.iris.persistence.relational.HibernateUtil {
 		adds import br.unb.cic.iris.core.model.AddressBookEntry;
 		modifies configureClasses() {
 			classList.add(AddressBookEntry.class);
@@ -7,7 +7,7 @@ delta dAddressBookRelational {
 		}
 	}	
 	adds{
-		package br.unb.cic.iris.persistence.sqlite3;
+		package br.unb.cic.iris.persistence.relational;
 
 		import java.util.List;
 		
@@ -67,6 +67,6 @@ delta dAddressBookRelational {
 		}
 	}
 	modifies br.unb.cic.iris.core.SystemFacade {
-		adds import br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
+		adds import br.unb.cic.iris.persistence.relational.AddressBookDAO;
 	}				
 }

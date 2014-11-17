@@ -1,12 +1,12 @@
-delta dPersistenceSqlite {
+delta dPersistenceRelational {
 	modifies br.unb.cic.iris.core.FolderManager{
-		adds import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
-		adds import br.unb.cic.iris.persistence.sqlite3.FolderDAO;		
+		adds import br.unb.cic.iris.persistence.relational.EmailDAO;
+		adds import br.unb.cic.iris.persistence.relational.FolderDAO;		
 	}
 	
 	modifies br.unb.cic.iris.core.SystemFacade {
-		adds import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
-		adds import br.unb.cic.iris.persistence.sqlite3.FolderDAO;		
+		adds import br.unb.cic.iris.persistence.relational.EmailDAO;
+		adds import br.unb.cic.iris.persistence.relational.FolderDAO;		
 	}
 	
 	adds{
@@ -33,7 +33,7 @@ delta dPersistenceSqlite {
 				this.id = id;
 			}
 
-			@Id @GeneratedValue(strategy = GenerationType.TABLE)
+			@Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
 			private Integer id;
 		
 			public Integer getId() {
@@ -75,7 +75,7 @@ delta dPersistenceSqlite {
 			public static final String INBOX = "INBOX";
 			public static final String OUTBOX = "OUTBOX";
 			
-			@Column(name="NAME", unique=true)
+			@Column(name="NAME", unique=true, length=512)
 			private String name;
 			
 			@OneToMany(cascade=CascadeType.ALL, fetch = FetchType.LAZY)
@@ -144,22 +144,22 @@ delta dPersistenceSqlite {
 		@Entity
 		@Table(name = "TB_MESSAGE")
 		public class EmailMessage extends FolderContent { 
-			@Column(name="MSG_FROM")
+			@Column(name="MSG_FROM", length=1024)
 			private String from;
 			
-			@Column(name="RECIPIENT")
+			@Column(name="RECIPIENT", length=1024)
 			private String to;
 			
-			@Column(name="CC_RECIPIENT")
+			@Column(name="CC_RECIPIENT", length=1024)
 			private String cc;
 			
-			@Column(name="BCC_RECIPIENT")
+			@Column(name="BCC_RECIPIENT", length=1024)
 			private String bcc;
 			
-			@Column(name="SUBJECT")
+			@Column(name="SUBJECT", length=1024)
 			private String subject;
 			
-			@Column(name="MESSAGE_CONTENT")
+			@Column(name="MESSAGE_CONTENT", length=32000)
 			private String message;
 			
 			@Temporal(TemporalType.TIMESTAMP)
@@ -304,7 +304,7 @@ delta dPersistenceSqlite {
 	
 	
 	adds {
-		package br.unb.cic.iris.persistence.sqlite3;
+		package br.unb.cic.iris.persistence.relational;
 		
 		import java.lang.reflect.ParameterizedType;
 		import java.util.List;
@@ -315,7 +315,7 @@ delta dPersistenceSqlite {
 		import org.hibernate.criterion.MatchMode;
 		
 		import br.unb.cic.iris.core.exception.DBException;
-		import br.unb.cic.iris.persistence.HibernateUtil;
+		import br.unb.cic.iris.persistence.relational.HibernateUtil;
 		
 		public abstract class AbstractDAO<T> {
 			private Class<T> clazz;
@@ -329,7 +329,7 @@ delta dPersistenceSqlite {
 		        try {
 		            startSession();
 		            session.saveOrUpdate(obj);
-		            session.getTransaction().commit();
+		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -341,7 +341,7 @@ delta dPersistenceSqlite {
 				try {
 		            startSession();
 		            session.delete(t);
-		            session.getTransaction().commit();
+		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -354,7 +354,7 @@ delta dPersistenceSqlite {
 		        try {
 		            startSession();
 		            obj = (T) session.load(clazz, id);
-		            session.getTransaction().commit();
+		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -369,7 +369,7 @@ delta dPersistenceSqlite {
 		            startSession();
 		            System.out.println("Session: "+session);
 		            obj = (T) session.load(clazz, id);
-		            session.getTransaction().commit();
+		            //session.getTransaction().commit();
 		            return obj;
 		        } catch (HibernateException e) {
 		            handleException(e);
@@ -385,7 +385,7 @@ delta dPersistenceSqlite {
 		            startSession();
 		            Query query = session.createQuery("from " + clazz.getName());
 		            objects = query.list();
-		            session.getTransaction().commit();
+		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -428,6 +428,7 @@ delta dPersistenceSqlite {
 		    
 			protected void closeSession() {
 				if(session != null && session.isOpen()) {
+					session.getTransaction().commit();
 					session.flush();
 					session.close();
 				}
@@ -444,7 +445,7 @@ delta dPersistenceSqlite {
 		 *  author: rbonifacio
 		 *  list of changes: (none) 
 		 */
-		package br.unb.cic.iris.persistence.sqlite3;
+		package br.unb.cic.iris.persistence.relational;
 		
 		import java.util.Date;
 		import java.util.List;
@@ -520,7 +521,7 @@ delta dPersistenceSqlite {
 	}
 	
 	adds {
-		package br.unb.cic.iris.persistence.sqlite3;
+		package br.unb.cic.iris.persistence.relational;
 		
 		import br.unb.cic.iris.i18n.MessageBundle;
 		
@@ -537,7 +538,8 @@ delta dPersistenceSqlite {
 			private FolderDAO(){ }
 			
 			public static FolderDAO instance(){
-				return instance;
+				//return instance;
+				return new FolderDAO();
 			}
 			
 			public IrisFolder findByName(String folderName) throws DBException {
@@ -567,7 +569,7 @@ delta dPersistenceSqlite {
 		 *    May you share freely, never taking more than you give.
 		 *
 		 */
-		package br.unb.cic.iris.persistence;
+		package br.unb.cic.iris.persistence.relational;
 		
 		import java.sql.Types;
 		
@@ -836,7 +838,7 @@ delta dPersistenceSqlite {
 	}
 	
 	adds{
-		package br.unb.cic.iris.persistence;
+		package br.unb.cic.iris.persistence.relational;
 
 		import java.util.ArrayList;
 		import java.util.List;

@@ -7,7 +7,7 @@ delta dTestAddressBookDAO {
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.FolderContent;
 		import br.unb.cic.iris.core.model.IrisFolder;
-		import br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
+		import br.unb.cic.iris.persistence.relational.AddressBookDAO;
 
 		import org.hibernate.SessionFactory;
 		import org.hibernate.cfg.AnnotationConfiguration;
