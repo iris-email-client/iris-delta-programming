@@ -1,4 +1,11 @@
-delta dAddressBookSqlite {
+delta dAddressBookRelational {
+	modifies br.unb.cic.iris.util.HibernateUtil {
+		adds import br.unb.cic.iris.core.model.AddressBookEntry;
+		modifies configureClasses() {
+			classList.add(AddressBookEntry.class);
+			original();
+		}
+	}	
 	adds{
 		package br.unb.cic.iris.persistence.sqlite3;
 
@@ -59,4 +66,7 @@ delta dAddressBookSqlite {
 			}
 		}
 	}
+	modifies br.unb.cic.iris.core.SystemFacade {
+		adds import br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
+	}				
 }

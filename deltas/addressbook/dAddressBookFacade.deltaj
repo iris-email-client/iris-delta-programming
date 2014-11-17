@@ -1,7 +1,7 @@
 delta dAddressBookFacade {
 	modifies br.unb.cic.iris.core.SystemFacade {
-		adds import br.unb.cic.iris.persistence.sqlite3.AddressBookDAO;
 		adds import br.unb.cic.iris.core.model.AddressBookEntry;
+		
 		adds public void addAddressBookEntry(String name, String email) throws
 		EmailException {
 			AddressBookDAO dao = AddressBookDAO.instance();

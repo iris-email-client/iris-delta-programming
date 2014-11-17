@@ -109,7 +109,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12-beta-2</version>
-			<scope>provided</scope>
+			<scope>test</scope>
 		</dependency>
 		<!-- postgresql -->
 		<dependency>
@@ -124,6 +124,23 @@
 			<version>3.2</version>
 			<scope>test</scope>
 		</dependency>
+		<!-- Lucene -->
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-core</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-queryparser</artifactId>
+			<version>4.10.2</version>
+		</dependency>
+
 	</dependencies>
 	<build>
 		<finalName>${iris.jar.name}</finalName>
@@ -435,7 +452,7 @@
 		</plugins>
 	</reporting>
 	<profiles>
-	<!-- mvn -P01 test -->
+		<!-- mvn -P01 test -->
 		<profile>
 			<id>01</id>
 			<properties>

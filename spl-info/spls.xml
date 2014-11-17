@@ -5,7 +5,6 @@
 			<feature name ="Base" />
 			<feature name ="Persistence" />
 			<feature name ="RelationalDB" />
-			<feature name ="TextualDB" />
 			<feature name ="LuceneDB" />
 			<feature name ="UI" />
 			<feature name ="Console" />
@@ -13,8 +12,8 @@
 			<feature name ="AddressBook" />
 		</features>
 		<configurations>
-			<configuration formula="Base AND Persistence AND UI" />
-			<configuration formula="Persistence AND (RelationalDB XOR TextualDB XOR LuceneDB)" />
+			<configuration formula="Base AND Persistence AND UI OR AddressBook" />
+			<configuration formula="Persistence AND (RelationalDB XOR LuceneDB)" />
 			<configuration formula="UI AND (Console XOR Window)" />
 		</configurations>
 		<deltas>
@@ -30,20 +29,26 @@
 			</partition>
 			<partition>
 				<modul delta="dPersistenceSqlite" when="RelationalDB" />
+				<modul delta="dTestFolderDAO" when="RelationalDB" />
 			</partition>
 			<partition>
 				<modul delta="dPersistenceLucene" when="LuceneDB" />
 			</partition>
 			<partition>
-				<modul delta="dConsole" when="Console" />
+				<modul delta="dAddressBook" when="RelationalDB AND AddressBook" />
+				<modul delta="dAddressBookRelational" when="RelationalDB AND AddressBook" />
+				<modul delta="dAddressBookConsole" when="RelationalDB AND AddressBook" />
+				<modul delta="dAddressBookFacade" when="RelationalDB AND AddressBook" />
+				<modul delta="dTestAddressBookDAO" when="RelationalDB AND AddressBook" />
 			</partition>
 			<partition>
-				<modul delta="dAddressBook" when="AddressBook" />
-				<modul delta="dAddressBookFacade" when="AddressBook" />
-				<modul delta="dAddressBookSqlite" when="AddressBook" />
-				<modul delta="dAddressBookConsole" when="AddressBook" />
-				<modul delta="dTestAddressBookDAO" when="AddressBook" />
-				<modul delta="dTestFolderDAO" when="AddressBook" />
+				<modul delta="dAddressBook" when="LuceneDB AND AddressBook" />
+				<modul delta="dAddressBookLucene" when="LuceneDB AND AddressBook" />
+				<modul delta="dAddressBookConsole" when="LuceneDB AND AddressBook" />
+				<modul delta="dAddressBookFacade" when="LuceneDB AND AddressBook" />
+			</partition>
+			<partition>
+				<modul delta="dConsole" when="Console" />
 			</partition>
 		</deltas>
 	</spl>

@@ -27,8 +27,6 @@ delta dBaseFacade {
 		import br.unb.cic.iris.mail.provider.DefaultProvider;
 		import br.unb.cic.iris.mail.provider.ProviderManager;
 		import br.unb.cic.iris.persistence.IEmailDAO;
-		import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
-		import br.unb.cic.iris.persistence.sqlite3.FolderDAO;
 		
 		public final class SystemFacade {
 			private static final SystemFacade instance = new SystemFacade();
@@ -174,8 +172,6 @@ delta dBaseFacade {
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.IrisFolder;
-		import br.unb.cic.iris.persistence.sqlite3.EmailDAO;
-		import br.unb.cic.iris.persistence.sqlite3.FolderDAO;
 		
 		import java.util.List;
 		

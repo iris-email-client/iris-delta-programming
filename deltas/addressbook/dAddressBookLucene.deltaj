@@ -1,0 +1,55 @@
+delta dAddressBookLucene {
+	adds {
+		package br.unb.cic.iris.persistence.lucene;
+
+		import java.util.List;
+		import org.apache.lucene.document.Document;
+		
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.AddressBookEntry;
+		import br.unb.cic.iris.persistence.IAddressBookDAO;
+
+		//TODO: not yet implemented, must be done.
+		public final class AddressBookDAO extends AbstractDAO<AddressBookEntry>
+		implements IAddressBookDAO {
+
+			private static AddressBookDAO instance;
+
+			private AddressBookDAO() {
+			}
+
+			public static AddressBookDAO instance() {
+				if(instance == null) {
+					instance = new AddressBookDAO();
+				}
+				return instance;
+			}
+
+			@Override
+			public void save(AddressBookEntry entry) throws DBException {
+			}
+
+			@Override
+			public AddressBookEntry find(String nick) throws DBException {
+				return null;
+			}
+
+			@Override
+			public void delete(String nick) throws DBException {
+			}
+			
+			@Override
+			protected AddressBookEntry fromDocument(int id, Document doc) throws
+			Exception {
+			// TODO Auto-generated method stub
+				return null;
+			}
+
+		}
+	}
+
+	modifies br.unb.cic.iris.core.SystemFacade {
+		adds import br.unb.cic.iris.persistence.lucene.AddressBookDAO;
+	}
+
+}
