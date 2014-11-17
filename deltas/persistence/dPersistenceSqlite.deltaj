@@ -512,14 +512,11 @@ delta dPersistenceSqlite {
 		import org.hibernate.criterion.Restrictions;
 		
 		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
-			private static FolderDAO instance;
+			private static final FolderDAO instance = new FolderDAO();
 			
 			private FolderDAO(){ }
 			
 			public static FolderDAO instance(){
-				if(instance == null){
-					instance = new FolderDAO();
-				}
 				return instance;
 			}
 			

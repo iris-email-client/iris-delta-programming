@@ -188,20 +188,30 @@ delta dBaseFacade {
 				return instance;
 			}
 			public String getCurrentFolderName() {
+				System.out.println("\n\ngetCurrentFolderName ......");
+				System.out.println("currentFolderId="+currentFolderId);
 				if(currentFolderId == null) {
 					return "ROOT";
 				}
 				try {
-					return FolderDAO.instance().findById(currentFolderId).getName();
+					IrisFolder folder = FolderDAO.instance().findById(currentFolderId);
+					System.out.println("folder="+folder);
+					System.out.println("folder.name="+folder.getName());
+					return folder.getName();
 				} catch (DBException e) {
 					throw new EmailUncheckedException(e.getMessage(),e);
 				}
 			}
+			
 			public void changeToFolder(Integer folderId) throws DBException {
+				System.out.println("\n\nchangeToFolder="+folderId);
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
+				System.out.println("folder="+folder);
+				System.out.println("folder.name="+folder.getName());
 				if(folder != null) {
 					currentFolderId = folderId;
 				}
+				System.out.println("currentFolderId="+currentFolderId);
 			}
 			public List<IrisFolder> listFolders() throws EmailException {
 				return FolderDAO.instance().findAll();

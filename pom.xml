@@ -10,12 +10,13 @@
 	<inceptionYear>2014</inceptionYear>
 	<url>https://github.com/iris-email-client/iris-delta-programming</url>
 	<properties>
-		<skipTests>false</skipTests>
+		<skipTests>true</skipTests>
 		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
 		<iris.jar.name>iris</iris.jar.name>
 		<iris.main.class>irisdeltaj.simpleaddressbook.br.unb.cic.iris.MainProgram</iris.main.class>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
+		<maven.surefire.plugin.version>2.12.3</maven.surefire.plugin.version>
 	</properties>
 	<issueManagement>
 	<system>GitHub Issues</system>
@@ -108,7 +109,7 @@
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
 			<version>4.12-beta-2</version>
-			<scope>test</scope>
+			<scope>provided</scope>
 		</dependency>
 		<!-- postgresql -->
 		<dependency>
@@ -160,6 +161,31 @@
 					</archive>
 				</configuration>
 			</plugin>
+			<plugin>
+		    	<groupId>org.apache.maven.plugins</groupId>
+		        <artifactId>maven-antrun-plugin</artifactId>
+		        <executions>
+		          	<execution>
+		            	<id>move_tests</id>
+		            	<phase>generate-sources</phase>
+		            	<configuration>
+			              	<tasks>
+			                	<echo>Moving generated test classes ... ${basedir}</echo>
+			                	<echo>From: ${basedir}/src-gen</echo>
+			                	<echo>To: ${basedir}/src/test/java</echo>
+								<move todir="${basedir}/src/test/java" overwrite="true" verbose="true">
+									<fileset dir="${basedir}/src-gen">
+										<include name="**/test/**/*.java" />
+									</fileset>
+								</move>					  	
+			              	</tasks>
+		            	</configuration>
+		            	<goals>
+		              		<goal>run</goal>
+		            	</goals>
+		          	</execution>
+		        </executions>
+			</plugin>	
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -408,22 +434,33 @@
 				<version>1.2</version> </plugin> -->
 		</plugins>
 	</reporting>
-	<!-- <profiles>
+	<profiles>
+	<!-- mvn -P01 test -->
 		<profile>
-			<id>db</id>
-			<activation>
-				<property>
-			        <name>db</name>
-			      </property>
-			</activation>
+			<id>01</id>
 			<properties>
-				<skipTests>true</skipTests>
+				<skipTests>false</skipTests>
 			</properties>
 			<build>
 				<plugins>
-				To run the plugin you just need a hibernate tool configuration 
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>${maven.surefire.plugin.version}</version>
+					<configuration>
+						<skipTests>${skipTests}</skipTests>
+						<includes> 
+							<include>**/*TestFolderDAO.java</include> 
+						</includes>
+						<forkMode>once</forkMode>
+						<excludes>
+							<!-- <exclude>**/Abstract*</exclude> <exclude>**/DatabaseTest*</exclude> -->
+						</excludes>
+					</configuration>
+				</plugin>				
+				<!-- To run the plugin you just need a hibernate tool configuration 
 				("jdbcconfiguration", "configuration", "annotationconfiguration", "jpaconfiguration") 
-				inside a "hibernatetool" element in the configuration section of the plugin.
+				inside a "hibernatetool" element in the configuration section of the plugin. 
 					<plugin>
 						<groupId>org.codehaus.mojo</groupId>
 						<artifactId>hibernate3-maven-plugin</artifactId>
@@ -448,8 +485,32 @@
 		                    </execution>
 		                </executions>
 					</plugin>
+					-->
 				</plugins>
 			</build>
 		</profile>
-	</profiles> -->
+		<profile>
+			<id>02</id>
+			<properties>
+				<skipTests>false</skipTests>
+			</properties>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-surefire-plugin</artifactId>
+						<version>${maven.surefire.plugin.version}</version>
+						<configuration>
+							<skipTests>${skipTests}</skipTests>
+							<includes> 
+								<include>**/*TestFolderDAO.java</include> 
+								<include>**/*TestAddressBookDAO.java</include> 
+							</includes>
+							<forkMode>once</forkMode>
+						</configuration>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles> 
 </project>
