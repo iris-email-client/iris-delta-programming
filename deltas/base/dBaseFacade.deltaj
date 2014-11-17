@@ -202,8 +202,8 @@ delta dBaseFacade {
 			public void changeToFolder(Integer folderId) throws DBException {
 				System.out.println("\n\nchangeToFolder="+folderId);
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
-				System.out.println("folder="+folder);
-				System.out.println("folder.name="+folder.getName());
+				//System.out.println("folder="+folder);
+				//System.out.println("folder.name="+folder.getName());
 				if(folder != null) {
 					currentFolderId = folderId;
 				}

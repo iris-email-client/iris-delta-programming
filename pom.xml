@@ -14,7 +14,6 @@
 		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
 		<iris.jar.name>iris</iris.jar.name>
-		<iris.main.class>irisdeltaj.simpleaddressbook.br.unb.cic.iris.MainProgram</iris.main.class>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 		<maven.surefire.plugin.version>2.12.3</maven.surefire.plugin.version>
 	</properties>
@@ -457,6 +456,7 @@
 			<id>01</id>
 			<properties>
 				<skipTests>false</skipTests>
+				<iris.main.class>irisdeltaj.simplerelational.br.unb.cic.iris.MainProgram</iris.main.class>
 			</properties>
 			<build>
 				<plugins>
@@ -510,6 +510,7 @@
 			<id>02</id>
 			<properties>
 				<skipTests>false</skipTests>
+				<iris.main.class>irisdeltaj.simplerelationaladdressbook.br.unb.cic.iris.MainProgram</iris.main.class>
 			</properties>
 			<build>
 				<plugins>
