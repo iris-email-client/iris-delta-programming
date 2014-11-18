@@ -1,0 +1,132 @@
+delta dTagRelational {
+	modifies br.unb.cic.iris.persistence.relational.HibernateUtil {
+		adds import br.unb.cic.iris.core.model.Tag;
+		modifies configureClasses() {
+			classList.add(Tag.class);
+			original();
+		}
+	}
+	modifies br.unb.cic.iris.core.model.EmailMessage{
+		adds import java.util.Set;
+		adds import javax.persistence.CascadeType;
+		adds import javax.persistence.JoinTable;
+		adds import javax.persistence.ManyToMany;
+		
+		adds
+			@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+			@JoinTable(name = "message_tags", joinColumns = { 
+					@JoinColumn(name = "ID", nullable = false, updatable = false) }, 
+					inverseJoinColumns = { @JoinColumn(name = "TAG_ID", 
+							nullable = false, updatable = false) })
+			private Set<Tag> tags;
+			
+		adds public Set<Tag> getTags() {
+				return tags;
+			}
+			
+		adds public void setTags(Set<Tag> tags) {
+				this.tags = tags;
+			}
+	}
+	modifies br.unb.cic.iris.core.TagManager{
+		adds import br.unb.cic.iris.persistence.relational.TagDAO;
+		
+		modifies getTagDAO () {
+			return TagDAO.instance();
+		}
+	}
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		import java.util.Set;
+		
+		import javax.persistence.Column;
+		import javax.persistence.Entity;
+		import javax.persistence.FetchType;
+		import javax.persistence.GeneratedValue;
+		import javax.persistence.Id;
+		import javax.persistence.ManyToMany;
+		import javax.persistence.Table;
+		
+		@Entity
+		@Table(name = "TB_TAG")
+		public class Tag {
+			@Id
+			@GeneratedValue
+			@Column(name = "TAG_ID", nullable = false, updatable = false)
+			private Long id;
+			
+			@Column(unique=true)
+			private String name;
+			
+			@ManyToMany(fetch = FetchType.LAZY, mappedBy = "tags")
+			private Set<EmailMessage> messages;
+		
+			public Tag() {
+				this(null);
+			}
+			public Tag(String name) {
+				this(null,name);
+			}
+			public Tag(Long id, String name) {
+				super();
+				this.id = id;
+				this.name = name;
+			}
+			
+			
+			public Long getId() {
+				return id;
+			}
+			public void setId(Long id) {
+				this.id = id;
+			}
+			public String getName() {
+				return name;
+			}
+			public void setName(String name) {
+				this.name = name;
+			}
+			public Set<EmailMessage> getMessages() {
+				return messages;
+			}
+			public void setMessages(Set<EmailMessage> messages) {
+				this.messages = messages;
+			}
+		}
+	}
+	adds{
+		package br.unb.cic.iris.persistence.relational;
+
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.Tag;
+		import br.unb.cic.iris.persistence.ITagDAO;
+		
+		import org.hibernate.Criteria;
+		import org.hibernate.criterion.Restrictions;
+		
+		public class TagDAO extends AbstractDAO<Tag> implements ITagDAO {
+			private static final TagDAO instance = new TagDAO();
+			private TagDAO() {
+			}
+			public static TagDAO instance() {
+				return instance;
+			}
+			public Tag findByName(String tagName) throws DBException {
+				try {
+					startSession();
+					Criteria criteria = session.createCriteria(Tag.class);
+					criteria.add(Restrictions.eq("name", tagName));
+					return (Tag) criteria.uniqueResult();
+				}
+				catch(Exception e) {
+					handleException(new DBException("Tag not found: "+tagName, e));
+				}
+				finally {
+					closeSession();
+				}
+				return null;
+			}
+		}
+	}
+}

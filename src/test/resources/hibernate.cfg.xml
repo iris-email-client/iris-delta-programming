@@ -5,16 +5,30 @@
 <hibernate-configuration>
     <session-factory>
         <property name="show_sql">true</property>
-        <property name="format_sql">false</property>       
+        <property name="format_sql">false</property>  
+        <property name="use_sql_comments">false</property>  
         
-        <!-- <property name="dialect">irisdeltaj.simplerelationaladdressbook.org.hibernate.dialect.SQLiteDialect</property>
+        <property name="hibernate.hbm2ddl.auto">create</property>    
+        
+        <!-- JDBC connection pool (use the built-in connection pool) -->
+        <property name="connection.pool_size">1</property>
+        
+        <!-- Enable Hibernate's automatic session context management -->
+        <property name="current_session_context_class">thread</property>
+
+        <!-- Disable the second-level cache  -->
+        <property name="cache.provider_class">org.hibernate.cache.NoCacheProvider</property>
+        
+        
+        <!-- SQLite 
+        <property name="dialect">irisdeltaj.simplerelationaladdressbook.org.hibernate.dialect.SQLiteDialect</property>
         <property name="connection.driver_class">org.sqlite.JDBC</property>
         <property name="connection.url">jdbc:sqlite:${user.home}/.iris/iris-test.db</property>
         <property name="connection.username"></property>
         <property name="connection.password"></property>   -->
     
-        <property name="hibernate.hbm2ddl.auto">create</property>    
-        
+
+		<!-- PostgreSQL -->
         <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="connection.driver_class">org.postgresql.Driver</property>
         <property name="connection.url">jdbc:postgresql://localhost:5432/bd_iris_test</property>

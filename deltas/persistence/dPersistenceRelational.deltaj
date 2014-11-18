@@ -159,7 +159,7 @@ delta dPersistenceRelational {
 			@Column(name="SUBJECT", length=1024)
 			private String subject;
 			
-			@Column(name="MESSAGE_CONTENT", length=32000)
+			@Column(name="MESSAGE_CONTENT", columnDefinition="TEXT")
 			private String message;
 			
 			@Temporal(TemporalType.TIMESTAMP)
