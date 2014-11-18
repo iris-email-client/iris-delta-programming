@@ -13,6 +13,57 @@ delta dTagBase{
 			public void delete(Tag t) throws EmailException;
 		}
 	}
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		import java.util.Set;
+		
+		import javax.persistence.Column;
+		import javax.persistence.Entity;
+		import javax.persistence.FetchType;
+		import javax.persistence.GeneratedValue;
+		import javax.persistence.Id;
+		import javax.persistence.ManyToMany;
+		import javax.persistence.Table;
+		
+		public class Tag {
+			private Long id;
+			private String name;
+			private Set<EmailMessage> messages;
+		
+			public Tag() {
+				this(null);
+			}
+			public Tag(String name) {
+				this(null,name);
+			}
+			public Tag(Long id, String name) {
+				super();
+				this.id = id;
+				this.name = name;
+			}
+			
+			
+			public Long getId() {
+				return id;
+			}
+			public void setId(Long id) {
+				this.id = id;
+			}
+			public String getName() {
+				return name;
+			}
+			public void setName(String name) {
+				this.name = name;
+			}
+			public Set<EmailMessage> getMessages() {
+				return messages;
+			}
+			public void setMessages(Set<EmailMessage> messages) {
+				this.messages = messages;
+			}
+		}
+	}
 	
 	adds{
 		package br.unb.cic.iris.core;

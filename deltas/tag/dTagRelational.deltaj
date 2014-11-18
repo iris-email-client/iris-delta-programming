@@ -35,6 +35,7 @@ delta dTagRelational {
 			return TagDAO.instance();
 		}
 	}
+	removes br.unb.cic.iris.core.model.Tag;
 	adds{
 		package br.unb.cic.iris.core.model;
 

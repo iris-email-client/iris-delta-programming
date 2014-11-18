@@ -13,7 +13,7 @@ delta dBasePersistence {
 		import java.util.Date;
 		import java.util.List;
 		
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		
 		/**
@@ -30,40 +30,22 @@ delta dBasePersistence {
 			 * 
 			 * @param message
 			 */
-			public void saveMessage(EmailMessage message) throws DBException;
+			public void saveMessage(EmailMessage message) throws EmailException;
 			
-			public Date lastMessageReceived() throws DBException;
+			public Date lastMessageReceived() throws EmailException;
 			
-			public List<EmailMessage> listMessages(Integer idFolder) throws DBException;
+			public List<EmailMessage> listMessages(Integer idFolder) throws EmailException;
 		
 		}		
 	}
 	adds {
 		package br.unb.cic.iris.persistence;
 		
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public interface IFolderDAO {
-			public IrisFolder findByName(String folderName) throws DBException ;
+			public IrisFolder findByName(String folderName) throws EmailException ;
 		}			
-	}
-	adds{
-		package br.unb.cic.iris.core.exception;
-
-		/**
-		 *  Classe usada para representar erros que podem ocorrer na 
-		 *  camada de persistencia. 
-		 *
-		 * @author rbonifacio
-		 */
-		public class DBException extends EmailException {
-		
-			private static final long serialVersionUID = 1L;
-		
-			public DBException(String message, Exception cause) {
-				super(message, cause);
-			}
-		}
 	}
 }

@@ -15,7 +15,6 @@ delta dBaseFacade {
 
 		import br.unb.cic.iris.core.model.Status;
 		import br.unb.cic.iris.i18n.MessageBundle;		
-		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 		import br.unb.cic.iris.core.model.EmailMessage;
@@ -65,10 +64,10 @@ delta dBaseFacade {
 				saveMessage(message);
 			}
 			
-			private void saveMessage(EmailMessage message) throws DBException{
+			private void saveMessage(EmailMessage message) throws EmailException{
 				saveMessage(message, IrisFolder.OUTBOX);
 			}
-			private void saveMessage(EmailMessage message, String folderName) throws DBException{
+			private void saveMessage(EmailMessage message, String folderName) throws EmailException{
 				IEmailDAO dao = EmailDAO.instance();
 				IrisFolder folder = FolderDAO.instance().findByName(folderName);
 				message.setFolder(folder);
@@ -166,8 +165,6 @@ delta dBaseFacade {
 	adds {
 		package br.unb.cic.iris.core;
 
-
-		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 		import br.unb.cic.iris.core.model.EmailMessage;
@@ -194,12 +191,12 @@ delta dBaseFacade {
 					System.out.println("folder="+folder);
 					System.out.println("folder.name="+folder.getName());
 					return folder.getName();
-				} catch (DBException e) {
+				} catch (EmailException e) {
 					throw new EmailUncheckedException(e.getMessage(),e);
 				}
 			}
 			
-			public void changeToFolder(Integer folderId) throws DBException {
+			public void changeToFolder(Integer folderId) throws EmailException {
 				System.out.println("\n\nchangeToFolder="+folderId);
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
 				//System.out.println("folder="+folder);

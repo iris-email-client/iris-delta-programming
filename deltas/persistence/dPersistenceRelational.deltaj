@@ -10,6 +10,19 @@ delta dPersistenceRelational {
 	}
 	
 	adds{
+		package br.unb.cic.iris.core.exception;
+
+		public class DBException extends EmailException {
+		
+			private static final long serialVersionUID = 1L;
+		
+			public DBException(String message, Exception cause) {
+				super(message, cause);
+			}
+		}
+	}
+	
+	adds{
 		package br.unb.cic.iris.core.model;
 
 		import javax.persistence.Entity;
