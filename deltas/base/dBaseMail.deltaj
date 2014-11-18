@@ -804,22 +804,9 @@ delta dBaseMail {
 			@Override
 			public void send(EmailMessage email) throws EmailException {
 				System.out.println("send message: " + email);
-					
-				//email.setTo(findAddress(email.getTo()));
-				//email.setCc(findAddress(email.getCc()));
-				//email.setBcc(findAddress(email.getBcc()));
-				
 				sender.send(email);
 			}
-		
-		/* incluir na feature de address book
-			private String findAddress(String email) throws EmailException {
-				if(email != null && !EmailValidator.validate(email)){
-					return AddressBookDAO.instance().find(email).getAddress();
-				}
-				return email;
-			}*/
-		
+				
 			@Override
 			public List<IrisFolder> listFolders() throws EmailException {
 				System.out.println("listing folders ...");
@@ -849,7 +836,7 @@ delta dBaseMail {
 		
 			@Override
 			public List<String> validateEmailMessage(EmailMessage message) {
-				// TODO ......
+				// TODO: validateEmail to be done.
 				return sender.validateEmailMessage(message);
 			}
 			

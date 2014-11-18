@@ -9,7 +9,7 @@ delta dAddressBookLucene {
 		import br.unb.cic.iris.core.model.AddressBookEntry;
 		import br.unb.cic.iris.persistence.IAddressBookDAO;
 
-		//TODO: not yet implemented, must be done.
+		//TODO: addressbook in lucene not yet implemented, must be done.
 		public final class AddressBookDAO extends AbstractDAO<AddressBookEntry>
 		implements IAddressBookDAO {
 
