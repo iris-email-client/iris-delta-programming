@@ -28,7 +28,7 @@ delta dPersistenceLucene {
 		import org.apache.lucene.search.TermQuery;
 		import org.apache.lucene.search.Query;
 		
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		
 		public abstract class AbstractDAO<T> {
 
@@ -57,39 +57,43 @@ delta dPersistenceLucene {
 				clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 			}
 
-			public List<T> findAll() throws DBException {
+			public List<T> findAll() throws EmailException {
 				List<T> result = new ArrayList<T>();
 				try {						
 					Query query = new TermQuery(new Term("type", type));
 					IndexSearcher searcher = IndexManager.getSearcher();
 					searcher.search(query, new TCollector(searcher, result));
 				} catch (IOException e) {
-					throw new DBException("An error occurred while retrieving all " + clazz.getName() + "s", e);
+					throw new EmailException("An error occurred while retrieving all " + clazz.getName() + "s", e);
 				}
 				return result;
 			}
 			
-			public T findById(Long id) throws DBException {
+			public T findById(Long id) throws EmailException {
+				return findById(id.intValue());
+			}
+			
+			public T findById(Integer id) throws EmailException {
 				try {
 					IndexReader reader = IndexManager.getReader();
-					Document doc = reader.document(id.intValue());
-					return fromDocument(id.intValue(), doc);
+					Document doc = reader.document(id);
+					return fromDocument(id, doc);
 				} catch (Exception e) {
-					throw new DBException("An error occurred while retrieving by id", e);
+					throw new EmailException("An error occurred while retrieving by id", e);
 				}
 			}
 			
-			protected void saveDocument(Document doc) throws DBException {
+			protected void saveDocument(Document doc) throws EmailException {
 				try {
 					IndexWriter writer = IndexManager.getWriter();
 					writer.addDocument(doc);
 					writer.commit();
 				} catch (IOException e) {
-					throw new DBException("An error occurred while saving " + type + ".", e);
+					throw new EmailException("An error occurred while saving " + type + ".", e);
 				}
 			}
 			
-			protected List<T> findByTerms(Query[] queries) throws DBException {
+			protected List<T> findByTerms(Query[] queries) throws EmailException {
 				List<T> result = new ArrayList<T>();
 				try {						
 					BooleanQuery query = new BooleanQuery();
@@ -99,7 +103,7 @@ delta dPersistenceLucene {
 					IndexSearcher searcher = IndexManager.getSearcher();
 					searcher.search(query, new TCollector(searcher, result));
 				} catch (IOException e) {
-					throw new DBException(e.getMessage(), e);
+					throw new EmailException(e.getMessage(), e);
 				}
 				return result;
 			}
@@ -157,7 +161,7 @@ delta dPersistenceLucene {
 		import org.apache.lucene.util.Version;
 		import org.apache.lucene.util.NumericUtils;
 
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.persistence.IEmailDAO;
 		import br.unb.cic.iris.core.model.IrisFolder;
@@ -186,7 +190,7 @@ delta dPersistenceLucene {
 			}
 		
 			@Override
-			public void saveMessage(EmailMessage m) throws DBException {
+			public void saveMessage(EmailMessage m) throws EmailException {
 				Document doc = new Document();
 				doc.add(new StringField("type", "email", Store.NO));
 				doc.add(new StringField("from", m.getFrom(), Store.YES));
@@ -202,7 +206,7 @@ delta dPersistenceLucene {
 			}
 		
 			@Override
-			public Date lastMessageReceived() throws DBException {
+			public Date lastMessageReceived() throws EmailException {
 				Date date = null;
 				try {
 					// Retrieves only documents whose 'type' is 'email'.
@@ -218,7 +222,7 @@ delta dPersistenceLucene {
 						date = DateTools.stringToDate(doc.get("date"));
 					}
 				} catch (IOException e) {
-					throw new DBException("An error occurred while retrieving last message received", e);
+					throw new EmailException("An error occurred while retrieving last message received", e);
 				} catch (ParseException e) {
 					e.printStackTrace();
 				}
@@ -226,7 +230,7 @@ delta dPersistenceLucene {
 				return date;
 			}
 			
-			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
+			public List<EmailMessage> listMessages(Integer idFolder) throws EmailException {
 				Query typeQuery = new TermQuery(new Term("type", "email"));
 				Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
 				return findByTerms(new Query[] { typeQuery, folderQuery });
@@ -248,7 +252,7 @@ delta dPersistenceLucene {
 				return m;				
 			}
 			
-			public static void main(String[] args) throws DBException {
+			public static void main(String[] args) throws EmailException {
 				EmailMessage message = new EmailMessage();
 				message.setFrom("alexandrelucchesi@gmail.com");
 				message.setTo("rbonifacio123@gmail.com");
@@ -289,7 +293,7 @@ delta dPersistenceLucene {
 		
 		import br.unb.cic.iris.i18n.MessageBundle;
 		
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		import br.unb.cic.iris.persistence.IFolderDAO;
 		
@@ -308,13 +312,13 @@ delta dPersistenceLucene {
 				return instance;
 			}
 
-			public IrisFolder findByName(String folderName) throws DBException {
+			public IrisFolder findByName(String folderName) throws EmailException {
 				List<IrisFolder> result = new ArrayList<IrisFolder>();
 				Query typeQuery = new TermQuery(new Term("type", "folder"));
 				Query nameQuery = new TermQuery(new Term("name", folderName));
 				result = findByTerms(new Query[] { typeQuery, nameQuery });
 				if (result.isEmpty()) {
-					throw new DBException("Folder name not found", null);
+					throw new EmailException("Folder name not found", null);
 				}
 				return result.iterator().next();
 			}
@@ -325,7 +329,12 @@ delta dPersistenceLucene {
 				f.setName(d.get("name"));
 				return f;				
 			}
-
+			
+			@Override
+			public String getFolderName(Integer id) throws EmailException {
+				// TODO Auto-generated method stub
+				return null;
+			}
 		}	
 	}	
 	

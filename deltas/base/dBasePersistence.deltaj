@@ -45,7 +45,8 @@ delta dBasePersistence {
 		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public interface IFolderDAO {
-			public IrisFolder findByName(String folderName) throws EmailException ;
+			public IrisFolder findByName(String folderName) throws EmailException;
+			public String getFolderName(Integer id) throws EmailException;
 		}			
 	}
 }

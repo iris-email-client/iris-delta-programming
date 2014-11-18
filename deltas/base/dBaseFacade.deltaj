@@ -2,7 +2,6 @@ delta dBaseFacade {
 	adds {
 		package br.unb.cic.iris.core;
 
-		
 		import java.util.Date;
 		import java.util.List;
 		
@@ -73,22 +72,10 @@ delta dBaseFacade {
 				message.setFolder(folder);
 				dao.saveMessage(message);
 			}
-		
-			public List<IrisFolder> listFolders() throws EmailException {
-				return FolderDAO.instance().findAll();
-			}
-			
+
 			public List<IrisFolder> listRemoteFolders() throws EmailException {
 				verifyConnection();
 				return client.listFolders();
-			}
-			
-			public List<EmailMessage> listFolderMessages(Integer folderId) throws EmailException {
-				return EmailDAO.instance().listMessages(folderId);
-			}
-			
-			public EmailMessage getMessage(Long id) throws EmailException {
-				return EmailDAO.instance().findById(id);
 			}
 			
 			public void downloadMessages(String folder) throws EmailException {
@@ -113,24 +100,6 @@ delta dBaseFacade {
 				}
 			}
 			
-			public List<EmailMessage> getMessages(String folder) throws EmailException {
-				//TODO ler as mensagens do banco de dados
-				
-				
-				// apenas para testar ... retorna as mensagens recentes e nao lidas
-				Flags seen = new Flags(Flags.Flag.SEEN);
-				FlagTerm unseenFlagTerm = new FlagTerm(seen, false);
-		
-				Flags recent = new Flags(Flags.Flag.RECENT);
-				FlagTerm recentFlagTerm = new FlagTerm(recent, true);
-		
-				SearchTerm searchTerm = new AndTerm(unseenFlagTerm, recentFlagTerm);
-		
-				// return client.getMessages(folder, searchTerm);
-				return client.getMessages(folder, unseenFlagTerm);
-				// return client.getMessages(folder, null);
-			}
-		
 			private void verifyConnection() {
 				if (!isConnected()) {
 					throw new EmailUncheckedException(MessageBundle.message("error.not.connected"));
@@ -174,37 +143,24 @@ delta dBaseFacade {
 		
 		public final class FolderManager {
 			private static final FolderManager instance = new FolderManager();
+			private static final String ROOT_FOLDER = "ROOT";
 			private Integer currentFolderId = null;
+			private String currentFolderName = ROOT_FOLDER;
 			private FolderManager() {
 			}
 			public static FolderManager instance() {
 				return instance;
 			}
 			public String getCurrentFolderName() {
-				System.out.println("\n\ngetCurrentFolderName ......");
-				System.out.println("currentFolderId="+currentFolderId);
-				if(currentFolderId == null) {
-					return "ROOT";
-				}
-				try {
-					IrisFolder folder = FolderDAO.instance().findById(currentFolderId);
-					System.out.println("folder="+folder);
-					System.out.println("folder.name="+folder.getName());
-					return folder.getName();
-				} catch (EmailException e) {
-					throw new EmailUncheckedException(e.getMessage(),e);
-				}
+				return currentFolderName;
 			}
 			
 			public void changeToFolder(Integer folderId) throws EmailException {
-				System.out.println("\n\nchangeToFolder="+folderId);
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
-				//System.out.println("folder="+folder);
-				//System.out.println("folder.name="+folder.getName());
 				if(folder != null) {
 					currentFolderId = folderId;
+					currentFolderName = FolderDAO.instance().getFolderName(currentFolderId);
 				}
-				System.out.println("currentFolderId="+currentFolderId);
 			}
 			public List<IrisFolder> listFolders() throws EmailException {
 				return FolderDAO.instance().findAll();
@@ -215,7 +171,7 @@ delta dBaseFacade {
 				}
 				return EmailDAO.instance().listMessages(currentFolderId);
 			}
-			public EmailMessage getMessage(Long id) throws EmailException {
+			public EmailMessage getMessage(Integer id) throws EmailException {
 				return EmailDAO.instance().findById(id);
 			}
 		}

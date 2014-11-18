@@ -5,7 +5,7 @@ delta dAddressBookLucene {
 		import java.util.List;
 		import org.apache.lucene.document.Document;
 		
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.AddressBookEntry;
 		import br.unb.cic.iris.persistence.IAddressBookDAO;
 
@@ -26,16 +26,16 @@ delta dAddressBookLucene {
 			}
 
 			@Override
-			public void save(AddressBookEntry entry) throws DBException {
+			public void save(AddressBookEntry entry) throws EmailException {
 			}
 
 			@Override
-			public AddressBookEntry find(String nick) throws DBException {
+			public AddressBookEntry find(String nick) throws EmailException {
 				return null;
 			}
 
 			@Override
-			public void delete(String nick) throws DBException {
+			public void delete(String nick) throws EmailException {
 			}
 			
 			@Override

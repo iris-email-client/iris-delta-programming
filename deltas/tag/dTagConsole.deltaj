@@ -1,0 +1,48 @@
+delta dTagConsole {
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.TagManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.Tag;
+		
+		import java.util.List;
+		
+		public class TagConsoleCommand extends AbstractMailCommand {
+			@Override
+			public void explain() {
+				System.out.println("(tag list) - show existing tags");
+		/*		System.out.println("(tag add <name>) - add an address book entry (name=email)");
+				System.out.println("(ab del <name> - delete an address book entry");*/
+			}
+			@Override
+			public String getCommandName() {
+				return "tag";
+			}
+			@Override
+			protected void handleExecute() throws EmailException {
+				switch(parameters.get(0)) {
+					case "list" : listAll();
+					break;
+					/*case "add" : add();
+					break;
+					case "delete" : delete();
+					break;*/
+					default : throw new EmailException(parameters.get(0) +
+						" is an invalid command");
+				}
+			}
+			private void listAll() throws EmailException {
+				List<Tag> tags = TagManager.instance().findAll();
+				System.out.println("-----------------------------------------------------");
+				System.out.println("TAGS:");
+				System.out.println("-----------------------------------------------------");
+				for(Tag t : tags) {
+					System.out.print(t.getName() + " - ");
+				}
+				System.out.println("-----------------------------------------------------");
+			}
+		}
+	}
+}

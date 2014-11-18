@@ -217,7 +217,7 @@ delta dConsole{
 		
 			@Override
 			public void explain() {
-				System.out.println("(cd) - change current folder)");
+				System.out.println("(cd <id_folder>) - change current folder)");
 			}
 		
 			@Override
@@ -225,13 +225,47 @@ delta dConsole{
 				if(validParameters()){
 					Integer id = Integer.parseInt(parameters.get(0));
 					FolderManager.instance().changeToFolder(id);
-					//String folder = FolderManager.instance().getCurrentFolderName();
-					//System.out.println(folder);
+					String folder = FolderManager.instance().getCurrentFolderName();
+					System.out.println(folder);
 				}else{
 					//TODO: invalid parameters given.
 				}
 			}
 		
+			@Override
+			public String getCommandName() {
+				return COMMAND_NAME;
+			}
+		}
+	}
+	
+	adds{
+		package br.unb.cic.iris.command.console;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.FolderManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		
+		public class ReadMessageConsoleCommand extends AbstractMailCommand {
+			static final String COMMAND_NAME = "read";
+			@Override
+			public void explain() {
+				System.out.println("(read <id_msg>) - read specified message)");
+			}
+			@Override
+			public void handleExecute() throws EmailException {
+				if(validParameters()) {
+					Integer id = Integer.parseInt(parameters.get(0));
+					EmailMessage message = FolderManager.instance().getMessage(id);
+					System.out.println("FROM: "+message.getFrom());
+					System.out.println("DATE: "+message.getDate());
+					System.out.println("SUBJECT: "+message.getSubject());
+					System.out.println("CONTENT:\n"+message.getMessage());
+				}
+				else {
+				}
+			}
 			@Override
 			public String getCommandName() {
 				return COMMAND_NAME;
@@ -264,7 +298,7 @@ delta dConsole{
 			public void handleExecute() throws EmailException {
 				List<EmailMessage> messages = FolderManager.instance().listFolderMessages();
 				for(EmailMessage msg : messages) {
-					System.out.printf("%s - %s \t- %s%n", formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
+					System.out.printf("%d - %s - %s \t- %s%n", msg.getId(), formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
 				}
 			}
 			@Override

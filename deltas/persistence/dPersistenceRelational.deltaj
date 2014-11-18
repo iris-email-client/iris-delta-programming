@@ -354,7 +354,6 @@ delta dPersistenceRelational {
 				try {
 		            startSession();
 		            session.delete(t);
-		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -367,7 +366,6 @@ delta dPersistenceRelational {
 		        try {
 		            startSession();
 		            obj = (T) session.load(clazz, id);
-		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -380,9 +378,7 @@ delta dPersistenceRelational {
 		        T obj = null;
 		        try {
 		            startSession();
-		            System.out.println("Session: "+session);
 		            obj = (T) session.load(clazz, id);
-		            //session.getTransaction().commit();
 		            return obj;
 		        } catch (HibernateException e) {
 		            handleException(e);
@@ -398,7 +394,6 @@ delta dPersistenceRelational {
 		            startSession();
 		            Query query = session.createQuery("from " + clazz.getName());
 		            objects = query.list();
-		            //session.getTransaction().commit();
 		        } catch (HibernateException e) {
 		            handleException(e);
 		        } finally {
@@ -444,6 +439,7 @@ delta dPersistenceRelational {
 					session.getTransaction().commit();
 					session.flush();
 					session.close();
+					session = null;
 				}
 			}
 		}		
@@ -555,6 +551,22 @@ delta dPersistenceRelational {
 				return new FolderDAO();
 			}
 			
+			public String getFolderName(Integer id) throws DBException {
+				try {
+					startSession();
+					Criteria criteria = session.createCriteria(IrisFolder.class);
+					criteria.add(Restrictions.idEq(id));
+					IrisFolder folder = (IrisFolder) criteria.uniqueResult();
+					if(folder != null){
+						return folder.getName();
+					}
+				} catch(Exception e) {
+					handleException(new	DBException("Error getting folder name: "+id, e));
+				} finally {
+					closeSession();
+				}
+				return null;
+			}
 			public IrisFolder findByName(String folderName) throws DBException {
 				try {
 					startSession();

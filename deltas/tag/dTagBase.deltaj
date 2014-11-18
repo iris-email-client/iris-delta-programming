@@ -92,7 +92,9 @@ delta dTagBase{
 			public Tag findByName(String name) throws EmailException {
 				return getTagDAO().findByName(name);
 			}
-			
+			public java.util.List<Tag> findAll() throws EmailException{
+				return getTagDAO().findAll();
+			}
 			public void saveOrUpdate(Tag tag) throws EmailException {
 				getTagDAO().saveOrUpdate(tag);
 			}
