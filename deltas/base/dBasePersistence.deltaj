@@ -46,7 +46,7 @@ delta dBasePersistence {
 		
 		public interface IFolderDAO {
 			public IrisFolder findByName(String folderName) throws EmailException;
-			public String getFolderName(Integer id) throws EmailException;
+			public IrisFolder findById(Integer id) throws EmailException;
 		}			
 	}
 }

@@ -156,7 +156,7 @@ delta dBaseFacade {
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
 				if(folder != null) {
 					currentFolderId = folderId;
-					currentFolderName = FolderDAO.instance().getFolderName(currentFolderId);
+					currentFolderName = folder.getName();
 				}
 			}
 			public List<IrisFolder> listFolders() throws EmailException {
