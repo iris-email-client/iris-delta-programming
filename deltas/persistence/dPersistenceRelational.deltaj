@@ -430,15 +430,21 @@ delta dPersistenceRelational {
 		    }
 		
 		    protected void startSession() throws HibernateException {
-		        session = HibernateUtil.getSessionFactory().openSession();
+				session = HibernateUtil.getSessionFactory().openSession();
 		        session.beginTransaction();
-		    }
-		    
+				/*if(session == null){
+					session = HibernateUtil.getSessionFactory().getCurrentSession();
+					session.beginTransaction();
+				}*/
+			}
 			protected void closeSession() {
-				if(session != null && session.isOpen()) {
-					session.getTransaction().commit();
-					session.flush();
-					session.close();
+				try{
+					if(session != null && session.isOpen()) {
+						session.getTransaction().commit();
+						session.flush();
+						session.close();
+					}
+				}finally{
 					session = null;
 				}
 			}

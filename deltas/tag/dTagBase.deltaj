@@ -10,6 +10,7 @@ delta dTagBase{
 			public Tag findByName(String name) throws EmailException;
 			public java.util.List<Tag> findAll() throws EmailException;
 			public void saveOrUpdate(Tag tag) throws EmailException;
+			public void save(Tag tag, Integer messageId) throws EmailException; 
 			public void delete(Tag t) throws EmailException;
 		}
 	}
@@ -69,9 +70,11 @@ delta dTagBase{
 		package br.unb.cic.iris.core;
 
 		import br.unb.cic.iris.core.exception.EmailException;
-		import br.unb.cic.iris.core.exception.EmailUncheckedException;
+		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
 		import br.unb.cic.iris.persistence.ITagDAO;
+		import br.unb.cic.iris.persistence.relational.EmailDAO;
+		import br.unb.cic.iris.persistence.relational.TagDAO;
 		
 		public final class TagManager {
 			private static final TagManager instance = new TagManager();
@@ -100,6 +103,13 @@ delta dTagBase{
 			}
 			public void delete(Tag tag) throws EmailException {
 				getTagDAO().delete(tag);
+			}
+			public void saveTags(Integer messageId, String tagsStr) throws EmailException{
+				String[] tags = tagsStr.trim().split(",");
+				for(String str : tags) {
+					Tag tag = new Tag(str.trim());
+					getTagDAO().save(tag, messageId);
+				}
 			}
 		}
 	}

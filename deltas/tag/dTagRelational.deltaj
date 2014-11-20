@@ -100,6 +100,7 @@ delta dTagRelational {
 		package br.unb.cic.iris.persistence.relational;
 
 		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
 		import br.unb.cic.iris.persistence.ITagDAO;
 		
@@ -127,6 +128,13 @@ delta dTagRelational {
 					closeSession();
 				}
 				return null;
+			}
+			public void save(Tag tag, Integer messageId) throws DBException{
+				saveOrUpdate(tag);
+				tag = findById(tag.getId());
+				EmailMessage message = EmailDAO.instance().findById(messageId);
+				tag.getMessages().add(message);
+				saveOrUpdate(tag);
 			}
 		}
 	}
