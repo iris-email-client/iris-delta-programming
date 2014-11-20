@@ -5,10 +5,7 @@ delta dBaseFacade {
 		import java.util.Date;
 		import java.util.List;
 		
-		import javax.mail.Flags;
-		import javax.mail.search.AndTerm;
 		import javax.mail.search.ComparisonTerm;
-		import javax.mail.search.FlagTerm;
 		import javax.mail.search.ReceivedDateTerm;
 		import javax.mail.search.SearchTerm;
 

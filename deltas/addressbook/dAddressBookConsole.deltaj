@@ -19,7 +19,7 @@ delta dAddressBookConsole{
 			public void explain() {
 				System.out.println("(ab list) - show the address book entries");
 				System.out.println("(ab add <name> <email>) - add an address book entry (name=email)");
-				System.out.println("(ab del <name> - delete an address book entry");
+				System.out.println("(ab delete <name> - delete an address book entry");
 			}
 		
 			@Override
