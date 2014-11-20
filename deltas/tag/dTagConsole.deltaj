@@ -52,9 +52,9 @@ delta dTagConsole {
 				System.out.println("TAGS:");
 				System.out.println("-----------------------------------------------------");
 				for (Tag t : tags) {
-					System.out.print(t.getName() + " - ");
+					System.out.print(t.getName() + " ");
 				}
-				System.out.println("-----------------------------------------------------");
+				System.out.println("\n-----------------------------------------------------");
 			}
 		}
 	}

@@ -8,6 +8,12 @@
         <property name="format_sql">false</property>
         <property name="hibernate.hbm2ddl.auto">update</property>    
         
+        <!-- JDBC connection pool (use the built-in connection pool)
+        <property name="connection.pool_size">1</property> -->
+        
+        <!-- Enable Hibernate's automatic session context management -->
+        <property name="current_session_context_class">thread</property>
+        
         <!-- PostreSQL -->
         <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>
         <property name="connection.driver_class">org.postgresql.Driver</property>

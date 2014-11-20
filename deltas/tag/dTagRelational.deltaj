@@ -129,12 +129,47 @@ delta dTagRelational {
 				}
 				return null;
 			}
-			public void save(Tag tag, Integer messageId) throws DBException{
-				saveOrUpdate(tag);
-				tag = findById(tag.getId());
-				EmailMessage message = EmailDAO.instance().findById(messageId);
-				tag.getMessages().add(message);
-				saveOrUpdate(tag);
+			public void save(Tag tagToSave, Integer messageId) throws DBException {
+				try {
+					session = HibernateUtil.getSessionFactory().openSession();
+					session.beginTransaction();
+					Criteria criteria = session.createCriteria(Tag.class);
+					criteria.add(Restrictions.eq("name", tagToSave.getName()));
+					Tag tag = ( Tag ) criteria.uniqueResult();
+					if(tag == null) {
+						session.saveOrUpdate(tagToSave);
+						criteria = session.createCriteria(Tag.class);
+						criteria.add(Restrictions.eq("name", tagToSave.getName()));
+						tag = ( Tag ) criteria.uniqueResult();
+						System.out.println("RESULT: " + tag.getName());
+					}
+					EmailMessage msg = ( EmailMessage ) session.load(EmailMessage.class,
+						messageId);
+					System.out.println("MESSAGE: " + msg.getSubject());
+					System.out.println("MESSAGES: " + tag.getMessages());
+					if(tag.getMessages() == null){
+						tag.setMessages(new java.util.HashSet<EmailMessage>());
+					}
+					tag.getMessages().add(msg);
+					System.out.println("Updating ...");
+					session.update(tag);
+					session.getTransaction().commit();
+				}
+				catch(Exception e) {
+					e.printStackTrace();
+					handleException(new DBException("Couldn't save tag: " + tagToSave.getName(),
+							e));
+				}
+				finally {
+					try {
+						if(session != null && session.isOpen()) {
+							session.close();
+						}
+					}
+					finally {
+						session = null;
+					}
+				}
 			}
 		}
 	}
