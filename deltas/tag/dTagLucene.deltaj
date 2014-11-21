@@ -1,0 +1,115 @@
+delta dTagLucene {
+	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
+		adds @Override 
+		public List<EmailMessage> listMessagesByTag(String tag) throws DBException {
+			List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
+			return messages;
+		}
+	}
+	modifies br.unb.cic.iris.core.model.EmailMessage{		
+		adds private Set<Tag> tags;
+			
+		adds public Set<Tag> getTags() {
+				return tags;
+			}
+			
+		adds public void setTags(Set<Tag> tags) {
+				this.tags = tags;
+			}
+	}
+	modifies br.unb.cic.iris.core.TagManager{
+		adds import br.unb.cic.iris.persistence.lucene.TagDAO;
+		
+		modifies getTagDAO () {
+			return TagDAO.instance();
+		}
+	}
+	removes br.unb.cic.iris.core.model.Tag;
+	adds{
+		package br.unb.cic.iris.core.model;
+
+		import java.util.Set;
+		
+		public class Tag {
+			private Long id;
+			
+			private String name;
+			
+			private Set<EmailMessage> messages;
+		
+			public Tag() {
+				this(null);
+			}
+			public Tag(String name) {
+				this(null,name);
+			}
+			public Tag(Long id, String name) {
+				super();
+				this.id = id;
+				this.name = name;
+			}
+			
+			public Long getId() {
+				return id;
+			}
+			public void setId(Long id) {
+				this.id = id;
+			}
+			public String getName() {
+				return name;
+			}
+			public void setName(String name) {
+				this.name = name;
+			}
+			public Set<EmailMessage> getMessages() {
+				return messages;
+			}
+			public void setMessages(Set<EmailMessage> messages) {
+				this.messages = messages;
+			}
+		}
+	}
+	adds{
+		package br.unb.cic.iris.persistence.lucene;
+
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.Tag;
+		import br.unb.cic.iris.persistence.ITagDAO;
+		
+		public class TagDAO extends AbstractDAO<Tag> implements ITagDAO {
+			private static final TagDAO instance = new TagDAO();
+			private TagDAO() {
+				this.type = "tag";
+			}
+			public static TagDAO instance() {
+				return instance;
+			}
+			public Tag findByName(String tagName) throws DBException {
+				List<Tag> result = new ArrayList<Tag>();
+				Query nameQuery = new TermQuery(new Term("name", folderName));
+				result = findByTerms(new Query[] { nameQuery });
+				if (result.isEmpty()) {
+					throw new EmailException("Tag name not found", null);
+				}
+				return result.iterator().next();
+			}
+			public void save(Tag tagToSave, Integer messageId) throws DBException {
+				// TODO
+			}
+			protected Tag fromDocument(int doc, Document d) throws ParseException {
+				Tag t = new Tag();
+				t.setId(doc);
+				t.setName(d.get("name"));
+				return f;				
+			}
+			
+			protected Document toDocument(Tag t) throws Exception {
+				Document doc = new Document();
+				doc.add(new StringField("type", "tag", Store.YES));
+				doc.add(new StringField("name", t.getName(), Store.YES));
+				return doc;
+			}
+		}
+	}
+}

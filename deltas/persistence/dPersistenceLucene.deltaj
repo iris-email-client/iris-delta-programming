@@ -83,6 +83,18 @@ delta dPersistenceLucene {
 				}
 			}
 			
+			public void saveOrUpdate(T t) throws EmailException {
+				try {
+					saveDocument(toDocument(t));
+				} catch (Exception e) {
+					throw new EmailException("An error occurred while saving " + type + ".", e);
+				}
+			}
+			
+			public void delete(T t) throws EmailException {
+				// TODO
+			}
+			
 			protected void saveDocument(Document doc) throws EmailException {
 				try {
 					IndexWriter writer = IndexManager.getWriter();
@@ -97,6 +109,8 @@ delta dPersistenceLucene {
 				List<T> result = new ArrayList<T>();
 				try {						
 					BooleanQuery query = new BooleanQuery();
+					Query typeQuery = new TermQuery(new Term("type", type));
+					query.add(typeQuery, Occur.MUST);
 					for (Query q : queries) {
 						query.add(q, Occur.MUST);
 					}
@@ -108,8 +122,9 @@ delta dPersistenceLucene {
 				return result;
 			}
 			
-
 			protected abstract T fromDocument(int id, Document doc) throws Exception;
+			
+			protected abstract Document toDocument(T t) throws Exception;
 
 		}		
 	}
@@ -191,18 +206,7 @@ delta dPersistenceLucene {
 		
 			@Override
 			public void saveMessage(EmailMessage m) throws EmailException {
-				Document doc = new Document();
-				doc.add(new StringField("type", "email", Store.NO));
-				doc.add(new StringField("from", m.getFrom(), Store.YES));
-				doc.add(new StringField("to", m.getTo(), Store.YES));
-				doc.add(new StringField("cc", m.getCc(), Store.YES));
-				doc.add(new StringField("bcc", m.getBcc(), Store.YES));
-				doc.add(new TextField("subject", m.getSubject(), Store.YES));
-				doc.add(new TextField("message", m.getMessage(), Store.YES));
-				doc.add(new StringField("date", DateTools.dateToString(m.getDate(),
-						DateTools.Resolution.SECOND), Store.YES));
-				doc.add(new LongField("folderId", m.getFolder().getId().longValue(), Store.YES));
-				saveDocument(doc);
+				saveOrUpdate(m);
 			}
 		
 			@Override
@@ -231,9 +235,23 @@ delta dPersistenceLucene {
 			}
 			
 			public List<EmailMessage> listMessages(Integer idFolder) throws EmailException {
-				Query typeQuery = new TermQuery(new Term("type", "email"));
 				Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
-				return findByTerms(new Query[] { typeQuery, folderQuery });
+				return findByTerms(new Query[] { folderQuery });
+			}
+			
+			protected Document toDocument(EmailMessage m) throws Exception {
+				Document doc = new Document();
+				doc.add(new StringField("type", "email", Store.YES));
+				doc.add(new StringField("from", m.getFrom(), Store.YES));
+				doc.add(new StringField("to", m.getTo(), Store.YES));
+				doc.add(new StringField("cc", m.getCc(), Store.YES));
+				doc.add(new StringField("bcc", m.getBcc(), Store.YES));
+				doc.add(new TextField("subject", m.getSubject(), Store.YES));
+				doc.add(new TextField("message", m.getMessage(), Store.YES));
+				doc.add(new StringField("date", DateTools.dateToString(m.getDate(),
+						DateTools.Resolution.SECOND), Store.YES));
+				doc.add(new LongField("folderId", m.getFolder().getId().longValue(), Store.YES));
+				return doc;				
 			}
 
 			protected EmailMessage fromDocument(int doc, Document d) throws ParseException {
@@ -284,6 +302,8 @@ delta dPersistenceLucene {
 		import java.util.List;
 		
 		import org.apache.lucene.document.Document;
+		import org.apache.lucene.document.Field.Store;
+		import org.apache.lucene.document.StringField;
 		import org.apache.lucene.index.Term;
 		import org.apache.lucene.search.Query;
 		import org.apache.lucene.search.BooleanClause.Occur;
@@ -314,9 +334,8 @@ delta dPersistenceLucene {
 
 			public IrisFolder findByName(String folderName) throws EmailException {
 				List<IrisFolder> result = new ArrayList<IrisFolder>();
-				Query typeQuery = new TermQuery(new Term("type", "folder"));
 				Query nameQuery = new TermQuery(new Term("name", folderName));
-				result = findByTerms(new Query[] { typeQuery, nameQuery });
+				result = findByTerms(new Query[] { nameQuery });
 				if (result.isEmpty()) {
 					throw new EmailException("Folder name not found", null);
 				}
@@ -330,10 +349,11 @@ delta dPersistenceLucene {
 				return f;				
 			}
 			
-			@Override
-			public String getFolderName(Integer id) throws EmailException {
-				// TODO Auto-generated method stub
-				return null;
+			protected Document toDocument(IrisFolder f) throws Exception {
+				Document doc = new Document();
+				doc.add(new StringField("type", "folder", Store.YES));
+				doc.add(new StringField("from", f.getName(), Store.YES));
+				return doc;
 			}
 		}	
 	}	
