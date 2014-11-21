@@ -2,8 +2,18 @@ delta dTagLucene {
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
 		adds @Override 
 		public List<EmailMessage> listMessagesByTag(String tag) throws DBException {
-			List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
-			return messages;
+			Query nameQuery = new TermQuery(new Term("tag", tag));
+			return findByTerms(new Query[] { nameQuery });
+		}
+		modifies toDocument() {
+			original();
+			for (Tag t : getTags()) {
+				doc.add(new StringField("tag", t.getName(), Store.YES));
+			}
+		}
+		modifies fromDocument() {
+			original();
+			// TODO				
 		}
 	}
 	modifies br.unb.cic.iris.core.model.EmailMessage{		

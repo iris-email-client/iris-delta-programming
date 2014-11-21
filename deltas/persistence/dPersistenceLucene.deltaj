@@ -105,7 +105,7 @@ delta dPersistenceLucene {
 				}
 			}
 			
-			protected List<T> findByTerms(Query[] queries) throws EmailException {
+			public List<T> findByTerms(Query[] queries) throws EmailException {
 				List<T> result = new ArrayList<T>();
 				try {						
 					BooleanQuery query = new BooleanQuery();
