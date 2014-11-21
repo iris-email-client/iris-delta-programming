@@ -24,18 +24,18 @@ delta dBaseModel {
 				this(null);
 			}
 		
-			public FolderContent(Integer id) {
+			public FolderContent(Long id) {
 				super();
 				this.id = id;
 			}
 
-			private Integer id;
+			private Long id;
 		
-			public Integer getId() {
+			public Long getId() {
 				return id;
 			}
 		
-			public void setId(Integer id) {
+			public void setId(Long id) {
 				this.id = id;
 			}
 		}
@@ -62,7 +62,7 @@ delta dBaseModel {
 				this(null,name);
 			}
 		
-			public IrisFolder(Integer id, String name) {
+			public IrisFolder(Long id, String name) {
 				super(id);
 				this.name = name;
 				contents = new ArrayList<FolderContent>();
