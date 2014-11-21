@@ -1,4 +1,7 @@
 delta dTagBase{
+	modifies br.unb.cic.iris.persistence.IEmailDAO{
+		adds public List<EmailMessage> listMessagesByTag(String tag) throws EmailException;
+	}
 	adds{
 		package br.unb.cic.iris.persistence;
 
@@ -110,6 +113,9 @@ delta dTagBase{
 					Tag tag = new Tag(str.trim());
 					getTagDAO().save(tag, messageId);
 				}
+			}
+			public java.util.List<EmailMessage> listMessagesByTag(String tag) throws EmailException{
+				return EmailDAO.instance().listMessagesByTag(tag);
 			}
 		}
 	}
