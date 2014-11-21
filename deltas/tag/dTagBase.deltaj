@@ -76,8 +76,6 @@ delta dTagBase{
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
 		import br.unb.cic.iris.persistence.ITagDAO;
-		import br.unb.cic.iris.persistence.relational.EmailDAO;
-		import br.unb.cic.iris.persistence.relational.TagDAO;
 		
 		public final class TagManager {
 			private static final TagManager instance = new TagManager();

@@ -47,6 +47,7 @@ delta dTagRelational {
 	}
 	modifies br.unb.cic.iris.core.TagManager{
 		adds import br.unb.cic.iris.persistence.relational.TagDAO;
+		adds import br.unb.cic.iris.persistence.relational.TagDAO;
 		
 		modifies getTagDAO () {
 			return TagDAO.instance();

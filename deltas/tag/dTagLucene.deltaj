@@ -1,10 +1,11 @@
 delta dTagLucene {
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
-		adds @Override 
-		public List<EmailMessage> listMessagesByTag(String tag) throws DBException {
+		adds @Override
+		public List<EmailMessage> listMessagesByTag(String tag) throws EmailException {
 			Query nameQuery = new TermQuery(new Term("tag", tag));
 			return findByTerms(new Query[] { nameQuery });
 		}
+		/*
 		modifies toDocument() {
 			original();
 			for (Tag t : getTags()) {
@@ -15,8 +16,11 @@ delta dTagLucene {
 			original();
 			// TODO				
 		}
+		*/
 	}
-	modifies br.unb.cic.iris.core.model.EmailMessage{		
+	modifies br.unb.cic.iris.core.model.EmailMessage{	
+		adds import java.util.Set; 
+			
 		adds private Set<Tag> tags;
 			
 		adds public Set<Tag> getTags() {
@@ -29,6 +33,7 @@ delta dTagLucene {
 	}
 	modifies br.unb.cic.iris.core.TagManager{
 		adds import br.unb.cic.iris.persistence.lucene.TagDAO;
+		adds import br.unb.cic.iris.persistence.lucene.EmailDAO;
 		
 		modifies getTagDAO () {
 			return TagDAO.instance();
@@ -81,8 +86,19 @@ delta dTagLucene {
 	}
 	adds{
 		package br.unb.cic.iris.persistence.lucene;
+		
+		import java.text.ParseException;
+		import java.util.ArrayList;
+		import java.util.List;
+		
+		import org.apache.lucene.document.Document;
+		import org.apache.lucene.document.Field.Store;
+		import org.apache.lucene.document.StringField;
+		import org.apache.lucene.index.Term;
+		import org.apache.lucene.search.Query;
+		import org.apache.lucene.search.TermQuery;
 
-		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
 		import br.unb.cic.iris.persistence.ITagDAO;
@@ -95,23 +111,23 @@ delta dTagLucene {
 			public static TagDAO instance() {
 				return instance;
 			}
-			public Tag findByName(String tagName) throws DBException {
+			public Tag findByName(String tagName) throws EmailException {
 				List<Tag> result = new ArrayList<Tag>();
-				Query nameQuery = new TermQuery(new Term("name", folderName));
+				Query nameQuery = new TermQuery(new Term("name", tagName));
 				result = findByTerms(new Query[] { nameQuery });
 				if (result.isEmpty()) {
 					throw new EmailException("Tag name not found", null);
 				}
 				return result.iterator().next();
 			}
-			public void save(Tag tagToSave, Integer messageId) throws DBException {
+			public void save(Tag tagToSave, Integer messageId) throws EmailException {
 				// TODO
 			}
 			protected Tag fromDocument(int doc, Document d) throws ParseException {
 				Tag t = new Tag();
-				t.setId(doc);
+				t.setId((long) doc);
 				t.setName(d.get("name"));
-				return f;				
+				return t;				
 			}
 			
 			protected Document toDocument(Tag t) throws Exception {

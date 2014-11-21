@@ -5,7 +5,7 @@ SPL IrisDeltaJ {
 	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
 	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceRelational, dPersistenceLucene, 
 	dAddressBook, dAddressBookRelational, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, 
-	dTestAddressBookDAO, dTestFolderDAO, dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole}
+	dTestAddressBookDAO, dTestFolderDAO, dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole, dTagLucene}
 
 	Constraints {
 	// Put boolean expression representation of the feature model here.
@@ -28,6 +28,8 @@ SPL IrisDeltaJ {
 		{dAddressBook, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade} when (LuceneDB & AddressBook);	
 		
 		{dTagBase, dTagRelational, dTagConsole, dTestRelationalTagDAO} when (RelationalDB & Tag);
+		
+		{dTagBase, dTagLucene, dTagConsole} when (LuceneDB & Tag);
 
 		{dConsole} when (Console);
 	}
@@ -38,6 +40,8 @@ SPL IrisDeltaJ {
 		SimpleRelationalTag = {Base, RelationalDB, Tag, Console};
 		CompleteRelational = {Base, RelationalDB, AddressBook, Tag, Console};
 		SimpleLucene = {Base, LuceneDB, Console};
-		SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};		
+		SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};
+		SimpleLuceneTag = {Base, LuceneDB, Tag, Console};
+		CompleteLucene = {Base, LuceneDB, AddressBook, Tag, Console};		
 	} 
 } 
