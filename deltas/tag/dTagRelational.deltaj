@@ -6,6 +6,23 @@ delta dTagRelational {
 			original();
 		}
 	}
+	modifies br.unb.cic.iris.persistence.relational.EmailDAO {
+		adds @Override 
+		public List<EmailMessage> listMessagesByTag(String tag) throws DBException {
+			List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
+			try {
+				startSession();
+				Criteria criteria =	session.createCriteria(EmailMessage.class).createCriteria("tags").add(Restrictions.eq("name",tag));
+				messages = populate(( List<EmailMessage> ) criteria.list());
+				System.out.println("messages: "+messages);
+			} catch(Exception e) {
+				handleException(new DBException("Error listing messages with tag: " + tag, e));
+			} finally {
+				closeSession();
+			}
+			return messages;
+		}
+	}
 	modifies br.unb.cic.iris.core.model.EmailMessage{
 		adds import java.util.Set;
 		adds import javax.persistence.CascadeType;
@@ -135,38 +152,37 @@ delta dTagRelational {
 					session.beginTransaction();
 					Criteria criteria = session.createCriteria(Tag.class);
 					criteria.add(Restrictions.eq("name", tagToSave.getName()));
-					Tag tag = ( Tag ) criteria.uniqueResult();
-					if(tag == null) {
+					Tag tag = (Tag) criteria.uniqueResult();
+					if (tag == null) {
 						session.saveOrUpdate(tagToSave);
 						criteria = session.createCriteria(Tag.class);
 						criteria.add(Restrictions.eq("name", tagToSave.getName()));
-						tag = ( Tag ) criteria.uniqueResult();
-						System.out.println("RESULT: " + tag.getName());
+						tag = (Tag) criteria.uniqueResult();
 					}
-					EmailMessage msg = ( EmailMessage ) session.load(EmailMessage.class,
-						messageId);
-					System.out.println("MESSAGE: " + msg.getSubject());
-					System.out.println("MESSAGES: " + tag.getMessages());
-					if(tag.getMessages() == null){
+					EmailMessage msg = (EmailMessage) session.load(EmailMessage.class, messageId);
+					if (tag.getMessages() == null) {
 						tag.setMessages(new java.util.HashSet<EmailMessage>());
 					}
 					tag.getMessages().add(msg);
-					System.out.println("Updating ...");
 					session.update(tag);
+		
+					msg = (EmailMessage) session.load(EmailMessage.class, messageId);
+					if (msg.getTags() == null) {
+						msg.setTags(new java.util.HashSet<Tag>());
+					}
+					msg.getTags().add(tag);
+					session.update(msg);
+		
 					session.getTransaction().commit();
-				}
-				catch(Exception e) {
+				} catch (Exception e) {
 					e.printStackTrace();
-					handleException(new DBException("Couldn't save tag: " + tagToSave.getName(),
-							e));
-				}
-				finally {
+					handleException(new DBException("Couldn't save tag: " + tagToSave.getName(), e));
+				} finally {
 					try {
-						if(session != null && session.isOpen()) {
+						if (session != null && session.isOpen()) {
 							session.close();
 						}
-					}
-					finally {
+					} finally {
 						session = null;
 					}
 				}
