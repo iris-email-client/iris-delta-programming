@@ -44,6 +44,10 @@ delta dAddressBookLucene {
 			// TODO Auto-generated method stub
 				return null;
 			}
+			
+			protected Document toDocument(AddressBookEntry e) {
+				return null;
+			}
 
 		}
 	}
