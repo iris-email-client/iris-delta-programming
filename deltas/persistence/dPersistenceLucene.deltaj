@@ -369,6 +369,7 @@ delta dPersistenceLucene {
 			}
 
 			protected IrisFolder fromDocument(int doc, Document d) throws ParseException {
+				IrisFolder f = new IrisFolder();
 				f.setId(Long.parseLong(d.get("id")));
 				f.setName(d.get("name"));
 				return f;				
@@ -511,6 +512,8 @@ delta dPersistenceLucene {
 		import org.apache.lucene.search.Scorer;
 
 		public abstract class AbstractCollector extends Collector {
+			
+			private int base;
 
 			public void setScorer(Scorer scorer) {
 			}
@@ -521,7 +524,7 @@ delta dPersistenceLucene {
 		 
 			public void collect(int doc) {
 				try {
-					tryCollect(doc);
+					tryCollect(doc + base);
 				} catch (Exception e) {
 					throw new RuntimeException(e);
 				}
@@ -530,6 +533,7 @@ delta dPersistenceLucene {
 			abstract void tryCollect(int doc) throws Exception;			
 		 
 			public void setNextReader(AtomicReaderContext context) throws IOException {
+				 this.base = context.docBase;
 			}				
 		}
 		
