@@ -66,7 +66,8 @@ delta dPersistenceLucene {
 					IndexSearcher searcher = IndexManager.getSearcher();
 					searcher.search(query, new TCollector(searcher, result));
 				} catch (IOException e) {
-					throw new EmailException("An error occurred while retrieving all " + clazz.getName() + "s", e);
+					e.printStackTrace();
+					throw new EmailException("An error occurred while retrieving all " + type + "s", e);
 				}
 				return result;
 			}
@@ -101,7 +102,7 @@ delta dPersistenceLucene {
 				try {
 					IndexWriter writer = IndexManager.getWriter();
 					String id = doc.get("id");
-					if ("null".equals(id) || "0".equals(id)) {
+					if ("null".equals(id) || "0".equals(id) || id == null) {
 						doc.removeField("id");
 						doc.add(new StringField("id", String.valueOf(java.util.UUID.randomUUID().getMostSignificantBits()), Store.YES));
 						writer.addDocument(doc);
@@ -335,26 +336,40 @@ delta dPersistenceLucene {
 				this.type = "folder";
 			}
 			
-			public static FolderDAO instance(){
+			public static FolderDAO instance() throws EmailException {
 				if(instance == null){
 					instance = new FolderDAO();
+					ensureIsCreated(IrisFolder.INBOX);
+					ensureIsCreated(IrisFolder.OUTBOX);
+					System.out.println(String.format("%s and %s folders created.", IrisFolder.INBOX, IrisFolder.OUTBOX));
 				}
 				return instance;
 			}
+			
+			private static void ensureIsCreated(String folderName) throws EmailException {
+				List<IrisFolder> folders = instance.doFindByName(folderName);
+				if (folders.isEmpty()) {
+					IrisFolder inbox = new IrisFolder();
+					inbox.setName(folderName);
+					instance.saveOrUpdate(inbox);
+				}				
+			}
 
 			public IrisFolder findByName(String folderName) throws EmailException {
-				List<IrisFolder> result = new ArrayList<IrisFolder>();
-				Query nameQuery = new TermQuery(new Term("name", folderName));
-				result = findByTerms(new Query[] { nameQuery });
+				List<IrisFolder> result = doFindByName(folderName);
 				if (result.isEmpty()) {
-					throw new EmailException("Folder name not found", null);
+					throw new EmailException(String.format("Folder '%s' not found", folderName), null);
 				}
 				return result.iterator().next();
 			}
 
+			public List<IrisFolder> doFindByName(String folderName) throws EmailException {
+				Query nameQuery = new TermQuery(new Term("name", folderName));
+				return findByTerms(new Query[] { nameQuery });
+			}
+
 			protected IrisFolder fromDocument(int doc, Document d) throws ParseException {
-				IrisFolder f = new IrisFolder();
-				f.setId(d.getField("id").numericValue().longValue());
+				f.setId(Long.parseLong(d.get("id")));
 				f.setName(d.get("name"));
 				return f;				
 			}
@@ -363,7 +378,7 @@ delta dPersistenceLucene {
 				Document doc = new Document();
 				doc.add(new StringField("type", "folder", Store.YES));
 				doc.add(new StringField("id", String.valueOf(f.getId()), Store.YES));
-				doc.add(new StringField("from", f.getName(), Store.YES));
+				doc.add(new StringField("name", f.getName(), Store.YES));
 				return doc;
 			}
 		}
@@ -415,10 +430,12 @@ delta dPersistenceLucene {
 					path = new File(filepath);
 				}
 		
-				if (path == null || !path.exists())
+				if (path == null || !path.exists()) {
 					index = new RAMDirectory();
-				else
+					getWriter();
+				} else {
 					index = FSDirectory.open(path);
+				}
 		
 				return index;
 			}
@@ -454,6 +471,7 @@ delta dPersistenceLucene {
 					IndexWriterConfig config = new IndexWriterConfig(Version.LATEST,
 							analyzer);
 					writer = new IndexWriter(getIndex(), config);
+					writer.commit();
 				}
 				return writer;
 			}
