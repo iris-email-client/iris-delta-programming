@@ -73,17 +73,16 @@ delta dPersistenceLucene {
 			}
 			
 			public T findById(Long id) throws EmailException {
-				return findById(id.intValue());
+				Query nameQuery = new TermQuery(new Term("id", String.valueOf(id)));
+				List<T> result = findByTerms(new Query[] { nameQuery });
+				if (result.isEmpty()) {
+					throw new EmailException(String.format("%s not found", type), null);
+				}
+				return result.iterator().next();
 			}
 			
 			public T findById(Integer id) throws EmailException {
-				try {
-					IndexReader reader = IndexManager.getReader();
-					Document doc = reader.document(id);
-					return fromDocument(id, doc);
-				} catch (Exception e) {
-					throw new EmailException("An error occurred while retrieving by id", e);
-				}
+				return findById((long) id);
 			}
 			
 			public void saveOrUpdate(T t) throws EmailException {
@@ -95,7 +94,17 @@ delta dPersistenceLucene {
 			}
 			
 			public void delete(T t) throws EmailException {
-				// TODO
+				try {
+					Document d = toDocument(t);
+					BooleanQuery q = new BooleanQuery();
+					q.add(new TermQuery(new Term("type", type)), Occur.MUST);
+					q.add(new TermQuery(new Term("id", d.get("id"))), Occur.MUST);
+					IndexWriter writer = IndexManager.getWriter();
+					writer.deleteDocuments(q);
+					writer.commit();
+				} catch (Exception e) {
+					throw new EmailException("An error occured while deleting " + type, e);
+				}
 			}
 			
 			protected void saveDocument(Document doc) throws EmailException {
@@ -267,7 +276,7 @@ delta dPersistenceLucene {
 
 			protected EmailMessage fromDocument(int doc, Document d) throws ParseException {
 				EmailMessage m = new EmailMessage();
-				m.setId(d.getField("id").numericValue().longValue());
+				m.setId(Long.parseLong(d.get("id")));
 				m.setFrom(d.get("from"));
 				m.setTo(d.get("to"));
 				m.setCc(d.get("cc"));
