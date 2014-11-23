@@ -2,9 +2,27 @@ delta dAddressBookLucene {
 	adds {
 		package br.unb.cic.iris.persistence.lucene;
 
+		import java.io.IOException;
+		import java.util.ArrayList;
 		import java.util.List;
+		import java.util.UUID;
+
 		import org.apache.lucene.document.Document;
-		
+		import org.apache.lucene.document.Field;
+		import org.apache.lucene.document.Field.Store;
+		import org.apache.lucene.document.LongField;
+		import org.apache.lucene.document.StringField;
+		import org.apache.lucene.index.IndexWriter;
+		import org.apache.lucene.index.Term;
+		import org.apache.lucene.search.BooleanClause;
+		import org.apache.lucene.search.BooleanClause.Occur;
+		import org.apache.lucene.search.BooleanQuery;
+		import org.apache.lucene.search.IndexSearcher;
+		import org.apache.lucene.search.NumericRangeQuery;
+		import org.apache.lucene.search.Query;
+		import org.apache.lucene.search.TermQuery;
+		import org.apache.lucene.search.TopDocs;
+
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.AddressBookEntry;
 		import br.unb.cic.iris.persistence.IAddressBookDAO;
@@ -37,16 +55,64 @@ delta dAddressBookLucene {
 			@Override
 			public void delete(String nick) throws EmailException {
 			}
-			
+
+			private void create(AddressBookEntry entry) throws EmailException {
+				try {
+					IndexWriter writer = IndexManager.getWriter();
+
+					StringField uuidField = new StringField("uuid",
+						UUID.randomUUID().toString(), Store.YES);
+					Document newDoc = toDocument(entry);
+					newDoc.add(uuidField);
+					writer.addDocument(newDoc);
+					writer.commit();
+				}
+				catch(IOException e) {
+					throw new
+					EmailException("An error occured while creating address book entry.", e);
+				}
+			}
+			private void update(Document oldDoc, AddressBookEntry entry) throws
+			EmailException {
+				try {
+					IndexWriter writer = IndexManager.getWriter();
+
+					String oldDocUUID = oldDoc.getField("uuid").stringValue();
+					// As it's an update operation, keep the previous UUID.
+					StringField uuidField = new StringField("uuid", oldDocUUID, Store.YES);
+					// The update operation actually removes the old document and adds a new one.
+					Document newDoc = toDocument(entry);
+					newDoc.add(uuidField);
+					writer.updateDocument(new Term("uuid", oldDocUUID), newDoc);
+					writer.commit();
+				}
+				catch(IOException e) {
+					throw new
+					EmailException("An error occured while updating address book entry.", e);
+				}
+			}
+
 			@Override
 			protected AddressBookEntry fromDocument(int id, Document doc) throws
 			Exception {
-			// TODO Auto-generated method stub
-				return null;
+				AddressBookEntry entry = new AddressBookEntry();
+				entry.setId(doc.getField("id").numericValue().longValue());
+				entry.setNick(doc.getField("nick").stringValue());
+				entry.setAddress(doc.getField("address").stringValue());
+				return entry;
 			}
-			
-			protected Document toDocument(AddressBookEntry e) {
-				return null;
+
+			protected Document toDocument(AddressBookEntry m) {
+				List<Field> fields = new ArrayList<Field>();
+				fields.add(new StringField("type", "addressBook", Store.YES));
+				fields.add(new LongField("id", m.getId().longValue(), Store.YES));
+				fields.add(new StringField("nick", m.getNick(), Store.YES));
+				fields.add(new StringField("address", m.getAddress(), Store.YES));
+
+				Document doc = new Document();
+				for(Field f : fields) doc.add(f);
+
+				return doc;
 			}
 
 		}
