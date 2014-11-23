@@ -34,7 +34,7 @@ delta dBasePersistence {
 			
 			public Date lastMessageReceived() throws EmailException;
 			
-			public List<EmailMessage> listMessages(Integer idFolder) throws EmailException;
+			public List<EmailMessage> listMessages(Long idFolder) throws EmailException;
 		
 		}		
 	}

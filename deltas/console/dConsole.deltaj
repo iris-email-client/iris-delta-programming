@@ -223,7 +223,7 @@ delta dConsole{
 			@Override
 			public void handleExecute() throws EmailException {
 				if(validParameters()){
-					Integer id = Integer.parseInt(parameters.get(0));
+					Long id = Long.parseLong(parameters.get(0));
 					FolderManager.instance().changeToFolder(id);
 					String folder = FolderManager.instance().getCurrentFolderName();
 					System.out.println(folder);

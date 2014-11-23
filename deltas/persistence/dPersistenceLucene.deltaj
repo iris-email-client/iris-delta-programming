@@ -89,6 +89,7 @@ delta dPersistenceLucene {
 				try {
 					saveDocument(toDocument(t));
 				} catch (Exception e) {
+					e.printStackTrace();
 					throw new EmailException("An error occurred while saving " + type + ".", e);
 				}
 			}
@@ -230,7 +231,7 @@ delta dPersistenceLucene {
 				return date;
 			}
 			
-			public List<EmailMessage> listMessages(Integer idFolder) throws EmailException {
+			public List<EmailMessage> listMessages(Long idFolder) throws EmailException {
 				Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
 				return findByTerms(new Query[] { folderQuery });
 			}
@@ -279,7 +280,7 @@ delta dPersistenceLucene {
 				message.setFolder(new IrisFolder(19l, "UnB"));
 				EmailDAO emailDAO = new EmailDAO();
 				emailDAO.saveMessage(message);
-				System.out.println(emailDAO.listMessages(19));
+				System.out.println(emailDAO.listMessages(19l));
 				System.out.println(emailDAO.findAll());
 				System.out.println(emailDAO.findById((long) emailDAO.findAll().iterator().next().getId()));
 				System.out.println(emailDAO.findById((long) emailDAO.findAll().iterator().next().getId()).getSubject());
@@ -318,7 +319,6 @@ delta dPersistenceLucene {
 					instance = new FolderDAO();
 					ensureIsCreated(IrisFolder.INBOX);
 					ensureIsCreated(IrisFolder.OUTBOX);
-					System.out.println(String.format("%s and %s folders created.", IrisFolder.INBOX, IrisFolder.OUTBOX));
 				}
 				return instance;
 			}
@@ -329,6 +329,7 @@ delta dPersistenceLucene {
 					IrisFolder inbox = new IrisFolder();
 					inbox.setName(folderName);
 					instance.saveOrUpdate(inbox);
+					System.out.println(String.format("%s folder created.", folderName));
 				}				
 			}
 
@@ -407,14 +408,19 @@ delta dPersistenceLucene {
 				if (filepath != null && !filepath.isEmpty()) {
 					path = new File(filepath);
 				}
-		
-				if (path == null || !path.exists()) {
+				if (path == null) {
 					index = new RAMDirectory();
-					getWriter();
+					IndexWriter writer = getWriter();
+					writer.commit();
 				} else {
+					if (!path.exists()) {
+						path.mkdir();
+						index = FSDirectory.open(path);
+						IndexWriter writer = getWriter();
+						writer.commit();
+					}
 					index = FSDirectory.open(path);
 				}
-		
 				return index;
 			}
 		
@@ -431,8 +437,14 @@ delta dPersistenceLucene {
 			}
 		
 			public static Directory getIndex() throws IOException {
-				if (index == null)
-					index = createIndex(null); // Index in RAM
+				if (index == null) {
+					String path = System.getProperty("user.home") +  "/.iris/lucene_idx";
+					if ("true".equals(System.getProperty("iris.lucene.ram"))) {
+					 	// Index in RAM
+					 	path = null;
+					}
+					index = createIndex(path);					
+				}
 				return index;
 			}
 		
@@ -449,7 +461,6 @@ delta dPersistenceLucene {
 					IndexWriterConfig config = new IndexWriterConfig(Version.LATEST,
 							analyzer);
 					writer = new IndexWriter(getIndex(), config);
-					writer.commit();
 				}
 				return writer;
 			}

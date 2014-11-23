@@ -141,7 +141,7 @@ delta dBaseFacade {
 		public final class FolderManager {
 			private static final FolderManager instance = new FolderManager();
 			private static final String ROOT_FOLDER = "ROOT";
-			private Integer currentFolderId = null;
+			private Long currentFolderId = null;
 			private String currentFolderName = ROOT_FOLDER;
 			private FolderManager() {
 			}
@@ -152,7 +152,7 @@ delta dBaseFacade {
 				return currentFolderName;
 			}
 			
-			public void changeToFolder(Integer folderId) throws EmailException {
+			public void changeToFolder(Long folderId) throws EmailException {
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
 				if(folder != null) {
 					currentFolderId = folderId;

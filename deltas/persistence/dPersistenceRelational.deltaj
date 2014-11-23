@@ -41,19 +41,19 @@ delta dPersistenceRelational {
 				this(null);
 			}
 		
-			public FolderContent(Integer id) {
+			public FolderContent(Long id) {
 				super();
 				this.id = id;
 			}
 
 			@Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
-			private Integer id;
+			private Long id;
 		
-			public Integer getId() {
+			public Long getId() {
 				return id;
 			}
 		
-			public void setId(Integer id) {
+			public void setId(Long id) {
 				this.id = id; 
 			}
 		}
@@ -102,7 +102,7 @@ delta dPersistenceRelational {
 				this(null,name);
 			}
 		
-			public IrisFolder(Integer id, String name) {
+			public IrisFolder(Long id, String name) {
 				super(id);
 				this.name = name;
 				contents = new ArrayList<FolderContent>();
@@ -514,7 +514,7 @@ delta dPersistenceRelational {
 				return obj;
 			}
 		
-			public List<EmailMessage> listMessages(Integer idFolder) throws DBException {
+			public List<EmailMessage> listMessages(Long idFolder) throws DBException {
 				List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
 				try {
 					startSession();
@@ -522,7 +522,7 @@ delta dPersistenceRelational {
 							.add(Restrictions.idEq(idFolder));
 					messages = populate((List<EmailMessage>) criteria.list());
 				} catch (Exception e) {
-					handleException(new DBException("Error listing messages from fodler: " + idFolder, e));
+					handleException(new DBException("Error listing messages from folder: " + idFolder, e));
 				} finally {
 					closeSession();
 				}
