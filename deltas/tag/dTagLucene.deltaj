@@ -1,22 +1,37 @@
 delta dTagLucene {
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
+		adds import java.util.TreeSet;
+		adds import br.unb.cic.iris.core.model.Tag;
+		adds import org.apache.lucene.index.IndexableField;
+		modifies fromDocument(int doc, Document d) {
+			EmailMessage m = original(doc, d);
+			for (IndexableField f : d.getFields()) {
+				if ("tag".equals(f.name())) {
+					if (m.getTags() == null) {
+						m.setTags(new TreeSet<Tag>());
+					}
+					Tag t = new Tag();
+					t.setName(f.stringValue());
+					m.getTags().add(t);
+				}
+			}
+			return m;
+		}
 		adds @Override
 		public List<EmailMessage> listMessagesByTag(String tag) throws EmailException {
 			Query nameQuery = new TermQuery(new Term("tag", tag));
 			return findByTerms(new Query[] { nameQuery });
 		}
-		/*
-		modifies toDocument() {
-			original();
-			for (Tag t : getTags()) {
-				doc.add(new StringField("tag", t.getName(), Store.YES));
+
+		modifies toDocument(EmailMessage m) {
+			Document d = original(m);
+			if (m.getTags() != null) {
+				for (Tag t : m.getTags()) {
+					d.add(new StringField("tag", t.getName(), Store.YES));
+				}				
 			}
+			return d;
 		}
-		modifies fromDocument() {
-			original();
-			// TODO				
-		}
-		*/
 	}
 	modifies br.unb.cic.iris.core.model.EmailMessage{	
 		adds import java.util.Set; 
