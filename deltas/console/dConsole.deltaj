@@ -80,14 +80,14 @@ delta dConsole{
 						MailCommand command = createCommand(cmd.trim());
 						command.execute();
 					} catch (EmailUncheckedException eux) {
-						System.err.printf("%s: %s", MessageBundle.message("error"), eux.getLocalizedMessage());
+						System.err.printf("%s: %s\n", MessageBundle.message("error"), eux.getLocalizedMessage());
 					} catch (EmailMessageValidationException emvx) {
 						System.err.println(MessageBundle.message("error.validation"));
 						for(String msg: emvx.getMessages()){
 							System.err.println(" - "+msg);
 						}
 					} catch (EmailException ex) {
-						System.err.printf("%s: %s", MessageBundle.message("error"), ex.getMessage());
+						System.err.printf("%s: %s\n", MessageBundle.message("error"), ex.getMessage());
 					} catch (Exception e) {
 						e.printStackTrace();
 					} catch (Throwable t){
