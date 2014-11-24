@@ -75,17 +75,5 @@ delta dAddressBookRelational {
 
 	modifies br.unb.cic.iris.mail.EmailClient {
 		adds import br.unb.cic.iris.persistence.relational.AddressBookDAO;
-
-		adds private String findAddress(String email) throws EmailException {
-			if(email != null && !email.equals("") && !EmailValidator.validate(email)) {
-				return AddressBookDAO.instance().find(email).getAddress();
-			}
-			return email;
-		}
-		modifies send(EmailMessage email) throws EmailException {
-			email.setTo(findAddress(email.getTo()));
-			email.setCc(findAddress(email.getCc()));
-			email.setBcc(findAddress(email.getBcc()));
-		}
 	}
 }

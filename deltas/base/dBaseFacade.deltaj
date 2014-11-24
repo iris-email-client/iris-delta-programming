@@ -13,6 +13,7 @@ delta dBaseFacade {
 		import br.unb.cic.iris.i18n.MessageBundle;		
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
+		
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		import br.unb.cic.iris.core.model.Status;

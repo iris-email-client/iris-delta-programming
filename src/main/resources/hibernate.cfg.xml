@@ -7,7 +7,12 @@
         <property name="show_sql">false</property>
         <property name="format_sql">false</property>
         <property name="hibernate.hbm2ddl.auto">update</property>    
-        
+		
+		<!-- First time run, create the database and do some inserts. -->
+		<!--		  
+        <property name="hibernate.hbm2ddl.auto">create</property>    
+         -->
+         
         <!-- JDBC connection pool (use the built-in connection pool)
         <property name="connection.pool_size">1</property> -->
         
