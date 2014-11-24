@@ -13,7 +13,7 @@ are implemented in this version
 ## Import into Eclipse IDE
 
 1. Install Java 7 SDK;
-2. Download Eclipse Kepler orKepler and Luna Luna;
+2. Download Eclipse Kepler and Luna Luna;
 3. Install Xtext 2.5.x.
 3. Install DeltaJ 1.5 from https://www.tu-braunschweig.de/isf/research/deltas/
 5. Clone this repository and import the project in Eclipse as an existing Maven project;
