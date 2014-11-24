@@ -12,13 +12,11 @@ are implemented in this version
 
 ## Import into Eclipse IDE
 
-This version was successfully compiled using Eclipse 
-Kepler and Java 7. You must clone the repository and 
-import the projet into Eclipse using the maven plugin. 
-You need to install Java 7 support to Eclipse Kepler 
-(see: http://www.eclipse.org/downloads/java7/), and thus 
-change the Java compiler of each project to 
-Java 7. Finally (at least I hope so) it is also necessary 
-to upgrade the maven plugin (add the update site 
-http://download.eclipse.org/technology/m2e/releases and 
-take a look at http://stackoverflow.com/questions/10564684/how-to-fix-error-updating-maven-project-unsupported-iclasspathentry-kind-4).
+1. Install Java 7 SDK;
+2. Download Eclipse Kepler orKepler and Luna Luna;
+3. Install Xtext 2.5.x.
+3. Install DeltaJ 1.5 from https://www.tu-braunschweig.de/isf/research/deltas/
+5. Clone this repository and import the project in Eclipse as an existing Maven project;
+6. Install whatever Eclipse suggests;
+7. Have fun! :-)
+

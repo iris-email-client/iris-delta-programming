@@ -8,9 +8,10 @@
         <property name="format_sql">false</property>
         <property name="hibernate.hbm2ddl.auto">update</property>    
 		
-		<!-- First time run, create the database and do some inserts. -->
+		<!-- Uncomment on first time run, create the schema and do some inserts. -->
 		<!--		  
-        <property name="hibernate.hbm2ddl.auto">create</property>    
+        <property name="hibernate.hbm2ddl.auto">create</property>
+        <property name="hibernate.hbm2ddl.import_files">initial_data.sql</property>         
          -->
          
         <!-- JDBC connection pool (use the built-in connection pool)
