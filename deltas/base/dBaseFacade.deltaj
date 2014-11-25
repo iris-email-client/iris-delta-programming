@@ -57,7 +57,8 @@ delta dBaseFacade {
 				verifyConnection();
 				client.send(message);
 				message.setDate(new Date());
-				saveMessage(message);
+				message.setId(java.util.UUID.randomUUID().toString());
+				saveMessage(message, IrisFolder.OUTBOX);
 			}
 			
 			private void saveMessage(EmailMessage message) throws EmailException{
@@ -93,6 +94,7 @@ delta dBaseFacade {
 				
 				//persist messages
 				for(EmailMessage message: messages) {
+					message.setId(java.util.UUID.randomUUID().toString());
 					saveMessage(message, folder);
 				}
 			}
@@ -141,34 +143,49 @@ delta dBaseFacade {
 		public final class FolderManager {
 			private static final FolderManager instance = new FolderManager();
 			private static final String ROOT_FOLDER = "ROOT";
-			private Long currentFolderId = null;
-			private String currentFolderName = ROOT_FOLDER;
+			private IrisFolder currentFolder = new IrisFolder(ROOT_FOLDER);
+			
+			private List<EmailMessage> currentMessages;
+			//private int pageNumber = 0;
+			//private int pageSize = 10;
+		
+			
 			private FolderManager() {
 			}
 			public static FolderManager instance() {
 				return instance;
 			}
 			public String getCurrentFolderName() {
-				return currentFolderName;
+				return currentFolder.getName();
 			}
-			
-			public void changeToFolder(Long folderId) throws EmailException {
+			public List<EmailMessage> getCurrentMessages(){
+				return currentMessages;
+			}
+			public void changeToFolder(Integer folderId) throws EmailException {
+				changeToFolder(folderId+"");
+			}
+			public void changeToFolder(String folderId) throws EmailException {
 				IrisFolder folder = FolderDAO.instance().findById(folderId);
 				if(folder != null) {
-					currentFolderId = folderId;
-					currentFolderName = folder.getName();
+					currentFolder = folder;
+					currentMessages = new java.util.ArrayList<EmailMessage>();
 				}
 			}
+			
 			public List<IrisFolder> listFolders() throws EmailException {
 				return FolderDAO.instance().findAll();
 			}
 			public List<EmailMessage> listFolderMessages() throws EmailException {
-				if(currentFolderId == null){
+				if(currentFolder == null || currentFolder.getId() == null) {
 					return new java.util.ArrayList<EmailMessage>();
 				}
-				return EmailDAO.instance().listMessages(currentFolderId);
+				//return EmailDAO.instance().listMessages(currentFolder.getId());
+				//TODO ver como ficara a paginacao
+				currentMessages = EmailDAO.instance().listMessages(currentFolder.getId());
+				return currentMessages;
 			}
-			public EmailMessage getMessage(Integer id) throws EmailException {
+			
+			public EmailMessage getMessage(String id) throws EmailException {
 				return EmailDAO.instance().findById(id);
 			}
 		}

@@ -13,12 +13,6 @@
         <property name="hibernate.hbm2ddl.auto">create</property>
         <property name="hibernate.hbm2ddl.import_files">initial_data.sql</property>         
          -->
-         
-        <!-- JDBC connection pool (use the built-in connection pool)
-        <property name="connection.pool_size">1</property> -->
-        
-        <!-- Enable Hibernate's automatic session context management -->
-        <property name="current_session_context_class">thread</property>
         
         <!-- PostreSQL -->
         <property name="dialect">org.hibernate.dialect.PostgreSQLDialect</property>

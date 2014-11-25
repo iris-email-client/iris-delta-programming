@@ -82,6 +82,15 @@ delta dPersistenceLucene {
 				return findById((long) id);
 			}
 			
+			public T findById(String id) throws EmailException {
+				Query nameQuery = new TermQuery(new Term("id", id));
+				List<T> result = findByTerms(new Query[] { nameQuery });
+				if (result.isEmpty()) {
+					throw new EmailException(String.format("%s not found", type), null);
+				}
+				return result.iterator().next();
+			}
+			
 			public void saveOrUpdate(T t) throws EmailException {
 				try {
 					saveDocument(toDocument(t));

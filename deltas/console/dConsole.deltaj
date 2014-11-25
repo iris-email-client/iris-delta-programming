@@ -223,8 +223,7 @@ delta dConsole{
 			@Override
 			public void handleExecute() throws EmailException {
 				if(validParameters()){
-					Long id = Long.parseLong(parameters.get(0));
-					FolderManager.instance().changeToFolder(id);
+					FolderManager.instance().changeToFolder(parameters.get(0));
 					String folder = FolderManager.instance().getCurrentFolderName();
 					System.out.println(folder);
 				}else{
@@ -256,8 +255,9 @@ delta dConsole{
 			@Override
 			public void handleExecute() throws EmailException {
 				if(validParameters()) {
-					Integer id = Integer.parseInt(parameters.get(0));
-					EmailMessage message = FolderManager.instance().getMessage(id);
+					Integer idx = Integer.parseInt(parameters.get(0));
+					EmailMessage message = FolderManager.instance().getCurrentMessages().get(idx-1);
+					//EmailMessage message = FolderManager.instance().getMessage(id);
 					System.out.println("FROM: "+message.getFrom());
 					System.out.println("DATE: "+message.getDate());
 					System.out.println("SUBJECT: "+message.getSubject());
@@ -289,6 +289,7 @@ delta dConsole{
 		public class ConsoleListMessagesCommand extends AbstractMailCommand {
 			static final String COMMAND_NAME = "ls";
 			DateFormat formatter = new SimpleDateFormat("dd/MMM/yy 'at' HH:mm");
+			List<EmailMessage> messages;
 			
 			@Override
 			public void explain() {
@@ -296,9 +297,10 @@ delta dConsole{
 			}
 			@Override
 			public void handleExecute() throws EmailException {
-				List<EmailMessage> messages = FolderManager.instance().listFolderMessages();
-				for(EmailMessage msg : messages) {
-					System.out.printf("%d - %s - %s \t- %s%n", msg.getId(), formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
+				messages = FolderManager.instance().listFolderMessages();
+				for(int i=0; i < messages.size(); i++){
+					EmailMessage msg = messages.get(i);
+					System.out.printf("%d - %s - %s \t- %s%n", i+1, formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
 				}
 			}
 			@Override
@@ -363,7 +365,7 @@ delta dConsole{
 			public void handleExecute() throws EmailException {
 				List<IrisFolder> irisFolders = FolderManager.instance().listFolders();
 				for (IrisFolder folder : irisFolders) {
-					System.out.printf("%d - %s%n", folder.getId(), folder.getName());
+					System.out.printf("%s - %s%n", folder.getId(), folder.getName());
 				}
 			}
 		

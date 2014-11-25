@@ -26,12 +26,10 @@ delta dPersistenceRelational {
 		package br.unb.cic.iris.core.model;
 
 		import javax.persistence.Entity;
+		import javax.persistence.Id;
 		import javax.persistence.Inheritance;
 		import javax.persistence.InheritanceType;
 		import javax.persistence.Table;
-		import javax.persistence.GeneratedValue;
-		import javax.persistence.GenerationType;
-		import javax.persistence.Id;
 		
 		@Entity
 		@Table(name = "TB_FOLDER_CONTENT")
@@ -41,19 +39,19 @@ delta dPersistenceRelational {
 				this(null);
 			}
 		
-			public FolderContent(Long id) {
+			public FolderContent(String id) {
 				super();
 				this.id = id;
 			}
 
-			@Id @GeneratedValue(strategy = GenerationType.SEQUENCE)
-			private Long id;
+			@Id
+			private String id;
 		
-			public Long getId() {
+			public String getId() {
 				return id;
 			}
 		
-			public void setId(Long id) {
+			public void setId(String id) {
 				this.id = id; 
 			}
 		}
@@ -102,7 +100,7 @@ delta dPersistenceRelational {
 				this(null,name);
 			}
 		
-			public IrisFolder(Long id, String name) {
+			public IrisFolder(String id, String name) {
 				super(id);
 				this.name = name;
 				contents = new ArrayList<FolderContent>();
@@ -374,6 +372,19 @@ delta dPersistenceRelational {
 		        return obj;
 		    }
 		    
+		    public T findById(String uuid) throws DBException {
+		        T obj = null;
+		        try {
+		            startSession();
+		            obj = (T) session.load(clazz, uuid);
+		        } catch (HibernateException e) {
+		            handleException(e);
+		        } finally {
+		        	closeSession();
+		        }
+		        return obj;
+		    }
+		    
 		    public T findById(Integer id) throws DBException {
 		        T obj = null;
 		        try {
@@ -500,8 +511,14 @@ delta dPersistenceRelational {
 				}
 				return date;
 			}
-		
+			//TODO remove these two methods after (dao) interface update
 			public EmailMessage findById(Integer id) throws DBException {
+				return findById(id+"");
+			}
+			public List<EmailMessage> listMessages(Long idFolder) throws DBException {
+				return listMessages(idFolder+"");
+			}
+			public EmailMessage findById(String id) throws DBException {
 				EmailMessage obj = null;
 				try {
 					startSession();
@@ -514,7 +531,7 @@ delta dPersistenceRelational {
 				return obj;
 			}
 		
-			public List<EmailMessage> listMessages(Long idFolder) throws DBException {
+			public List<EmailMessage> listMessages(String idFolder) throws DBException {
 				List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
 				try {
 					startSession();
@@ -557,23 +574,37 @@ delta dPersistenceRelational {
 		import br.unb.cic.iris.i18n.MessageBundle;
 		
 		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		import br.unb.cic.iris.persistence.IFolderDAO;
 
+		import java.util.UUID;
+		
 		import org.hibernate.Criteria;
 		import org.hibernate.criterion.Restrictions;
 		
 		public class FolderDAO extends AbstractDAO<IrisFolder> implements IFolderDAO {
-			private static final FolderDAO instance = new FolderDAO();
-		
+			private static FolderDAO instance;
 			private FolderDAO() {
 			}
-		
-			public static FolderDAO instance() {
+			public static FolderDAO instance() throws EmailException {
+				if(instance == null){
+					instance = new FolderDAO();
+					ensureIsCreated(IrisFolder.INBOX);
+					ensureIsCreated(IrisFolder.OUTBOX);
+				}
 				return instance;
 			}
+			
+			private static void ensureIsCreated(String folderName) throws EmailException {
+				IrisFolder folder = instance.findByName(folderName);
+				if(folder == null){
+					instance.saveOrUpdate(new IrisFolder(UUID.randomUUID().toString(), folderName));
+					System.out.printf("%s folder created.\n", folderName);
+				}		
+			}
 		
-			public IrisFolder findById(Integer id) throws DBException {
+			public IrisFolder findById(String id) throws DBException {
 				IrisFolder obj = null;
 				try {
 					startSession();
@@ -932,8 +963,8 @@ delta dPersistenceRelational {
 			
 			public static void configureClasses(){
 				classList.add(FolderContent.class);
-				classList.add(IrisFolder.class);
 				classList.add(EmailMessage.class);
+				classList.add(IrisFolder.class);
 			}
 			
 			public static SessionFactory getSessionFactory() {
