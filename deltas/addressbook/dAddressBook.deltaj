@@ -3,7 +3,8 @@ delta dAddressBook {
 		package br.unb.cic.iris.core.model;
 
 		public class AddressBookEntry {
-			private Long id;
+
+			private String id;
 
 			private String nick;
 
@@ -17,11 +18,11 @@ delta dAddressBook {
 				this.address = address;
 			}
 
-			public Long getId() {
+			public String getId() {
 				return id;
 			}
 
-			public void setId(Long id) {
+			public void setId(String id) {
 				this.id = id;
 			}
 
