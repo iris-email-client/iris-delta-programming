@@ -47,7 +47,8 @@ delta dTagConsole {
 					String tag = parameters.get(1);
 					List<EmailMessage> messages = TagManager.instance().listMessagesByTag(tag);
 					for(EmailMessage msg: messages){
-						System.out.printf("%d - %s - %s \t- %s%n", msg.getId(),
+						//TODO: put msg.getId as a number abstracting the UUID of the table
+						System.out.printf("%s - %s - %s \t- %s%n", msg.getId(),
 								formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
 					}
 				} else{
@@ -58,7 +59,7 @@ delta dTagConsole {
 		
 			private void add() throws EmailException {
 				if (parameters.size() == 3) {
-					Integer messageId = Integer.parseInt(parameters.get(1).trim());
+					String messageId = parameters.get(1);
 					String tags = parameters.get(2);
 					TagManager.instance().saveTags(messageId, tags);
 				} else {

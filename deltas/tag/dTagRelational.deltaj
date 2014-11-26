@@ -7,97 +7,110 @@ delta dTagRelational {
 		}
 	}
 	modifies br.unb.cic.iris.persistence.relational.EmailDAO {
-		adds @Override 
+		adds @Override
 		public List<EmailMessage> listMessagesByTag(String tag) throws DBException {
 			List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
 			try {
 				startSession();
-				Criteria criteria =	session.createCriteria(EmailMessage.class).createCriteria("tags").add(Restrictions.eq("name",tag));
+				Criteria criteria =
+				session.createCriteria(EmailMessage.class).createCriteria("tags").add(Restrictions.eq("name",
+						tag));
 				messages = populate(( List<EmailMessage> ) criteria.list());
-				System.out.println("messages: "+messages);
-			} catch(Exception e) {
-				handleException(new DBException("Error listing messages with tag: " + tag, e));
-			} finally {
+				System.out.println("messages: " + messages);
+			}
+			catch(Exception e) {
+				handleException(new DBException("Error listing messages with tag: " + tag,
+						e));
+			}
+			finally {
 				closeSession();
 			}
 			return messages;
 		}
 	}
-	modifies br.unb.cic.iris.core.model.EmailMessage{
+	modifies br.unb.cic.iris.core.model.EmailMessage {
 		adds import java.util.Set;
 		adds import javax.persistence.CascadeType;
 		adds import javax.persistence.JoinTable;
 		adds import javax.persistence.ManyToMany;
-		
-		adds
-			@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-			@JoinTable(name = "message_tags", joinColumns = { 
-					@JoinColumn(name = "ID", nullable = false, updatable = false) }, 
-					inverseJoinColumns = { @JoinColumn(name = "TAG_ID", 
-							nullable = false, updatable = false) })
-			private Set<Tag> tags;
-			
+
+		adds @ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+		@JoinTable(name = "message_tags", joinColumns = {
+				@JoinColumn(name = "ID", nullable = false, updatable = false)
+			}, inverseJoinColumns = {
+				@JoinColumn(name = "TAG_ID", nullable = false, updatable = false)
+			})
+		private Set<Tag> tags;
+
 		adds public Set<Tag> getTags() {
-				return tags;
-			}
-			
+			return tags;
+		}
+
 		adds public void setTags(Set<Tag> tags) {
-				this.tags = tags;
-			}
+			this.tags = tags;
+		}
 	}
-	modifies br.unb.cic.iris.core.TagManager{
+	modifies br.unb.cic.iris.core.TagManager {
 		adds import br.unb.cic.iris.persistence.relational.TagDAO;
 		adds import br.unb.cic.iris.persistence.relational.EmailDAO;
-		
-		modifies getTagDAO () {
+
+		modifies getTagDAO() {
 			return TagDAO.instance();
 		}
 	}
 	removes br.unb.cic.iris.core.model.Tag;
-	adds{
+	adds {
 		package br.unb.cic.iris.core.model;
 
 		import java.util.Set;
-		
+
 		import javax.persistence.Column;
 		import javax.persistence.Entity;
 		import javax.persistence.FetchType;
 		import javax.persistence.GeneratedValue;
+        import org.hibernate.annotations.GenericGenerator;		
 		import javax.persistence.Id;
 		import javax.persistence.ManyToMany;
 		import javax.persistence.Table;
-		
+
 		@Entity
 		@Table(name = "TB_TAG")
 		public class Tag {
-			@Id
-			@GeneratedValue
-			@Column(name = "TAG_ID", nullable = false, updatable = false)
-			private Long id;
-			
-			@Column(unique=true)
+//			@Id
+//			@GeneratedValue
+//			@Column(name = "TAG_ID", nullable = false, updatable = false)
+//			private Long id;
+
+            @Id
+            @GeneratedValue(generator = "uuid")
+			@Column(name = "TAG_ID", nullable = false, updatable = false)            
+            @GenericGenerator(name = "uuid", strategy = "uuid2")
+            private String id;
+
+
+
+			@Column(unique = true)
 			private String name;
-			
+
 			@ManyToMany(fetch = FetchType.LAZY, mappedBy = "tags")
 			private Set<EmailMessage> messages;
-		
+
 			public Tag() {
 				this(null);
 			}
 			public Tag(String name) {
-				this(null,name);
+				this(null, name);
 			}
-			public Tag(Long id, String name) {
+			public Tag(String id, String name) {
 				super();
 				this.id = id;
 				this.name = name;
 			}
-			
-			
-			public Long getId() {
+
+			public String getId() {
 				return id;
 			}
-			public void setId(Long id) {
+			public void setId(String id) {
 				this.id = id;
 			}
 			public String getName() {
@@ -114,17 +127,17 @@ delta dTagRelational {
 			}
 		}
 	}
-	adds{
+	adds {
 		package br.unb.cic.iris.persistence.relational;
 
 		import br.unb.cic.iris.core.exception.DBException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
 		import br.unb.cic.iris.persistence.ITagDAO;
-		
+
 		import org.hibernate.Criteria;
 		import org.hibernate.criterion.Restrictions;
-		
+
 		public class TagDAO extends AbstractDAO<Tag> implements ITagDAO {
 			private static final TagDAO instance = new TagDAO();
 			private TagDAO() {
@@ -137,53 +150,58 @@ delta dTagRelational {
 					startSession();
 					Criteria criteria = session.createCriteria(Tag.class);
 					criteria.add(Restrictions.eq("name", tagName));
-					return (Tag) criteria.uniqueResult();
+					return ( Tag ) criteria.uniqueResult();
 				}
 				catch(Exception e) {
-					handleException(new DBException("Tag not found: "+tagName, e));
+					handleException(new DBException("Tag not found: " + tagName, e));
 				}
 				finally {
 					closeSession();
 				}
 				return null;
 			}
-			public void save(Tag tagToSave, Integer messageId) throws DBException {
+			public void save(Tag tagToSave, String messageId) throws DBException {
 				try {
 					session = HibernateUtil.getSessionFactory().openSession();
 					session.beginTransaction();
 					Criteria criteria = session.createCriteria(Tag.class);
 					criteria.add(Restrictions.eq("name", tagToSave.getName()));
-					Tag tag = (Tag) criteria.uniqueResult();
-					if (tag == null) {
+					Tag tag = ( Tag ) criteria.uniqueResult();
+					if(tag == null) {
 						session.saveOrUpdate(tagToSave);
 						criteria = session.createCriteria(Tag.class);
 						criteria.add(Restrictions.eq("name", tagToSave.getName()));
-						tag = (Tag) criteria.uniqueResult();
+						tag = ( Tag ) criteria.uniqueResult();
 					}
-					EmailMessage msg = (EmailMessage) session.load(EmailMessage.class, messageId);
-					if (tag.getMessages() == null) {
+					EmailMessage msg = ( EmailMessage ) session.load(EmailMessage.class,
+						messageId);
+					if(tag.getMessages() == null) {
 						tag.setMessages(new java.util.HashSet<EmailMessage>());
 					}
 					tag.getMessages().add(msg);
 					session.update(tag);
-		
-					msg = (EmailMessage) session.load(EmailMessage.class, messageId);
-					if (msg.getTags() == null) {
+
+					msg = ( EmailMessage ) session.load(EmailMessage.class, messageId);
+					if(msg.getTags() == null) {
 						msg.setTags(new java.util.HashSet<Tag>());
 					}
 					msg.getTags().add(tag);
 					session.update(msg);
-		
+
 					session.getTransaction().commit();
-				} catch (Exception e) {
+				}
+				catch(Exception e) {
 					e.printStackTrace();
-					handleException(new DBException("Couldn't save tag: " + tagToSave.getName(), e));
-				} finally {
+					handleException(new DBException("Couldn't save tag: " +
+							tagToSave.getName(), e));
+				}
+				finally {
 					try {
-						if (session != null && session.isOpen()) {
+						if(session != null && session.isOpen()) {
 							session.close();
 						}
-					} finally {
+					}
+					finally {
 						session = null;
 					}
 				}

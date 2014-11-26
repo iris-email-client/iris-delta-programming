@@ -9,11 +9,11 @@ delta dTagBase{
 		import br.unb.cic.iris.core.model.Tag;
 		
 		public interface ITagDAO {
-			public Tag findById(Long id) throws EmailException;
+			public Tag findById(String id) throws EmailException;
 			public Tag findByName(String name) throws EmailException;
 			public java.util.List<Tag> findAll() throws EmailException;
 			public void saveOrUpdate(Tag tag) throws EmailException;
-			public void save(Tag tag, Integer messageId) throws EmailException; 
+			public void save(Tag tag, String messageId) throws EmailException; 
 			public void delete(Tag t) throws EmailException;
 		}
 	}
@@ -21,17 +21,10 @@ delta dTagBase{
 		package br.unb.cic.iris.core.model;
 
 		import java.util.Set;
-		
-		import javax.persistence.Column;
-		import javax.persistence.Entity;
-		import javax.persistence.FetchType;
-		import javax.persistence.GeneratedValue;
-		import javax.persistence.Id;
-		import javax.persistence.ManyToMany;
-		import javax.persistence.Table;
-		
+				
 		public class Tag {
-			private Long id;
+			
+			private String id;
 			private String name;
 			private Set<EmailMessage> messages;
 		
@@ -41,17 +34,17 @@ delta dTagBase{
 			public Tag(String name) {
 				this(null,name);
 			}
-			public Tag(Long id, String name) {
+			public Tag(String id, String name) {
 				super();
 				this.id = id;
 				this.name = name;
 			}
 			
 			
-			public Long getId() {
+			public String getId() {
 				return id;
 			}
-			public void setId(Long id) {
+			public void setId(String id) {
 				this.id = id;
 			}
 			public String getName() {
@@ -90,7 +83,7 @@ delta dTagBase{
 				throw new EmailUncheckedException("Not implemented: TagManager.getTagDAO");
 			}
 			
-			public Tag findById(Long id) throws EmailException {
+			public Tag findById(String id) throws EmailException {
 				return getTagDAO().findById(id);
 			}
 			public Tag findByName(String name) throws EmailException {
@@ -105,7 +98,7 @@ delta dTagBase{
 			public void delete(Tag tag) throws EmailException {
 				getTagDAO().delete(tag);
 			}
-			public void saveTags(Integer messageId, String tagsStr) throws EmailException{
+			public void saveTags(String messageId, String tagsStr) throws EmailException{
 				String[] tags = tagsStr.trim().split(",");
 				for(String str : tags) {
 					Tag tag = new Tag(str.trim());
