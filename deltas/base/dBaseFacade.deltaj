@@ -57,7 +57,6 @@ delta dBaseFacade {
 				verifyConnection();
 				client.send(message);
 				message.setDate(new Date());
-				message.setId(java.util.UUID.randomUUID().toString());
 				saveMessage(message, IrisFolder.OUTBOX);
 			}
 			
@@ -94,7 +93,6 @@ delta dBaseFacade {
 				
 				//persist messages
 				for(EmailMessage message: messages) {
-					message.setId(java.util.UUID.randomUUID().toString());
 					saveMessage(message, folder);
 				}
 			}

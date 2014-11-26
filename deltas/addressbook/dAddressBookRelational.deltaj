@@ -23,8 +23,6 @@ delta dAddressBookRelational {
 		@Table(name = "TB_ADDRESS_BOOK")
 		public class AddressBookEntry {
 
-		//			@Id
-		//			@GeneratedValue
 			@Id
 			@GeneratedValue(generator = "uuid")
 			@GenericGenerator(name = "uuid", strategy = "uuid2")

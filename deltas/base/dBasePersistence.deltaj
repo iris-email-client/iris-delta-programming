@@ -34,7 +34,7 @@ delta dBasePersistence {
 			
 			public Date lastMessageReceived() throws EmailException;
 			
-			public List<EmailMessage> listMessages(Long idFolder) throws EmailException;
+			public List<EmailMessage> listMessages(String idFolder) throws EmailException;
 		
 		}		
 	}
@@ -46,7 +46,7 @@ delta dBasePersistence {
 		
 		public interface IFolderDAO {
 			public IrisFolder findByName(String folderName) throws EmailException;
-			public IrisFolder findById(Integer id) throws EmailException;
+			public IrisFolder findById(String id) throws EmailException;
 		}			
 	}
 }
