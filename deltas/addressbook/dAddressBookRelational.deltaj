@@ -14,20 +14,20 @@ delta dAddressBookRelational {
 
 		import javax.persistence.Column;
 		import javax.persistence.Entity;
-		import javax.persistence.GeneratedValue;		
-        import org.hibernate.annotations.GenericGenerator;		
+		import javax.persistence.GeneratedValue;
+		import org.hibernate.annotations.GenericGenerator;
 		import javax.persistence.Id;
 		import javax.persistence.Table;
 
 		@Entity
 		@Table(name = "TB_ADDRESS_BOOK")
 		public class AddressBookEntry {
-			
-//			@Id
-//			@GeneratedValue
-            @Id
-            @GeneratedValue(generator = "uuid")            
-            @GenericGenerator(name = "uuid", strategy = "uuid2")			
+
+		//			@Id
+		//			@GeneratedValue
+			@Id
+			@GeneratedValue(generator = "uuid")
+			@GenericGenerator(name = "uuid", strategy = "uuid2")
 			private String id;
 
 			@Column(unique = true)
