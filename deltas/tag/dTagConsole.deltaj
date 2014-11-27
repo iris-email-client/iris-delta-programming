@@ -4,6 +4,7 @@ delta dTagConsole {
 
 		import br.unb.cic.iris.command.AbstractMailCommand;
 		import br.unb.cic.iris.core.TagManager;
+		import br.unb.cic.iris.core.FolderManager;		
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
@@ -59,9 +60,10 @@ delta dTagConsole {
 		
 			private void add() throws EmailException {
 				if (parameters.size() == 3) {
-					String messageId = parameters.get(1);
+					Integer idx = Integer.parseInt(parameters.get(1));
+					EmailMessage message = FolderManager.instance().getCurrentMessages().get(idx-1);
 					String tags = parameters.get(2);
-					TagManager.instance().saveTags(messageId, tags);
+					TagManager.instance().saveTags(message.getId(), tags);
 				} else {
 					throw new InvalidParameterException();
 				}
