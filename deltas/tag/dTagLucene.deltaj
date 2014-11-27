@@ -1,18 +1,14 @@
 delta dTagLucene {
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
-		adds import java.util.TreeSet;
 		adds import br.unb.cic.iris.core.model.Tag;
 		adds import org.apache.lucene.index.IndexableField;
 		modifies fromDocument(int doc, Document d) {
 			EmailMessage m = original(doc, d);
 			for(IndexableField f : d.getFields()) {
 				if("tag".equals(f.name())) {
-					if(m.getTags() == null) {
-						m.setTags(new TreeSet<Tag>());
-					}
 					Tag t = new Tag();
 					t.setName(f.stringValue());
-					m.getTags().add(t);
+					m.addTag(t);
 				}
 			}
 			return m;
@@ -38,6 +34,7 @@ delta dTagLucene {
 	}
 	modifies br.unb.cic.iris.core.model.EmailMessage {
 		adds import java.util.Set;
+		adds import java.util.HashSet;
 
 		adds private Set<Tag> tags;
 
@@ -47,6 +44,12 @@ delta dTagLucene {
 
 		adds public void setTags(Set<Tag> tags) {
 			this.tags = tags;
+		}
+		adds public void addTag(Tag tag) {
+			if (tags == null) {
+				tags = new HashSet<Tag>();
+			}
+			this.tags.add(tag);
 		}
 	}
 	modifies br.unb.cic.iris.core.TagManager {
@@ -64,7 +67,7 @@ delta dTagLucene {
 		import java.util.Set;
 
 		public class Tag {
-			private Long id;
+			private String id;
 
 			private String name;
 
@@ -76,16 +79,16 @@ delta dTagLucene {
 			public Tag(String name) {
 				this(null, name);
 			}
-			public Tag(Long id, String name) {
+			public Tag(String id, String name) {
 				super();
 				this.id = id;
 				this.name = name;
 			}
 
-			public Long getId() {
+			public String getId() {
 				return id;
 			}
-			public void setId(Long id) {
+			public void setId(String id) {
 				this.id = id;
 			}
 			public String getName() {
@@ -140,20 +143,21 @@ delta dTagLucene {
 				}
 				return result.iterator().next();
 			}
-			public void save(Tag tagToSave, Integer messageId) throws EmailException {
-			// TODO
-
+			public void save(Tag tagToSave, String messageId) throws EmailException {
+				EmailMessage email = EmailDAO.instance().findById(messageId);
+				email.addTag(tagToSave);
+				EmailDAO.instance().saveOrUpdate(email);
 			}
 			protected Tag fromDocument(int doc, Document d) throws ParseException {
 				Tag t = new Tag();
-				t.setId(( long ) doc);
+				t.setId(d.get("id"));
 				t.setName(d.get("name"));
 				return t;
 			}
 
 			protected Document toDocument(Tag t) throws Exception {
 				Document doc = new Document();
-				doc.add(new StringField("type", "tag", Store.YES));
+				doc.add(new StringField("id", String.valueOf(t.getId()), Store.YES));
 				doc.add(new StringField("name", t.getName(), Store.YES));
 				return doc;
 			}

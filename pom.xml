@@ -616,5 +616,16 @@
 				<iris.main.class>irisdeltaj.simpleluceneaddressbook.br.unb.cic.iris.MainProgram</iris.main.class>
 			</properties>
 		</profile>
+		<!-- 
+		CompleteLucene
+		mvn -P07 test
+		-->
+		<profile>
+			<id>07</id>
+			<properties>
+				<skipTests>true</skipTests>
+				<iris.main.class>irisdeltaj.completelucene.br.unb.cic.iris.MainProgram</iris.main.class>
+			</properties>
+		</profile>
 	</profiles> 
 </project>

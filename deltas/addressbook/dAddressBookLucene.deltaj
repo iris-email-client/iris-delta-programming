@@ -53,9 +53,9 @@ delta dAddressBookLucene {
 			protected AddressBookEntry fromDocument(int id, Document doc) throws
 			Exception {
 				AddressBookEntry entry = new AddressBookEntry();
-				entry.setId(doc.getField("id").numericValue().longValue());
-				entry.setNick(doc.getField("nick").stringValue());
-				entry.setAddress(doc.getField("address").stringValue());
+				entry.setId(doc.get("id"));
+				entry.setNick(doc.get("nick"));
+				entry.setAddress(doc.get("address"));
 				return entry;
 			}
 			

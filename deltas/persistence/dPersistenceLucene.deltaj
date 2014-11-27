@@ -69,19 +69,6 @@ delta dPersistenceLucene {
 				return result;
 			}
 			
-			public T findById(Long id) throws EmailException {
-				Query nameQuery = new TermQuery(new Term("id", String.valueOf(id)));
-				List<T> result = findByTerms(new Query[] { nameQuery });
-				if (result.isEmpty()) {
-					throw new EmailException(String.format("%s not found", type), null);
-				}
-				return result.iterator().next();
-			}
-			
-			public T findById(Integer id) throws EmailException {
-				return findById((long) id);
-			}
-			
 			public T findById(String id) throws EmailException {
 				Query nameQuery = new TermQuery(new Term("id", id));
 				List<T> result = findByTerms(new Query[] { nameQuery });
@@ -114,18 +101,20 @@ delta dPersistenceLucene {
 				}
 			}
 			
-			protected void saveDocument(Document doc) throws EmailException {
+			protected Document saveDocument(Document doc) throws EmailException {
 				try {
+					doc.add(new StringField("type", type, Store.YES));
 					IndexWriter writer = IndexManager.getWriter();
 					String id = doc.get("id");
 					if ("null".equals(id) || "0".equals(id) || id == null) {
 						doc.removeField("id");
-						doc.add(new StringField("id", String.valueOf(java.util.UUID.randomUUID().getMostSignificantBits()), Store.YES));
+						doc.add(new StringField("id", java.util.UUID.randomUUID().toString(), Store.YES));
 						writer.addDocument(doc);
 					} else {
 						writer.updateDocument(new Term("id", id), doc);
 					}
 					writer.commit();
+					return doc;
 				} catch (IOException e) {
 					throw new EmailException("An error occurred while saving " + type + ".", e);
 				}
@@ -166,7 +155,6 @@ delta dPersistenceLucene {
 		import org.apache.lucene.document.DateTools;
 		import org.apache.lucene.document.Document;
 		import org.apache.lucene.document.Field.Store;
-		import org.apache.lucene.document.LongField;
 		import org.apache.lucene.document.StringField;
 		import org.apache.lucene.document.TextField;
 		import org.apache.lucene.index.Term;
@@ -237,14 +225,13 @@ delta dPersistenceLucene {
 				return date;
 			}
 			
-			public List<EmailMessage> listMessages(Long idFolder) throws EmailException {
-				Query folderQuery = NumericRangeQuery.newLongRange("folderId", idFolder.longValue(), idFolder.longValue(), true, true);
+			public List<EmailMessage> listMessages(String idFolder) throws EmailException {
+				Query folderQuery = new TermQuery(new Term("folderId", idFolder));
 				return findByTerms(new Query[] { folderQuery });
 			}
 			
 			protected Document toDocument(EmailMessage m) throws Exception {
 				Document doc = new Document();
-				doc.add(new StringField("type", "email", Store.YES));
 				doc.add(new StringField("id", String.valueOf(m.getId()), Store.YES));
 				doc.add(new StringField("from", m.getFrom(), Store.YES));
 				doc.add(new StringField("to", m.getTo(), Store.YES));
@@ -254,13 +241,13 @@ delta dPersistenceLucene {
 				doc.add(new TextField("message", m.getMessage(), Store.YES));
 				doc.add(new StringField("date", DateTools.dateToString(m.getDate(),
 						DateTools.Resolution.SECOND), Store.YES));
-				doc.add(new LongField("folderId", m.getFolder().getId().longValue(), Store.YES));
+				doc.add(new StringField("folderId", m.getFolder().getId(), Store.YES));
 				return doc;				
 			}
 
 			protected EmailMessage fromDocument(int doc, Document d) throws ParseException {
 				EmailMessage m = new EmailMessage();
-				m.setId(Long.parseLong(d.get("id")));
+				m.setId(d.get("id"));
 				m.setFrom(d.get("from"));
 				m.setTo(d.get("to"));
 				m.setCc(d.get("cc"));
@@ -269,7 +256,7 @@ delta dPersistenceLucene {
 				m.setMessage(d.get("message"));
 				m.setDate(DateTools.stringToDate(d.get("date")));
 				IrisFolder f = new IrisFolder();
-				f.setId(d.getField("folderId").numericValue().longValue());
+				f.setId(d.get("folderId"));
 				m.setFolder(f);	
 				return m;				
 			}
@@ -283,13 +270,13 @@ delta dPersistenceLucene {
 				message.setSubject("Alexandre Lucchesi");
 				message.setMessage("Testing Lucene. :-)");
 				message.setDate(new Date());
-				message.setFolder(new IrisFolder(19l, "UnB"));
+				message.setFolder(new IrisFolder("19", "UnB"));
 				EmailDAO emailDAO = new EmailDAO();
 				emailDAO.saveMessage(message);
-				System.out.println(emailDAO.listMessages(19l));
+				System.out.println(emailDAO.listMessages("19"));
 				System.out.println(emailDAO.findAll());
-				System.out.println(emailDAO.findById((long) emailDAO.findAll().iterator().next().getId()));
-				System.out.println(emailDAO.findById((long) emailDAO.findAll().iterator().next().getId()).getSubject());
+				System.out.println(emailDAO.findById(emailDAO.findAll().iterator().next().getId()));
+				System.out.println(emailDAO.findById(emailDAO.findAll().iterator().next().getId()).getSubject());
 			}
 		
 		}		
@@ -354,14 +341,13 @@ delta dPersistenceLucene {
 
 			protected IrisFolder fromDocument(int doc, Document d) throws ParseException {
 				IrisFolder f = new IrisFolder();
-				f.setId(Long.parseLong(d.get("id")));
+				f.setId(d.get("id"));
 				f.setName(d.get("name"));
 				return f;				
 			}
 			
 			protected Document toDocument(IrisFolder f) throws Exception {
 				Document doc = new Document();
-				doc.add(new StringField("type", "folder", Store.YES));
 				doc.add(new StringField("id", String.valueOf(f.getId()), Store.YES));
 				doc.add(new StringField("name", f.getName(), Store.YES));
 				return doc;
