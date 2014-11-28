@@ -110,7 +110,7 @@ delta dBaseModel {
 			}
 			
 			public EmailMessage(String from, String to, String subject, String message, Date date, IrisFolder folder) {
-				this(from, to, null, null, subject, message, folder);
+				this(from, to, null, null, subject, message, date, folder);
 			}
 		
 			public EmailMessage(String from, String to, String subject, String message) {
@@ -119,16 +119,17 @@ delta dBaseModel {
 		
 			public EmailMessage(String from, String to, String cc, String bcc,
 					String subject, String message) {
-				this(null, to, cc, bcc, subject, message, null);
+				this(from, to, cc, bcc, subject, message, null, null);
 			}
 			public EmailMessage(String from, String to, String cc, String bcc,
-					String subject, String message, IrisFolder folder) {
+					String subject, String message, Date date, IrisFolder folder) {
 				this.from = from;
 				this.to = to;
 				this.cc = cc;
 				this.bcc = bcc;
 				this.subject = subject;
 				this.message = message;
+				this.date = date;
 				this.folder = folder;
 			}
 			

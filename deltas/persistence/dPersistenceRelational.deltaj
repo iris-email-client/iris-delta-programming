@@ -162,25 +162,28 @@ delta dPersistenceRelational {
 			@JoinColumn(name = "FOLDER_ID", nullable = false)
 			private IrisFolder folder;
 
+			//TODO: duplicate code is not cool.
 			public EmailMessage() {
 			}
+			
 			public EmailMessage(String to, String subject, String message) {
 				this(null, to, subject, message);
 			}
-			public EmailMessage(String from, String to, String subject, String message,
-				Date date, IrisFolder folder) {
+			
+			public EmailMessage(String from, String to, String subject, String message, Date date, IrisFolder folder) {
 				this(from, to, null, null, subject, message, date, folder);
 			}
-			public EmailMessage(String from, String to, String subject, String message)
-			{
+		
+			public EmailMessage(String from, String to, String subject, String message) {
 				this(from, to, null, null, subject, message);
 			}
-			public EmailMessage(String from, String to, String cc, String bcc, String
-				subject, String message) {
-				this(null, to, cc, bcc, subject, message, null, null);
+		
+			public EmailMessage(String from, String to, String cc, String bcc,
+					String subject, String message) {
+				this(from, to, cc, bcc, subject, message, null, null);
 			}
-			public EmailMessage(String from, String to, String cc, String bcc, String
-				subject, String message, Date date, IrisFolder folder) {
+			public EmailMessage(String from, String to, String cc, String bcc,
+					String subject, String message, Date date, IrisFolder folder) {
 				this.from = from;
 				this.to = to;
 				this.cc = cc;
