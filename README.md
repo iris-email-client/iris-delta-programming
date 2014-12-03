@@ -16,9 +16,9 @@ are implemented in this version
 2. Download Eclipse Kepler and Luna;
 3. Install Xtext 2.5.x;
 3. Install DeltaJ 1.5 from https://www.tu-braunschweig.de/isf/research/deltas/
-5. Clone this repository and import the project in Eclipse as an existing Maven project;
+5. Clone this repository and import the project in Eclipse as an existing Project into Workspace;
 6. Install whatever Eclipse suggests;
-7. Remove the maven nature of the project (if you have imported as a maven project, DeltaJ don't work very well with Maven);
+7. Disable maven nature of the project (DeltaJ don't work very well with Maven);
 8. Build the system with "Project -> Clean...";
 11. Choose product(s) to generate;
 12. In the terminal, shell or cmd, do a "mvn clean package";
