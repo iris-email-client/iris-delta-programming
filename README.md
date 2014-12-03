@@ -18,9 +18,9 @@ are implemented in this version
 3. Install DeltaJ 1.5 from https://www.tu-braunschweig.de/isf/research/deltas/
 5. Clone this repository and import the project in Eclipse as an existing Project into Workspace;
 6. Install whatever Eclipse suggests;
-7. Disable maven nature of the project (DeltaJ don't work very well with Maven);
+7. DeltaJ don't work very well with Maven, if you have problems disable maven nature;
 8. Build the system with "Project -> Clean...";
 11. Choose product(s) to generate;
-12. In the terminal, shell or cmd, do a "mvn clean package";
+12. In the terminal,runs as (eclipse), shell or cmd, do a "mvn clean package" (we also have some maven profiles for running the program);
 13. Have fun! :-)
 
