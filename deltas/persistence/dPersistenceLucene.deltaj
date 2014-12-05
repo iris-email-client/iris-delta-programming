@@ -242,7 +242,8 @@ delta dPersistenceLucene {
 			public List<EmailMessage> search(String queryStr, int numberOfHits)
 				throws org.apache.lucene.queryparser.classic.ParseException, IOException {
 
-				Query userQuery = new QueryParser(queryStr, new
+				// Default field of search set to "subject".
+				Query userQuery = new QueryParser("subject", new
 					StandardAnalyzer()).parse(queryStr);
 				Query typeQuery = new TermQuery(new Term("type", "email"));
 
@@ -274,7 +275,7 @@ delta dPersistenceLucene {
 			protected Document toDocument(EmailMessage m) throws Exception {
 				Document doc = new Document();
 				doc.add(new StringField("id", String.valueOf(m.getId()), Store.YES));
-				doc.add(new StringField("from", m.getFrom(), Store.YES));
+				doc.add(new TextField("from", m.getFrom(), Store.YES));
 				doc.add(new StringField("to", m.getTo(), Store.YES));
 				doc.add(new StringField("cc", m.getCc(), Store.YES));
 				doc.add(new StringField("bcc", m.getBcc(), Store.YES));
@@ -283,7 +284,7 @@ delta dPersistenceLucene {
 				doc.add(new StringField("date", DateTools.dateToString(m.getDate(),
 						DateTools.Resolution.SECOND), Store.YES));
 				doc.add(new StringField("folderId", m.getFolder().getId(), Store.YES));
-				return doc;				
+				return doc;
 			}
 
 			protected EmailMessage fromDocument(Document d) throws ParseException {
