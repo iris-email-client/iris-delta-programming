@@ -1,46 +1,46 @@
-delta dTagBase{
-	modifies br.unb.cic.iris.persistence.IEmailDAO{
-		adds public List<EmailMessage> listMessagesByTag(String tag) throws EmailException;
+delta dTagBase {
+	modifies br.unb.cic.iris.persistence.IEmailDAO {
+		adds public List<EmailMessage> listMessagesByTag(String tag) throws
+		EmailException;
 	}
-	adds{
+	adds {
 		package br.unb.cic.iris.persistence;
 
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.Tag;
-		
+
 		public interface ITagDAO {
 			public Tag findById(String id) throws EmailException;
 			public Tag findByName(String name) throws EmailException;
 			public java.util.List<Tag> findAll() throws EmailException;
 			public void saveOrUpdate(Tag tag) throws EmailException;
-			public void save(Tag tag, String messageId) throws EmailException; 
+			public void save(Tag tag, String messageId) throws EmailException;
 			public void delete(Tag t) throws EmailException;
 		}
 	}
-	adds{
+	adds {
 		package br.unb.cic.iris.core.model;
 
 		import java.util.Set;
-				
+
 		public class Tag {
-			
+
 			private String id;
 			private String name;
 			private Set<EmailMessage> messages;
-		
+
 			public Tag() {
 				this(null);
 			}
 			public Tag(String name) {
-				this(null,name);
+				this(null, name);
 			}
 			public Tag(String id, String name) {
 				super();
 				this.id = id;
 				this.name = name;
 			}
-			
-			
+
 			public String getId() {
 				return id;
 			}
@@ -61,35 +61,36 @@ delta dTagBase{
 			}
 		}
 	}
-	
-	adds{
+
+	adds {
 		package br.unb.cic.iris.core;
 
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.Tag;
 		import br.unb.cic.iris.persistence.ITagDAO;
-		
+
 		public final class TagManager {
 			private static final TagManager instance = new TagManager();
-			
-			private TagManager(){}
-		
-			public static TagManager instance(){
+
+			private TagManager() {
+			}
+
+			public static TagManager instance() {
 				return instance;
 			}
-			
-			public ITagDAO getTagDAO(){
+
+			public ITagDAO getTagDAO() {
 				throw new EmailUncheckedException("Not implemented: TagManager.getTagDAO");
 			}
-			
+
 			public Tag findById(String id) throws EmailException {
 				return getTagDAO().findById(id);
 			}
 			public Tag findByName(String name) throws EmailException {
 				return getTagDAO().findByName(name);
 			}
-			public java.util.List<Tag> findAll() throws EmailException{
+			public java.util.List<Tag> findAll() throws EmailException {
 				return getTagDAO().findAll();
 			}
 			public void saveOrUpdate(Tag tag) throws EmailException {
@@ -98,14 +99,16 @@ delta dTagBase{
 			public void delete(Tag tag) throws EmailException {
 				getTagDAO().delete(tag);
 			}
-			public void saveTags(String messageId, String tagsStr) throws EmailException{
-				String[] tags = tagsStr.trim().split(",");
+			public void saveTags(String messageId, String tagsStr) throws EmailException
+			{
+				String [] tags = tagsStr.trim().split(",");
 				for(String str : tags) {
 					Tag tag = new Tag(str.trim());
 					getTagDAO().save(tag, messageId);
 				}
 			}
-			public java.util.List<EmailMessage> listMessagesByTag(String tag) throws EmailException{
+			public java.util.List<EmailMessage> listMessagesByTag(String tag) throws
+			EmailException {
 				return EmailDAO.instance().listMessagesByTag(tag);
 			}
 		}

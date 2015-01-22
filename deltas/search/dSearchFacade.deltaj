@@ -1,0 +1,8 @@
+delta dSearchFacade {
+	modifies br.unb.cic.iris.core.SystemFacade {
+		adds public List<EmailMessage> search(String query) throws EmailException {
+			EmailDAO dao = EmailDAO.instance();
+			return dao.search(query);
+		}
+	}
+}

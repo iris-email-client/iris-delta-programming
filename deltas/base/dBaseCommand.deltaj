@@ -1,6 +1,6 @@
 delta dBaseCommand {
 	adds {
-		/*
+	/*
 		 * MailCommand
 		 *--------------------------------------- 
 		 *  version: 0.0.1 
@@ -10,91 +10,123 @@ delta dBaseCommand {
 		 *  changes: (none)  
 		 */
 		package br.unb.cic.iris.command;
-		
+
 		/**
 		 * An interface for processing mail commands.
 		 * 
 		 * @author rbonifacio
 		 */
 		public interface MailCommand {
-			/**
+		/**
 			 * Each command must provide an execute method. The execute method will be
 			 * triggered when the uses ask to.
 			 */
 			public void execute();
-		
+
 			public void setParameters(java.util.List<String> parameters);
-		
+
 			/**
 			 * Each command must provide an explain message, which should explain its
 			 * arguments and usage data.
 			 */
 			public void explain();
-		
+
 			public String getCommandName();
 		}
 	}
 
 	adds {
 		package br.unb.cic.iris.command;
-		
+
 		import br.unb.cic.iris.i18n.MessageBundle;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.exception.EmailMessageValidationException;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 		import java.util.List;
-		
+
 		public abstract class AbstractMailCommand implements MailCommand {
 			protected List<String> parameters;
-		
+
 			@Override
 			public void setParameters(List<String> parameters) {
 				this.parameters = parameters;
 			}
-		
+
 			protected boolean validParameters() {
 				return parameters != null && parameters.size() > 0;
 			}
-			
-			public static String message(String key){
+
+			public static String message(String key) {
 				return MessageBundle.message(key);
 			}
-		
+
 			protected abstract void handleExecute() throws EmailException;
-		
+
 			public void execute() {
 				try {
 					handleExecute();
-				} catch (EmailUncheckedException eux) {
-					System.err.printf("%s: %s\n", MessageBundle.message("error"), eux.getLocalizedMessage());
-				} catch (EmailMessageValidationException emvx) {
+				}
+				catch(EmailUncheckedException eux) {
+					System.err.printf("%s: %s\n", MessageBundle.message("error"),
+						eux.getLocalizedMessage());
+				}
+				catch(EmailMessageValidationException emvx) {
 					System.err.println(MessageBundle.message("error.validation"));
-					for (String msg : emvx.getMessages()) {
+					for(String msg : emvx.getMessages()) {
 						System.err.println(" - " + msg);
 					}
-				} catch (EmailException ex) {
-					System.err.printf("%s: %s\n", MessageBundle.message("error"), ex.getMessage());
-				} catch (Exception e) {
+				}
+				catch(EmailException ex) {
+					System.err.printf("%s: %s\n", MessageBundle.message("error"),
+						ex.getMessage());
+				}
+				catch(Exception e) {
 					e.printStackTrace();
-				} catch (Throwable t) {
+				}
+				catch(Throwable t) {
 					t.printStackTrace();
 				}
 			}
-		}		
+		}
 	}
-	
+
 	adds {
 		package br.unb.cic.iris.command;
-		
+
 		public interface CommandListener {
-		
+
 			public void commandAdded(MailCommand command);
-		
-		}		
+
+		}
 	}
-	
 	adds {
-		/*
+		package br.unb.cic.iris.command;
+
+		import java.text.DateFormat;
+		import java.text.SimpleDateFormat;
+		import java.util.List;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.model.EmailMessage;
+
+		public abstract class AbstractListMessagesCommand extends AbstractMailCommand
+		{
+			DateFormat formatter = new SimpleDateFormat("dd/MMM/yy 'at' HH:mm");
+
+			protected void print(List<EmailMessage> messages) {
+				for(int i = 0;
+					i < messages.size();
+					i ++) {
+					EmailMessage msg = messages.get(i);
+					System.out.printf("%d - %s - %s \t- %s%n", i + 1,
+						formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
+				}
+			}
+		}
+	}
+
+	adds {
+	/*
 		 * CommandNotFoundException
 		 * -------------------------------------
 		 *  version: 0.0.1
@@ -106,7 +138,7 @@ delta dBaseCommand {
 		 *  List of changes: (none)
 		 */
 		package br.unb.cic.iris.command;
-		
+
 		/**
 		 * Exception that must be thrown when the interpreter could not execute (find) a
 		 * user command.
@@ -114,201 +146,211 @@ delta dBaseCommand {
 		 * @author ExceptionHandling
 		 */
 		public class CommandNotFoundException extends RuntimeException {
-		
+
 			private static final long serialVersionUID = 1L;
-		
+
 			// TODO: mover para package de excecoes?
 			public CommandNotFoundException() {
 			}
-		
+
 			public CommandNotFoundException(String msg) {
 				super(msg);
 			}
-		
+
 			public CommandNotFoundException(Throwable cause) {
 				super(cause);
 			}
 		}
 	}
-	
+
 	adds {
 		package br.unb.cic.iris.command;
-		
+
 		import java.util.List;
-		
+
 		import br.unb.cic.iris.core.exception.EmailException;
-		
+
 		public interface ICommandManager {
-		
-			// deve permitir adicao dinamica/estatica (tipo plugins)
+
+		// deve permitir adicao dinamica/estatica (tipo plugins)
 			public void addCommand(MailCommand command) throws EmailException;
-		
+
 			public MailCommand getCommand(String commandName) throws EmailException;
-		
+
 			// lista todos os comandos registrados
 			public List<MailCommand> listAll();
-		
+
 			public void addCommandListener(CommandListener listener);
-		
+
 			public void reload() throws Exception;
 			// TODO outras operacoes
-		
-		}		
+
+		}
 	}
-	
+
 	adds {
 		package br.unb.cic.iris.command.manager;
-		
+
 		import java.lang.reflect.Modifier;
 		import java.util.Iterator;
 		import java.util.Set;
-		
+
 		import br.unb.cic.iris.command.MailCommand;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.reflect.ClassFinder;
-		
+
 		public abstract class AbstractCommandManager extends BaseCommandManager {
-		
-			// disponibilizar esse metodo para os deltas se registrarem,
-			// e outros (possiveis) "plugins" (via merge de codigo)
-			// e acesso atraves do singleton
-			// protected abstract void initialize();
-		
+
+		// disponibilizar esse metodo para os deltas se registrarem,
+		// e outros (possiveis) "plugins" (via merge de codigo)
+		// e acesso atraves do singleton
+		// protected abstract void initialize();
+
 			public AbstractCommandManager() {
 				try {
 					loadClasspathCommands();
-				} catch (ClassNotFoundException e) {
-					// TODO Auto-generated catch block
+				}
+				catch(ClassNotFoundException e) {
+				// TODO Auto-generated catch block
 					e.printStackTrace();
-					System.exit(-1);
-				} catch (InstantiationException e) {
-					// TODO Auto-generated catch block
+					System.exit(- 1);
+				}
+				catch(InstantiationException e) {
+				// TODO Auto-generated catch block
 					e.printStackTrace();
-					System.exit(-1);
-				} catch (IllegalAccessException e) {
-					// TODO Auto-generated catch block
+					System.exit(- 1);
+				}
+				catch(IllegalAccessException e) {
+				// TODO Auto-generated catch block
 					e.printStackTrace();
-					System.exit(-1);
-				} catch (EmailException e) {
-					// TODO Auto-generated catch block
+					System.exit(- 1);
+				}
+				catch(EmailException e) {
+				// TODO Auto-generated catch block
 					e.printStackTrace();
-					System.exit(-1);
+					System.exit(- 1);
 				}
 			}
-		
+
 			public void reload() throws Exception {
 				loadClasspathCommands();
 			}
-		
+
 			private void loadClasspathCommands() throws ClassNotFoundException,
-					InstantiationException, IllegalAccessException, EmailException {
+			InstantiationException, IllegalAccessException, EmailException {
 				System.out.println("Scanning commands ...");
-		
+
 				// commandMap = Collections.synchronizedMap(new HashMap<>());
-		
+
 				ClassFinder classFinder = new ClassFinder(MailCommand.class);
 				Set classesFound = classFinder.getClasses();
-				for (Iterator it = classesFound.iterator(); it.hasNext();) {
+				for(Iterator it = classesFound.iterator();
+					it.hasNext();) {
 					String clazzName = it.next().toString();
-		
+
 					Class c = Class.forName(clazzName);
-					if (!c.isInterface() && !Modifier.isAbstract(c.getModifiers())) {
-						MailCommand command = (MailCommand) c.newInstance();
+					if(! c.isInterface() && ! Modifier.isAbstract(c.getModifiers())) {
+						MailCommand command = ( MailCommand ) c.newInstance();
 						addCommand(command);
 					}
 				}
-		
+
 				System.out.println("Total commands found: " + listAll().size());
 			}
-		
+
 		}
-		
+
 	}
-	
+
 	adds {
 		package br.unb.cic.iris.command.manager;
-		
+
 		import br.unb.cic.iris.i18n.MessageBundle;
-		
+
 		import java.util.HashSet;
 		import java.util.List;
 		import java.util.Set;
-		
+
 		import br.unb.cic.iris.command.CommandListener;
 		import br.unb.cic.iris.command.ICommandManager;
 		import br.unb.cic.iris.command.MailCommand;
 		import br.unb.cic.iris.core.BaseManager;
 		import br.unb.cic.iris.core.exception.EmailException;
-		
+
 		public abstract class BaseCommandManager implements ICommandManager {
 			private BaseManager<MailCommand> manager = new BaseManager<MailCommand>();
-			private Set<CommandListener> commandListeners = new HashSet<CommandListener>();
-		
+			private Set<CommandListener> commandListeners = new
+			HashSet<CommandListener>();
+
 			// metodo para complementar a adicao do command. opcional
 			// EX: um ambiente gui pode add um botao para esse command
 			protected abstract void handleAddCommand(MailCommand command);
-		
+
 			public void addCommand(MailCommand command) throws EmailException {
 				System.out.println("Adding command: " + command.getCommandName());
 				// TODO validar comando?
 				manager.add(command.getCommandName(), command);
-		
+
 				handleAddCommand(command);
-		
+
 				notifyListeners(command);
 			}
-		
+
 			public MailCommand getCommand(String commandName) throws EmailException {
 				MailCommand command = manager.get(commandName);
-				if (command == null) {
-					throw new EmailException(MessageBundle.message("error.command.not.found", new String[] {commandName}));
+				if(command == null) {
+					throw new EmailException(MessageBundle.message("error.command.not.found",
+							new String [] {
+								commandName
+							}));
 				}
 				return command;
 			}
-		
+
 			@Override
 			public List<MailCommand> listAll() {
 				return manager.getAll();
 			}
-		
+
 			public void addCommandListener(CommandListener listener) {
 				commandListeners.add(listener);
 			}
-		
+
 			private void notifyListeners(MailCommand command) {
-				// commandListeners.forEach(n -> n.commandAdded(command));
-				for (CommandListener listener : commandListeners) {
+			// commandListeners.forEach(n -> n.commandAdded(command));
+				for(CommandListener listener : commandListeners) {
 					listener.commandAdded(command);
 				}
 			}
-		
+
 			@Override
 			public void reload() throws Exception {
-				// TODO manager.clear();
+			// TODO manager.clear();
+
 			}
-		
+
 		}
-		
+
 	}
 
 	adds {
 		package br.unb.cic.iris.command.manager;
-		
+
 		import br.unb.cic.iris.command.MailCommand;
-		
+
 		public class SimpleCommandManager extends BaseCommandManager {
-		
-			// sera usado se usar command com composite, para gerenciar os subcomandos
-		
+
+		// sera usado se usar command com composite, para gerenciar os subcomandos
+
 			@Override
 			protected void handleAddCommand(MailCommand command) {
-				// TODO Auto-generated method stub
-		
+			// TODO Auto-generated method stub
+
 			}
-		
-		}		
+
+		}
 	}
-	adds{
+	adds {
 		package br.unb.cic.iris.reflect;
 
 		/*
@@ -327,7 +369,7 @@ delta dBaseCommand {
 		 *
 		 * Copyright (C) 2003 Sapient Corporation. All Rights Reserved.
 		 */
-		
+
 		import java.io.File;
 		import java.util.Enumeration;
 		import java.util.HashSet;
@@ -336,7 +378,7 @@ delta dBaseCommand {
 		import java.util.StringTokenizer;
 		import java.util.zip.ZipEntry;
 		import java.util.zip.ZipFile;
-		
+
 		/**
 		 * <p>
 		 * This class implements the capability to search over the current classpath
@@ -350,12 +392,12 @@ delta dBaseCommand {
 		 * @version $Revision: 1.10 $($Author: dvoet $ / $Date: 2003/05/05 21:21:23 $)
 		 */
 		public class ClassFinder {
-		
-			/**
+
+		/**
 			 * Tracks the count of classes found that match the provided criteria.
 			 */
 			protected long foundClasses = 0;
-		
+
 			/**
 			 * The super class criteria
 			 */
@@ -368,7 +410,7 @@ delta dBaseCommand {
 			 * The set of classes found matching the provided criteria.
 			 */
 			protected Set classes = new HashSet(2000);
-		
+
 			/**
 			 * <p>
 			 * Instantiates the type of MBeanHarvester that will return all classes in
@@ -376,9 +418,9 @@ delta dBaseCommand {
 			 * </p>
 			 */
 			public ClassFinder() {
-		
+
 			}
-		
+
 			/**
 			 * <p>
 			 * Instantiates the type of MBeanHarvester that will return all classes that
@@ -393,9 +435,9 @@ delta dBaseCommand {
 			 */
 			public ClassFinder(Class superClass) {
 				this.superClass = superClass;
-		
+
 			}
-		
+
 			/**
 			 * <p>
 			 * Instantiates the type of MBeanHarvester that will return all classes that
@@ -414,10 +456,10 @@ delta dBaseCommand {
 			 */
 			public ClassFinder(Class superClass, String requiredPathSubstring) {
 				this.superClass = superClass;
-		
+
 				this.requiredPathSubstring = requiredPathSubstring;
 			}
-		
+
 			/**
 			 * <p>
 			 * Adds a class name to the list of found classes if and only if it meets
@@ -428,34 +470,39 @@ delta dBaseCommand {
 			 *            the FQN String name of the class to add
 			 */
 			protected void addClassName(String className) {
-		
-				// Only add this class if we're not checking for a particular
-				// substring of the FQN or we find that substring
-				if ((this.requiredPathSubstring == null)
-						|| (className.indexOf(this.requiredPathSubstring) >= 0)) {
-		
-					if (this.superClass == null) {
+
+			// Only add this class if we're not checking for a particular
+			// substring of the FQN or we find that substring
+				if((this.requiredPathSubstring == null)
+					||(className.indexOf(this.requiredPathSubstring) >= 0)) {
+
+					if(this.superClass == null) {
 						this.classes.add(className);
-					} else {
+					}
+					else {
 						try {
-		
-							// TODO: GH - add a way to search other classpaths and the
-							// system classpath.
-							Class theClass = Class.forName(className, false, this
-									.getClass().getClassLoader());
-		
-							if (this.superClass.isAssignableFrom(theClass)) {
+
+						// TODO: GH - add a way to search other classpaths and the
+						// system classpath.
+							Class theClass = Class.forName(className, false,
+								this.getClass().getClassLoader());
+
+							if(this.superClass.isAssignableFrom(theClass)) {
 								this.classes.add(className);
 							}
-						} catch (ClassNotFoundException cnfe) {
-							// Used to catch mis-parsed classnames
-						} catch (Throwable t) {
-							// Used to catch JVM security and linkage errors
+						}
+						catch(ClassNotFoundException cnfe) {
+						// Used to catch mis-parsed classnames
+
+						}
+						catch(Throwable t) {
+						// Used to catch JVM security and linkage errors
+
 						}
 					}
 				}
 			}
-		
+
 			/**
 			 * <p>
 			 * Used to retrieve the results <code>Set</code> from this harvester's
@@ -465,24 +512,24 @@ delta dBaseCommand {
 			 * @return Set the set of classes that meet this harvester's requirements
 			 */
 			public Set getClasses() {
-		
-				// 1) tokenize classpath
+
+			// 1) tokenize classpath
 				String classpath = System.getProperty("java.class.path");
 				String pathSeparator = System.getProperty("path.separator");
-		
+
 				StringTokenizer st = new StringTokenizer(classpath, pathSeparator);
-		
+
 				// 2) for each element in the classpath
-				while (st.hasMoreTokens()) {
+				while(st.hasMoreTokens()) {
 					File currentDirectory = new File(st.nextToken());
-		
+
 					processFile(currentDirectory.getAbsolutePath(), "");
-		
+
 				}
-		
+
 				return this.classes;
 			}
-		
+
 			/**
 			 * Recursively search through Directories with special checks to recognize
 			 * zip and jar files. (Zip and Jar files return true from
@@ -495,49 +542,54 @@ delta dBaseCommand {
 			 */
 			private void processFile(String base, String current) {
 				File currentDirectory = new File(base + File.separatorChar + current);
-		
+
 				// Handle special for archives
-				if (isArchive(currentDirectory.getName())) {
+				if(isArchive(currentDirectory.getName())) {
 					try {
 						processZip(new ZipFile(currentDirectory));
-					} catch (Exception e) {
-						// The directory was not found so the classpath was probably in
-						// error or we don't have rights to it
+					}
+					catch(Exception e) {
+					// The directory was not found so the classpath was probably in
+					// error or we don't have rights to it
+
 					}
 					return;
 				}
 				Set directories = new HashSet();
-		
-				File[] children = currentDirectory.listFiles();
-		
+
+				File [] children = currentDirectory.listFiles();
+
 				// if no children, return
-				if (children == null || children.length == 0) {
+				if(children == null || children.length == 0) {
 					return;
 				}
-		
+
 				// check for classfiles
-				for (int i = 0; i < children.length; i++) {
+				for(int i = 0;
+					i < children.length;
+					i ++) {
 					File child = children[i];
-					if (child.isDirectory()) {
+					if(child.isDirectory()) {
 						directories.add(children[i]);
-					} else {
-						if (child.getName().endsWith(".class")) {
-							String className = getClassName(current
-									+ ((current == "") ? "" : File.separator)
-									+ child.getName());
+					}
+					else {
+						if(child.getName().endsWith(".class")) {
+							String className = getClassName(current +((current == "") ? "" :
+									File.separator) + child.getName());
 							addClassName(className);
-							this.foundClasses++;
+							this.foundClasses ++;
 						}
 					}
 				}
-		
+
 				// call process file on each directory. This is an iterative call!!
-				for (Iterator i = directories.iterator(); i.hasNext();) {
-					processFile(base, current + ((current == "") ? "" : File.separator)
-							+ ((File) i.next()).getName());
+				for(Iterator i = directories.iterator();
+					i.hasNext();) {
+					processFile(base, current +((current == "") ? "" : File.separator) +((
+							File ) i.next()).getName());
 				}
 			}
-		
+
 			/**
 			 * <p>
 			 * Looks at the name of a file to determine if it is an archive
@@ -549,14 +601,15 @@ delta dBaseCommand {
 			 *         Zip file
 			 */
 			protected boolean isArchive(String name) {
-				if ((name.endsWith(".jar") || (name.endsWith(".zip")))) {
-		
+				if((name.endsWith(".jar") ||(name.endsWith(".zip")))) {
+
 					return true;
-				} else {
+				}
+				else {
 					return false;
 				}
 			}
-		
+
 			/**
 			 * <p>
 			 * Returns the Fully Qualified Class name of a class from it's path
@@ -571,7 +624,7 @@ delta dBaseCommand {
 				newName = newName.replace('/', '.');
 				return newName.substring(0, fileName.length() - 6);
 			}
-		
+
 			/**
 			 * <P>
 			 * Iterates through the files in a zip looking for files that may be
@@ -584,33 +637,33 @@ delta dBaseCommand {
 			 */
 			protected void processZip(ZipFile file) {
 				Enumeration files = file.entries();
-		
-				while (files.hasMoreElements()) {
+
+				while(files.hasMoreElements()) {
 					Object tfile = files.nextElement();
-					ZipEntry child = (ZipEntry) tfile;
-					if (child.getName().endsWith(".class")) {
+					ZipEntry child = ( ZipEntry ) tfile;
+					if(child.getName().endsWith(".class")) {
 						addClassName(getClassName(child.getName()));
-		
-						this.foundClasses++;
+
+						this.foundClasses ++;
 					}
 				}
 			}
 		}
 	}
 
-	adds{
+	adds {
 		package br.unb.cic.iris.reflect;
 
 		import java.net.MalformedURLException;
 		import java.net.URL;
 		import java.net.URLClassLoader;
-		
+
 		//preparando para carregar "plugins" dinamicamente
 		public class JarFileLoader extends URLClassLoader {
-			public JarFileLoader(URL[] urls) {
+			public JarFileLoader(URL [] urls) {
 				super(urls);
 			}
-		
+
 			public void addFile(String path) throws MalformedURLException {
 				String urlPath = "jar:file://" + path + "!/";
 				addURL(new URL(urlPath));
