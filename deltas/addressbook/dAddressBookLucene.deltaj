@@ -50,7 +50,7 @@ delta dAddressBookLucene {
 			}
 
 			@Override
-			protected AddressBookEntry fromDocument(int id, Document doc) throws
+			protected AddressBookEntry fromDocument(Document doc) throws
 			Exception {
 				AddressBookEntry entry = new AddressBookEntry();
 				entry.setId(doc.get("id"));
