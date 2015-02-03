@@ -43,6 +43,7 @@ SPL IrisDeltaJ {
 		SimpleRelational = {Base, RelationalDB, Console};
 		SimpleRelationalAddressBook = {Base, RelationalDB, AddressBook, Console};
 		SimpleRelationalTag = {Base, RelationalDB, Tag, Console};
+		SimpleRelationalSearch = {Base, RelationalDB, Search, Console};		
 		CompleteRelational = {Base, RelationalDB, AddressBook, Tag, Console};
 		SimpleLucene = {Base, LuceneDB, Console};
 		SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};
