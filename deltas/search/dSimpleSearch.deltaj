@@ -1,0 +1,32 @@
+delta dSimpleSearch {
+	modifies br.unb.cic.iris.persistence.relational.EmailDAO {
+
+		adds import java.util.ArrayList;
+
+		adds import br.unb.cic.iris.core.exception.EmailException;
+
+		//TODO: ??? 
+		//adds private static final String EmailDAO.FIND = "select e FROM EmailMessage e where e.from like :text or e.to like :text or e.cc like :text or e. cc like :text or e.subject like :text or e.message like :text";
+
+		adds public List<EmailMessage> search(String queryStr) throws EmailException
+		{
+			String FIND =
+			"select e FROM EmailMessage e where e.from like :text or e.to like :text or e.cc like :text or e. cc like :text or e.subject like :text or e.message like :text";
+			List<EmailMessage> result = new ArrayList<EmailMessage>();
+			try {
+				startSession();
+				result = session.createQuery(FIND).setParameter("text", "%" + queryStr +
+					"%").list();
+			}
+			catch(Exception e) {
+				e.printStackTrace();
+				throw new
+				EmailException("Error ocurred while retrieving messages from folder.", e);
+			}
+			finally {
+				closeSession();
+			}
+			return result;
+		}
+	}
+}

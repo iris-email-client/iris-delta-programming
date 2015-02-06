@@ -1,4 +1,4 @@
-delta dSearchLucene {
+delta dAdvancedSearch {
 
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
 
@@ -11,9 +11,8 @@ delta dSearchLucene {
 		adds import org.apache.lucene.queryparser.classic.QueryParser;
 		adds import org.apache.lucene.search.ScoreDoc;
 		adds import org.apache.lucene.search.TopDocs;
-		
-		adds import br.unb.cic.iris.core.exception.EmailException;		
 
+		adds import br.unb.cic.iris.core.exception.EmailException;
 
 		// Lucene's ParseException conflicts with java.text.ParseException.
 		adds public List<EmailMessage> search(String queryStr) throws EmailException {
@@ -30,22 +29,7 @@ delta dSearchLucene {
 				query.add(new BooleanClause(userQuery, Occur.MUST));
 
 				IndexSearcher searcher = IndexManager.getSearcher();
-				TopDocs docs = searcher.search(query, 0);
-
-				for(ScoreDoc sDoc : docs.scoreDocs) {
-					EmailDAO emailDAO = EmailDAO.instance();
-					Document doc = searcher.doc(sDoc.doc);
-					EmailMessage email = null;
-					try {
-						emailDAO.fromDocument(doc);
-					}
-					catch(ParseException e) {
-					// NOTE: Supressed because such exception should never happen
-					// when retrieving documents from the index.
-
-					}
-					if(email != null) emails.add(email);
-				}
+				searcher.search(query, new TCollector(searcher, emails));
 			}
 			catch(Exception e) {
 				e.printStackTrace();

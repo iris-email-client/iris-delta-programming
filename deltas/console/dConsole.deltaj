@@ -182,7 +182,6 @@ delta dConsole{
 		import br.unb.cic.iris.command.AbstractMailCommand;
 		import br.unb.cic.iris.core.FolderManager;
 		import br.unb.cic.iris.core.exception.EmailException;
-		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public class CurrentFolderConsoleCommand extends AbstractMailCommand {
 			static final String COMMAND_NAME = "pwd";
@@ -210,7 +209,6 @@ delta dConsole{
 		import br.unb.cic.iris.command.AbstractMailCommand;
 		import br.unb.cic.iris.core.FolderManager;
 		import br.unb.cic.iris.core.exception.EmailException;
-		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public class ChangeFolderConsoleCommand extends AbstractMailCommand {
 			static final String COMMAND_NAME = "cd";
@@ -280,7 +278,6 @@ delta dConsole{
 		import br.unb.cic.iris.core.FolderManager;
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
-		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		import java.text.DateFormat;
 		import java.text.SimpleDateFormat;
@@ -540,7 +537,6 @@ delta dConsole{
 		import br.unb.cic.iris.core.SystemFacade;
 		import br.unb.cic.iris.core.model.Status;
 		import br.unb.cic.iris.mail.EmailProvider;
-		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public class ConsoleStatusCommand extends AbstractMailCommand {
 			static final String COMMAND_NAME = "status";
@@ -573,12 +569,9 @@ delta dConsole{
 	adds{
 		package br.unb.cic.iris.command.console;
 		
-		import java.util.List;
-		
 		import br.unb.cic.iris.command.AbstractMailCommand;
 		import br.unb.cic.iris.core.SystemFacade;
 		import br.unb.cic.iris.core.exception.EmailException;
-		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.IrisFolder;
 		
 		public class DownloadMessagesConsoleCommand extends AbstractMailCommand {

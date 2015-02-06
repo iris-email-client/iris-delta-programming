@@ -2,8 +2,8 @@ delta dTagLucene {
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
 		adds import br.unb.cic.iris.core.model.Tag;
 		adds import org.apache.lucene.index.IndexableField;
-		modifies fromDocument(int doc, Document d) {
-			EmailMessage m = original(doc, d);
+		modifies fromDocument(Document d) {
+			EmailMessage m = original(d);
 			for(IndexableField f : d.getFields()) {
 				if("tag".equals(f.name())) {
 					Tag t = new Tag();
@@ -148,7 +148,7 @@ delta dTagLucene {
 				email.addTag(tagToSave);
 				EmailDAO.instance().saveOrUpdate(email);
 			}
-			protected Tag fromDocument(int doc, Document d) throws ParseException {
+			protected Tag fromDocument(Document d) throws ParseException {
 				Tag t = new Tag();
 				t.setId(d.get("id"));
 				t.setName(d.get("name"));
