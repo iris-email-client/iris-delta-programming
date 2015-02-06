@@ -820,7 +820,6 @@ delta dBaseMail {
 		import br.unb.cic.iris.core.exception.EmailException;
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.core.model.IrisFolder;
-		import br.unb.cic.iris.util.EmailValidator;
 		
 		public class EmailClient implements IEmailClient {
 			public static final String CHARACTER_ENCODING = "UTF-8";
@@ -873,8 +872,7 @@ delta dBaseMail {
 		
 			@Override
 			public List<String> validateEmailMessage(EmailMessage message) {
-				// TODO: validateEmail to be done.
-				return sender.validateEmailMessage(message);
+				return EmailSender.validateEmailMessage(message);
 			}
 			
 		}
