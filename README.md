@@ -9,6 +9,7 @@ are implemented in this version
 * Relational database.
 * Lucene persistence.
 * Tags.
+* Search, simple and advanced.
 
 ## Import into Eclipse IDE
 
