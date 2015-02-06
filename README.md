@@ -1,4 +1,4 @@
-# IRIS EMAIL CLIENT
+# IRIS E-mail Client (Delta version)
 
 This is the DeltaJ version of IRIS email client. The following features 
 are implemented in this version
