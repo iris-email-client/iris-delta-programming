@@ -1,4 +1,4 @@
-delta dSearchRelational {
+delta dSimpleSearch {
 	modifies br.unb.cic.iris.persistence.relational.EmailDAO {
 
 		adds import java.util.ArrayList;

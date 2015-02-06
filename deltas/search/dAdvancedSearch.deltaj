@@ -1,4 +1,4 @@
-delta dSearchLucene {
+delta dAdvancedSearch {
 
 	modifies br.unb.cic.iris.persistence.lucene.EmailDAO {
 
