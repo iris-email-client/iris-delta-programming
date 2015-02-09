@@ -41,15 +41,22 @@ SPL IrisDeltaJ {
 	}
 
 	Products {
-		SimpleRelational = {Base, RelationalDB, Console};
-		SimpleRelationalAddressBook = {Base, RelationalDB, AddressBook, Console};
-		SimpleRelationalTag = {Base, RelationalDB, Tag, Console};
-		SimpleRelationalSearch = {Base, RelationalDB, SimpleSearch, Console};		
-		CompleteRelational = {Base, RelationalDB, AddressBook, Tag, Console};
-		SimpleLucene = {Base, LuceneDB, Console};
-		SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};
-		SimpleLuceneTag = {Base, LuceneDB, Tag, Console};
-		SimpleLuceneSearch = {Base, LuceneDB, AdvancedSearch, Console};		
-		CompleteLucene = {Base, LuceneDB, AddressBook, Tag, Console, Search};		
+		/* 00*/SimpleRelational = {Base, RelationalDB, Console};
+		/* 01*/SimpleRelationalAddressBook = {Base, RelationalDB, AddressBook, Console};
+		/* 02*/SimpleRelationalTag = {Base, RelationalDB, Tag, Console};
+		/* 03*/SimpleRelationalAddressBookTag = {Base, RelationalDB, AddressBook, Tag, Console};
+		/* 04*/SimpleRelationalSearch = {Base, RelationalDB, SimpleSearch, Console};
+		/* 05*/SimpleRelationalSearchTag = {Base, RelationalDB, Tag, SimpleSearch, Console};
+		/* 06*/SimpleRelationalSearchAddressBook = {Base, RelationalDB, AddressBook, SimpleSearch, Console};		
+		/* 07*/CompleteRelational = {Base, RelationalDB, AddressBook, Tag, SimpleSearch, Console};
+		
+		/* 08*/SimpleLucene = {Base, LuceneDB, Console};
+		/* 09*/SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};
+		/* 10*/SimpleLuceneTag = {Base, LuceneDB, Tag, Console};
+		/* 11*/SimpleLuceneAddressBookTag = {Base, LuceneDB, AdvancedSearch, Console};		
+		/* 12*/SimpleLuceneSearch = {Base, LuceneDB, AdvancedSearch, Console};
+		/* 13*/SimpleLuceneSearchTag = {Base, LuceneDB, AdvancedSearch, Console};
+		/* 14*/SimpleLuceneSearchAddressBook = {Base, LuceneDB, AdvancedSearch, Console};	
+		/* 15*/CompleteLucene = {Base, LuceneDB, AddressBook, Tag, Console, Search};		
 	} 
 } 
