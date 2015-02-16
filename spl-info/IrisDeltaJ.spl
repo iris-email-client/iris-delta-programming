@@ -1,6 +1,8 @@
 SPL IrisDeltaJ {
 
-	Features = {Base, Persistence, RelationalDB, LuceneDB, UI, Console, Window, AddressBook, Tag, Search, SimpleSearch, AdvancedSearch}
+	Features = {services, sendMessage, receiveMessage, persistence, relational, nonRelational, 
+				ui, console, gui, addressBook, tagging, search, simpleSearch, advancedSearch
+	}
 
 	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
 	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceRelational, dPersistenceLucene, 
@@ -9,54 +11,55 @@ SPL IrisDeltaJ {
 	dConsole, dTagLucene, dSearchConsole, dSearchFacade, dSimpleSearch, dAdvancedSearch}
 
 	Constraints {
-	// Put boolean expression representation of the feature model here.
-		Base & Persistence & UI | AddressBook | Tag | Search; 
-		Persistence & (RelationalDB ^ LuceneDB);
-		Search & (SimpleSearch ^ AdvancedSearch);		
-		UI & (Console ^ Window);
+	// Put boolean expression representation of the feature model here.		
+		services & persistence & ui | addressBook | tagging | search;
+		services & (sendMessage & receiveMessage);  
+		persistence & (relational ^ nonRelational);
+		search & (simpleSearch ^ advancedSearch);
+		ui & (console ^ gui);		
 	}
 
 	Partitions {
 	// Put mapping between deltas and feature configurations here. 
 		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail,
-		dGmailProvider, dBaseFacade} when (Base);
+		dGmailProvider, dBaseFacade} when (services & sendMessage & receiveMessage);
 
-		{dPersistenceRelational, dTestFolderDAO} when (RelationalDB);
+		{dPersistenceRelational, dTestFolderDAO} when (relational);
 		
-		{dPersistenceLucene} when (LuceneDB);
+		{dPersistenceLucene} when (nonRelational);
 
-		{dAddressBook, dAddressBookRelational, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO} when (RelationalDB & AddressBook);
+		{dAddressBook, dAddressBookRelational, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO} when (relational & addressBook);
 		
-		{dAddressBook, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade} when (LuceneDB & AddressBook);
+		{dAddressBook, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade} when (nonRelational & addressBook);
 		
-		{dSearchFacade, dSearchConsole, dAdvancedSearch} when (LuceneDB & AdvancedSearch);
+		{dSearchFacade, dSearchConsole, dAdvancedSearch} when (nonRelational & advancedSearch);
 
-		{dSearchFacade, dSearchConsole, dSimpleSearch} when (RelationalDB & SimpleSearch);		
+		{dSearchFacade, dSearchConsole, dSimpleSearch} when (relational & simpleSearch);		
 		
-		{dTagBase, dTagRelational, dTagConsole, dTestRelationalTagDAO} when (RelationalDB & Tag);
+		{dTagBase, dTagRelational, dTagConsole, dTestRelationalTagDAO} when (relational & tagging);
 		
-		{dTagBase, dTagLucene, dTagConsole} when (LuceneDB & Tag);
+		{dTagBase, dTagLucene, dTagConsole} when (nonRelational & tagging);
 
-		{dConsole} when (Console);
+		{dConsole} when (console);
 	}
 
 	Products {
-		/* 00*/SimpleRelational = {Base, RelationalDB, Console};
-		/* 01*/SimpleRelationalAddressBook = {Base, RelationalDB, AddressBook, Console};
-		/* 02*/SimpleRelationalTag = {Base, RelationalDB, Tag, Console};
-		/* 03*/SimpleRelationalAddressBookTag = {Base, RelationalDB, AddressBook, Tag, Console};
-		/* 04*/SimpleRelationalSearch = {Base, RelationalDB, SimpleSearch, Console};
-		/* 05*/SimpleRelationalSearchTag = {Base, RelationalDB, Tag, SimpleSearch, Console};
-		/* 06*/SimpleRelationalSearchAddressBook = {Base, RelationalDB, AddressBook, SimpleSearch, Console};		
-		/* 07*/CompleteRelational = {Base, RelationalDB, AddressBook, Tag, SimpleSearch, Console};
+		/* 00*/SimpleRelational = {services, sendMessage, receiveMessage, relational, console};
+		/* 01*/SimpleRelationalAddressBook = {services, sendMessage, receiveMessage, relational, addressBook, console};
+		/* 02*/SimpleRelationalTag = {services, sendMessage, receiveMessage, relational, tagging, console};
+		/* 03*/SimpleRelationalAddressBookTag = {services, sendMessage, receiveMessage, relational, addressBook, tagging, console};
+		/* 04*/SimpleRelationalSearch = {services, sendMessage, receiveMessage, relational, simpleSearch, console};
+		/* 05*/SimpleRelationalSearchTag = {services, sendMessage, receiveMessage, relational, tagging, simpleSearch, console};
+		/* 06*/SimpleRelationalSearchAddressBook = {services, sendMessage, receiveMessage, relational, addressBook, simpleSearch, console};		
+		/* 07*/CompleteRelational = {services, sendMessage, receiveMessage, relational, addressBook, tagging, simpleSearch, console};
 		
-		/* 08*/SimpleLucene = {Base, LuceneDB, Console};
-		/* 09*/SimpleLuceneAddressBook = {Base, LuceneDB, AddressBook, Console};
-		/* 10*/SimpleLuceneTag = {Base, LuceneDB, Tag, Console};
-		/* 11*/SimpleLuceneAddressBookTag = {Base, LuceneDB, AdvancedSearch, Console};		
-		/* 12*/SimpleLuceneSearch = {Base, LuceneDB, AdvancedSearch, Console};
-		/* 13*/SimpleLuceneSearchTag = {Base, LuceneDB, AdvancedSearch, Console};
-		/* 14*/SimpleLuceneSearchAddressBook = {Base, LuceneDB, AdvancedSearch, Console};	
-		/* 15*/CompleteLucene = {Base, LuceneDB, AddressBook, Tag, Console, Search};		
+		/* 08*/SimpleLucene = {services, sendMessage, receiveMessage, nonRelational, console};
+		/* 09*/SimpleLuceneAddressBook = {services, sendMessage, receiveMessage, nonRelational, addressBook, console};
+		/* 10*/SimpleLuceneTag = {services, sendMessage, receiveMessage, nonRelational, tagging, console};
+		/* 11*/SimpleLuceneAddressBookTag = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};		
+		/* 12*/SimpleLuceneSearch = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};
+		/* 13*/SimpleLuceneSearchTag = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};
+		/* 14*/SimpleLuceneSearchAddressBook = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};	
+		/* 15*/CompleteLucene = {services, sendMessage, receiveMessage, nonRelational, addressBook, tagging, console, advancedSearch};		
 	} 
 } 
