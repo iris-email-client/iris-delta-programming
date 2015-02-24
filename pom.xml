@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>br.unb.cic.iris</groupId>
 	<artifactId>iris-delta-programming</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>0.3.0-SNAPSHOT</version>
 	<packaging>jar</packaging>
 	<name>iris</name>
 	<description>Iris Email Client - Delta Programming</description>
@@ -13,12 +13,13 @@
 		<skipTests>true</skipTests>
 		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
-		<iris.jar.name>iris</iris.jar.name>
+		<iris.jar.name>iris-${iris.product}</iris.jar.name>
+		<iris.main.class>irisdeltaj.${iris.product}.br.unb.cic.iris.MainProgram</iris.main.class>		
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 		<maven.surefire.plugin.version>2.12.3</maven.surefire.plugin.version>
 	</properties>
 	<issueManagement>
-	<system>GitHub Issues</system>
+		<system>GitHub Issues</system>
 		<url>https://github.com/iris-email-client/iris-delta-programming/issues</url>
 	</issueManagement>
 	<distributionManagement>
@@ -28,10 +29,6 @@
 			<url>file:///var/www/html/iris/</url>
 		</site>
 	</distributionManagement>
-	<ciManagement>
-		<system></system>
-		<url></url>
-	</ciManagement>
 	<developers>
 		<developer>
 			<id>1</id>
@@ -43,7 +40,7 @@
 				<role>Developer</role>
 			</roles>
 			<timezone>-3</timezone>
-		</developer> 
+		</developer>
 		<developer>
 			<id>2</id>
 			<name>Marcos César de Oliveira</name>
@@ -54,7 +51,7 @@
 				<role>Developer</role>
 			</roles>
 			<timezone>-3</timezone>
-		</developer> 
+		</developer>
 		<developer>
 			<id>3</id>
 			<name>Pedro Henrique Teixeira Costa</name>
@@ -65,7 +62,7 @@
 				<role>Developer</role>
 			</roles>
 			<timezone>-3</timezone>
-		</developer> 
+		</developer>
 	</developers>
 	<scm>
 		<connection>scm:git:https://github.com/iris-email-client/iris-delta-programming.git</connection>
@@ -78,11 +75,11 @@
 	</organization>
 	<licenses>
 		<license>
-            <name>Apache 2</name>
-            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-            <distribution>repo</distribution>
-            <comments>A business-friendly OSS license</comments>
-        </license>
+			<name>Apache 2</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+			<comments>A business-friendly OSS license</comments>
+		</license>
 	</licenses>
 	<dependencies>
 		<!-- java mail api -->
@@ -143,14 +140,37 @@
 	</dependencies>
 	<build>
 		<finalName>${iris.jar.name}</finalName>
-		<directory>target</directory>
-		<outputDirectory>target/classes</outputDirectory>
-		<testOutputDirectory>target/test-classes</testOutputDirectory>
-		<!-- <sourceDirectory>src/main/java</sourceDirectory> -->
-		<sourceDirectory>src-gen</sourceDirectory>
+		<directory>target/${iris.product}</directory>
+		<outputDirectory>target/${iris.product}/classes</outputDirectory>
+		<testOutputDirectory>target/${iris.product}/test-classes</testOutputDirectory>
+		<sourceDirectory>src-gen/irisdeltaj/${iris.product}</sourceDirectory>
 		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
+
 		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<id>enforce-property</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireProperty>
+									<property>iris.product</property>
+									<message>You must set a product with iris.product property!</message>
+								</requireProperty>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-assembly-plugin</artifactId>
@@ -178,30 +198,31 @@
 				</configuration>
 			</plugin>
 			<plugin>
-		    	<groupId>org.apache.maven.plugins</groupId>
-		        <artifactId>maven-antrun-plugin</artifactId>
-		        <executions>
-		          	<execution>
-		            	<id>move_tests</id>
-		            	<phase>generate-sources</phase>
-		            	<configuration>
-			              	<tasks>
-			                	<echo>Moving generated test classes ... ${basedir}</echo>
-			                	<echo>From: ${basedir}/src-gen</echo>
-			                	<echo>To: ${basedir}/src/test/java</echo>
-								<move todir="${basedir}/src/test/java" overwrite="true" verbose="true">
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>move_tests</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<tasks>
+								<echo>Moving generated test classes ... ${basedir}</echo>
+								<echo>From: ${basedir}/src-gen</echo>
+								<echo>To: ${basedir}/src/test/java</echo>
+								<move todir="${basedir}/src/test/java" overwrite="true"
+									verbose="true">
 									<fileset dir="${basedir}/src-gen">
 										<include name="**/test/**/*.java" />
 									</fileset>
-								</move>					  	
-			              	</tasks>
-		            	</configuration>
-		            	<goals>
-		              		<goal>run</goal>
-		            	</goals>
-		          	</execution>
-		        </executions>
-			</plugin>	
+								</move>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -215,8 +236,6 @@
 					<showWarnings>false</showWarnings>
 					<verbose>false</verbose>
 					<debug>false</debug>
-					<!-- <compilerArgument>-Xlint:cast,unchecked,fallthrough,finally,serial</compilerArgument> 
-						<staleMillis>10</staleMillis> -->
 				</configuration>
 			</plugin>
 		</plugins>
@@ -274,12 +293,6 @@
 						<link>http://junit.sourceforge.net/javadoc/</link>
 						<link>http://docs.jboss.org/hibernate/orm/4.3/javadocs/</link>
 					</links>
-					<!-- <doclet>org.umlgraph.doclet.UmlGraphDoc</doclet> <docletArtifact> 
-						<groupId>org.umlgraph</groupId> <artifactId>doclet</artifactId> <version>5.6.6</version> 
-						</docletArtifact> <additionalparam> -views -inferrel -inferdep -quiet -hide 
-						java*.* -collpackages java.util.* -qualify -postfixpackage -nodefontsize 
-						9 -nodefontpackagesize 7 -attributes -visibility -types -enumerations -enumconstants 
-						</additionalparam> <useStandardDocletOptions>true</useStandardDocletOptions> -->
 				</configuration>
 				<reportSets>
 					<reportSet>
@@ -340,9 +353,6 @@
 					<ncssLimit>90</ncssLimit>
 				</configuration>
 			</plugin>
-			<!-- <plugin> <artifactId>maven-checkstyle-plugin</artifactId> <version>${maven-checkstyle-plugin.version}</version> 
-				<configuration> <configLocation>${checkstyle.configLocation}</configLocation> 
-				</configuration> </plugin> -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>jdepend-maven-plugin</artifactId>
@@ -416,7 +426,7 @@
 						</reports>
 					</reportSet>
 				</reportSets>
-			</plugin> 
+			</plugin>
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>cobertura-maven-plugin</artifactId>
@@ -428,10 +438,6 @@
 					</formats>
 				</configuration>
 			</plugin>
-			<!-- Compare APIs to a previous version, uncomment when a release version 
-				exists <plugin> <groupId>org.codehaus.mojo</groupId> <artifactId>clirr-maven-plugin</artifactId> 
-				<version>2.6.1</version> <inherited>true</inherited> <configuration> <minSeverity>info</minSeverity> 
-				</configuration> </plugin> -->
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>versions-maven-plugin</artifactId>
@@ -446,186 +452,7 @@
 					</reportSet>
 				</reportSets>
 			</plugin>
-			<!-- <plugin> <groupId>org.apache.maven.plugins</groupId> <artifactId>maven-linkcheck-plugin</artifactId> 
-				<version>1.2</version> </plugin> -->
 		</plugins>
 	</reporting>
-	<profiles>
-		<!-- 
-		SimpleRelational
-		mvn -P01 test
-		-->
-		<profile>
-			<id>01</id>
-			<properties>
-				<skipTests>false</skipTests>
-				<iris.main.class>irisdeltaj.simplerelational.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-			<build>
-				<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-surefire-plugin</artifactId>
-					<version>${maven.surefire.plugin.version}</version>
-					<configuration>
-						<skipTests>${skipTests}</skipTests>
-						<includes> 
-							<include>**/*TestFolderDAO.java</include> 
-						</includes>
-						<forkMode>once</forkMode>
-						<excludes>
-							<!-- <exclude>**/Abstract*</exclude> <exclude>**/DatabaseTest*</exclude> -->
-						</excludes>
-					</configuration>
-				</plugin>				
-				<!-- To run the plugin you just need a hibernate tool configuration 
-				("jdbcconfiguration", "configuration", "annotationconfiguration", "jpaconfiguration") 
-				inside a "hibernatetool" element in the configuration section of the plugin. 
-					<plugin>
-						<groupId>org.codehaus.mojo</groupId>
-						<artifactId>hibernate3-maven-plugin</artifactId>
-						<version>3.0</version>
-						<configuration>
-							<hibernatetool>
-								<annotationconfiguration />
-							</hibernatetool>
-						</configuration>
-						<executions>
-		                    <execution>
-		                        <id>Generate hbm.xml mappings</id>
-		                        <phase>generate-sources</phase>
-		                        <configuration>
-									<hibernatetool>
-										<annotationconfiguration />
-									</hibernatetool>
-								</configuration>
-		                        <goals>
-		                            <goal>hbm2ddl</goal>
-		                        </goals>
-		                    </execution>
-		                </executions>
-					</plugin>
-					-->
-				</plugins>
-			</build>
-		</profile>
-		<!-- 
-		SimpleRelationalAddressBook
-		mvn -P02 test
-		-->
-		<profile>
-			<id>02</id>
-			<properties>
-				<skipTests>false</skipTests>
-				<iris.main.class>irisdeltaj.simplerelationaladdressbook.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${maven.surefire.plugin.version}</version>
-						<configuration>
-							<skipTests>${skipTests}</skipTests>
-							<includes> 
-								<include>**/*TestFolderDAO.java</include> 
-								<include>**/*TestAddressBookDAO.java</include> 
-							</includes>
-							<forkMode>once</forkMode>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<!-- 
-		SimpleRelationalTag
-		mvn -P03 test
-		-->
-		<profile>
-			<id>03</id>
-			<properties>
-				<skipTests>false</skipTests>
-				<iris.main.class>irisdeltaj.simplerelationaltag.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${maven.surefire.plugin.version}</version>
-						<configuration>
-							<skipTests>${skipTests}</skipTests>
-							<includes> 
-								<include>**/*TestFolderDAO.java</include> 
-								<include>**/*TestTagDAO.java</include>
-							</includes>
-							<forkMode>once</forkMode>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<!-- 
-		CompleteRelational
-		mvn -P04 test
-		-->
-		<profile>
-			<id>04</id>
-			<properties>
-				<skipTests>false</skipTests>
-				<iris.main.class>irisdeltaj.completerelational.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-			<build>
-				<plugins>
-					<plugin>
-						<groupId>org.apache.maven.plugins</groupId>
-						<artifactId>maven-surefire-plugin</artifactId>
-						<version>${maven.surefire.plugin.version}</version>
-						<configuration>
-							<skipTests>${skipTests}</skipTests>
-							<includes> 
-								<include>**/*TestFolderDAO.java</include> 
-								<include>**/*TestAddressBookDAO.java</include> 
-								<include>**/*TestTagDAO.java</include>
-							</includes>
-							<forkMode>once</forkMode>
-						</configuration>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-		<!-- 
-		SimpleLucene
-		mvn -P05 test
-		-->
-		<profile>
-			<id>05</id>
-			<properties>
-				<skipTests>true</skipTests>
-				<iris.main.class>irisdeltaj.simplelucene.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-		</profile>
-		<!-- 
-		SimpleLuceneAddressBook
-		mvn -P06 test
-		-->
-		<profile>
-			<id>06</id>
-			<properties>
-				<skipTests>true</skipTests>
-				<iris.main.class>irisdeltaj.simpleluceneaddressbook.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-		</profile>
-		<!-- 
-		CompleteLucene
-		mvn -P07 test
-		-->
-		<profile>
-			<id>07</id>
-			<properties>
-				<skipTests>true</skipTests>
-				<iris.main.class>irisdeltaj.completelucene.br.unb.cic.iris.MainProgram</iris.main.class>
-			</properties>
-		</profile>
-	</profiles> 
+
 </project>
