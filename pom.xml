@@ -14,7 +14,7 @@
 		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
 		<iris.jar.name>iris-${iris.product}</iris.jar.name>
-		<iris.main.class>irisdeltaj.${iris.product}.br.unb.cic.iris.MainProgram</iris.main.class>		
+		<iris.main.class>irisdeltaj.${iris.product}.br.unb.cic.iris.MainProgram</iris.main.class>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 		<maven.surefire.plugin.version>2.12.3</maven.surefire.plugin.version>
 	</properties>
@@ -135,6 +135,17 @@
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-queryparser</artifactId>
 			<version>4.10.2</version>
+		</dependency>
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+			<version>1.2.16</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+			<version>1.6.4</version>
 		</dependency>
 
 	</dependencies>
@@ -275,6 +286,7 @@
 			<plugin>
 				<groupId>org.codehaus.mojo</groupId>
 				<artifactId>dashboard-maven-plugin</artifactId>
+				<version>1.0.0-beta-1</version>
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
