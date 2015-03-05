@@ -79,6 +79,7 @@ delta dAddressBook {
 			email.setTo(findAddress(email.getTo()));
 			email.setCc(findAddress(email.getCc()));
 			email.setBcc(findAddress(email.getBcc()));
+			original(email);
 		}
 	}
 

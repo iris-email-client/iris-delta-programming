@@ -835,7 +835,6 @@ delta dBaseMail {
 				receiver = new EmailReceiver(provider, encoding);
 			}
 		
-			@Override
 			public void send(EmailMessage email) throws EmailException {
 				System.out.println("send message: " + email);
 				sender.send(email);
