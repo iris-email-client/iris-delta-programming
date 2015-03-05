@@ -1,65 +1,92 @@
 SPL IrisDeltaJ {
 
-	Features = {services, sendMessage, receiveMessage, persistence, relational, nonRelational, 
-				ui, console, gui, addressBook, tagging, search, simpleSearch, advancedSearch
-	}
+	Features = 
+		 {services, sendMessage, receiveMessage, persistence, relational, 
+		 nonRelational, ui, console, gui, addressBook, tagging, search, 
+		 simpleSearch, advancedSearch, security, sign, verify, encrypt, decrypt}
 
-	Deltas = {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence,
-	dBaseMail, dBaseFacade, dGmailProvider, dPersistenceRelational, dPersistenceLucene, 
-	dAddressBook, dAddressBookRelational, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, 
-	dTestAddressBookDAO, dTestFolderDAO, dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, 
-	dConsole, dTagLucene, dSearchConsole, dSearchFacade, dSimpleSearch, dAdvancedSearch}
+	Deltas = 
+	       {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence, dBaseMail, dBaseFacade, 
+	       dGmailProvider, dPersistenceRelational, dPersistenceLucene, dAddressBook, dAddressBookRelational, 
+	       dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO, dTestFolderDAO, 
+	       dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole, dTagLucene, dSearchConsole, 
+	       dSearchFacade, dSimpleSearch, dAdvancedSearch, dSecurityPgp, dSecurityCommand, dSecurityBaseMail, 
+	       dSecurityFacade, dSecuritySign, dSecurityVerify, dSecurityEncrypt, dSecurityDecrypt}
 
 	Constraints {
-	// Put boolean expression representation of the feature model here.		
-		services & persistence & ui | addressBook | tagging | search;
-		services & (sendMessage & receiveMessage);  
-		persistence & (relational ^ nonRelational);
-		search & (simpleSearch ^ advancedSearch);
-		ui & (console ^ gui);		
+		services AND persistence AND ui OR addressBook OR tagging OR search OR security;
+		services AND (sendMessage AND receiveMessage);  
+		persistence AND (relational XOR nonRelational);
+		search AND (simpleSearch XOR advancedSearch);
+		security AND (sign OR verify OR encrypt OR decrypt);
+		(sign IMPLIES verify) AND (verify IMPLIES sign);
+		(encrypt IMPLIES decrypt) AND (decrypt IMPLIES encrypt);
+		ui AND (console XOR gui);
 	}
 
 	Partitions {
-	// Put mapping between deltas and feature configurations here. 
-		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail,
-		dGmailProvider, dBaseFacade} when (services & sendMessage & receiveMessage);
 
-		{dPersistenceRelational, dTestFolderDAO} when (relational);
-		
-		{dPersistenceLucene} when (nonRelational);
+		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail, dGmailProvider, dBaseFacade} 
+		when (services & sendMessage & receiveMessage);
 
-		{dAddressBook, dAddressBookRelational, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO} when (relational & addressBook);
+		{dPersistenceRelational, dTestFolderDAO} 
+		when (relational);
 		
-		{dAddressBook, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade} when (nonRelational & addressBook);
-		
-		{dSearchFacade, dSearchConsole, dAdvancedSearch} when (nonRelational & advancedSearch);
+		{dPersistenceLucene} 
+		when (nonRelational);
 
-		{dSearchFacade, dSearchConsole, dSimpleSearch} when (relational & simpleSearch);		
+		{dAddressBook, dAddressBookRelational, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO} 
+		when (relational & addressBook);
 		
-		{dTagBase, dTagRelational, dTagConsole, dTestRelationalTagDAO} when (relational & tagging);
+		{dAddressBook, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade} 
+		when (nonRelational & addressBook);
 		
-		{dTagBase, dTagLucene, dTagConsole} when (nonRelational & tagging);
+		{dSearchFacade, dSearchConsole, dAdvancedSearch} 
+		when (nonRelational & advancedSearch);
 
-		{dConsole} when (console);
+		{dSearchFacade, dSearchConsole, dSimpleSearch} 
+		when (relational & simpleSearch);
+		
+		{dTagBase, dTagRelational, dTagConsole, dTestRelationalTagDAO} 
+		when (relational & tagging);
+		
+		{dTagBase, dTagLucene, dTagConsole} 
+		when (nonRelational & tagging);
+			
+		{dConsole} 
+		when (console);
+
+		/* console must come after before security */
+		{dSecurityPgp, dSecurityCommand, dSecurityBaseMail, dSecurityFacade} 
+		when (security);
+
+		{dSecuritySign, dSecurityVerify} 
+		when (security & sign & verify);
+ 
+		{dSecurityEncrypt, dSecurityDecrypt} 
+		when (security & encrypt & decrypt);
+
 	}
 
 	Products {
-		/* 00*/SimpleRelational = {services, sendMessage, receiveMessage, relational, console};
-		/* 01*/SimpleRelationalAddressBook = {services, sendMessage, receiveMessage, relational, addressBook, console};
-		/* 02*/SimpleRelationalTag = {services, sendMessage, receiveMessage, relational, tagging, console};
-		/* 03*/SimpleRelationalAddressBookTag = {services, sendMessage, receiveMessage, relational, addressBook, tagging, console};
-		/* 04*/SimpleRelationalSearch = {services, sendMessage, receiveMessage, relational, simpleSearch, console};
-		/* 05*/SimpleRelationalSearchTag = {services, sendMessage, receiveMessage, relational, tagging, simpleSearch, console};
-		/* 06*/SimpleRelationalSearchAddressBook = {services, sendMessage, receiveMessage, relational, addressBook, simpleSearch, console};		
-		/* 07*/CompleteRelational = {services, sendMessage, receiveMessage, relational, addressBook, tagging, simpleSearch, console};
+		/* 00*/ SimpleRelational = {services, sendMessage, receiveMessage, relational, console};
+		/* 01*/ SimpleRelationalAddressBook = {services, sendMessage, receiveMessage, relational, addressBook, console};
+		/* 02*/ SimpleRelationalTag = {services, sendMessage, receiveMessage, relational, tagging, console};
+		/* 03*/ SimpleRelationalAddressBookTag = {services, sendMessage, receiveMessage, relational, addressBook, tagging, console};
+		/* 04*/ SimpleRelationalSearch = {services, sendMessage, receiveMessage, relational, simpleSearch, console};
+		/* 05*/ SimpleRelationalSearchTag = {services, sendMessage, receiveMessage, relational, tagging, simpleSearch, console};
+		/* 06*/ SimpleRelationalSearchAddressBook = {services, sendMessage, receiveMessage, relational, addressBook, simpleSearch, console};		
+		/* 07*/ CompleteRelational = {services, sendMessage, receiveMessage, relational, addressBook, tagging, simpleSearch, console};
 		
-		/* 08*/SimpleLucene = {services, sendMessage, receiveMessage, nonRelational, console};
-		/* 09*/SimpleLuceneAddressBook = {services, sendMessage, receiveMessage, nonRelational, addressBook, console};
-		/* 10*/SimpleLuceneTag = {services, sendMessage, receiveMessage, nonRelational, tagging, console};
-		/* 11*/SimpleLuceneAddressBookTag = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};		
-		/* 12*/SimpleLuceneSearch = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};
-		/* 13*/SimpleLuceneSearchTag = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};
-		/* 14*/SimpleLuceneSearchAddressBook = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};	
-		/* 15*/CompleteLucene = {services, sendMessage, receiveMessage, nonRelational, addressBook, tagging, console, advancedSearch};		
+		/* 08*/ SimpleLucene = {services, sendMessage, receiveMessage, nonRelational, console};
+		/* 09*/ SimpleLuceneAddressBook = {services, sendMessage, receiveMessage, nonRelational, addressBook, console};
+		/* 10*/ SimpleLuceneTag = {services, sendMessage, receiveMessage, nonRelational, tagging, console};
+		/* 11*/ SimpleLuceneAddressBookTag = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};		
+		/* 12*/ SimpleLuceneSearch = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};
+		/* 13*/ SimpleLuceneSearchTag = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};
+		/* 14*/ SimpleLuceneSearchAddressBook = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};	
+		/* 15*/ CompleteLucene = {services, sendMessage, receiveMessage, nonRelational, addressBook, tagging, console, advancedSearch};
+		
+		SimpleRelationalSecurity = {services, sendMessage, receiveMessage, relational, console, security};
 	} 
 } 

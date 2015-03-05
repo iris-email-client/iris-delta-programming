@@ -1,0 +1,318 @@
+delta dSecurityBaseMail {
+
+	modifies br.unb.cic.iris.mail.EmailReceiver {
+
+		adds import java.io.InputStream;
+		adds import java.lang.reflect.Method;
+		adds import javax.mail.internet.MimeBodyPart;
+		adds import javax.mail.internet.MimeMessage;
+		adds import javax.mail.internet.MimeMultipart;
+		adds import br.unb.cic.iris.i18n.MessageBundle;
+		adds import br.unb.cic.iris.mail.pgp.PgpManager;
+		adds import br.unb.cic.iris.util.MessageUtils;
+
+		adds private String from;
+
+		removes convertToIrisMessage(Message message);
+
+		adds private EmailMessage convertToIrisMessage(Message message) throws
+		IOException, MessagingException {
+			MimeMessage m = ( MimeMessage ) message;
+
+			from = m.getFrom()[0].toString();
+			from = from.substring(from.indexOf('<') + 1);
+			from = from.substring(0, from.length() - 1);
+
+			EmailMessage msg = new EmailMessage();
+			try {
+				msg.setMessage(getText(m));
+			}
+			catch(Exception e) {
+			// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			msg.setBcc(convertAddressToString(m.getRecipients(RecipientType.BCC)));
+			msg.setCc(convertAddressToString(m.getRecipients(RecipientType.CC)));
+			msg.setTo(convertAddressToString(m.getRecipients(RecipientType.TO)));
+			msg.setFrom(from);
+			msg.setSubject(m.getSubject());
+			msg.setDate(m.getReceivedDate());
+
+			return msg;
+		}
+
+		removes getText(Message message);
+
+		adds protected String getText(Object content) throws Exception {
+			try {
+				Method method = getClass().getDeclaredMethod("getText",
+					content.getClass());
+				return method.invoke(this, content).toString();
+			}
+			catch(NoSuchMethodException ex) {
+				throw new RuntimeException("can't read message type: " +
+					content.getClass());
+			}
+		}
+
+		adds protected String getText(javax.mail.internet.MimeMultipart multi) throws
+		Exception {
+			System.out.println("getText: MimeMultipart :: " +
+				MessageUtils.getMimeType(multi.getContentType()));
+			String contentType = MessageUtils.getMimeType(multi.getContentType());
+			if(contentType.contains("multipart/signed")) {
+				return getText(verifySignature(multi));
+			}
+			if(multi instanceof Multipart) {
+				return getText(( Multipart ) multi);
+			}
+			//TODO ...
+			return getText(multi);
+		}
+
+		adds protected String getText(Multipart multi) throws Exception {
+			System.out.println("getText: Multipart :: " +
+				MessageUtils.getMimeType(multi.getContentType()));
+			int parts = multi.getCount();
+			for(int j = 0;
+				j < parts;
+				j ++) {
+				MimeBodyPart part = ( MimeBodyPart ) multi.getBodyPart(j);
+				System.out.println("getText: Multipart :: contentClass: " +
+					MessageUtils.getMimeType(part.getContentType()));
+				return getText(part.getContent());
+			}
+			//TODO ...
+			return getText(multi);
+		}
+
+		adds protected String getText(MimeMessage msg) throws Exception {
+			System.out.println("getText: MimeMessage :: " +
+				MessageUtils.getMimeType(msg.getContentType()));
+			String contentType = MessageUtils.getMimeType(msg.getContentType());
+			if(contentType.contains("multipart/encrypted")) {
+				return getText(decrypt(msg).getContent());
+			}
+			if(contentType.contains("multipart/signed")) {
+				boolean signatureVerified = verifySignature(msg);
+				System.out.println("signatureVerified: " + signatureVerified);
+				if(signatureVerified) {
+					return getText(msg.getContent());
+				}
+				else {
+					throw new EmailException("Invalid signature");
+				}
+			}
+			return getText(msg.getContent());
+		}
+
+		adds protected String getText(InputStream msg) {
+			System.out.println("getText: InputStream");
+			System.out.println("InputStream: " + msg);
+			return MessageUtils.getStringFromInputStream(msg);
+		}
+
+		adds protected String getText(String str) {
+			System.out.println("getText: String");
+			//System.out.println(str);
+			return str;
+		}
+
+		adds private MimeMessage decrypt(MimeMessage m) throws Exception {
+			System.out.println("received encrypted message ...");
+			return PgpManager.instance().decrypt(session.getSession(), m);
+		}
+
+		adds private boolean verifySignature(MimeMessage msg) throws Exception {
+			return PgpManager.instance().verifySignature(session.getSession(), msg);
+		}
+
+		adds private String verifySignature(MimeBodyPart part) throws Exception {
+			boolean signatureVerified =
+			PgpManager.instance().verifySignature(session.getSession(), part, from);
+			System.out.println("signatureVerified: " + signatureVerified);
+			if(signatureVerified) {
+				return getText(part.getContent());
+			}
+			throw new EmailException("Invalid signature");
+		}
+
+		adds private String verifySignature(MimeMultipart multi) throws Exception {
+			boolean signatureVerified =
+			PgpManager.instance().verifySignature(session.getSession(), multi, from);
+			System.out.println("signatureVerified: " + signatureVerified);
+			if(signatureVerified) {
+				return getText(( Multipart ) multi);
+			}
+			throw new EmailException("Invalid signature");
+		}
+	}
+
+	modifies br.unb.cic.iris.mail.EmailSender {
+		adds import br.unb.cic.iris.mail.pgp.PgpManager;
+		adds import br.unb.cic.iris.mail.pgp.SecurityType;
+		removes send(EmailMessage email);
+		removes createMessage(final EmailMessage email);
+
+		adds protected MimeMessage createMessage(final EmailMessage email) throws
+		MessagingException, UnsupportedEncodingException {
+			final MimeMessage message = new MimeMessage(session.getSession());
+			message.setSubject(email.getSubject(), session.getEncoding());
+			message.setFrom(new InternetAddress(email.getFrom(),
+					session.getEncoding()));
+			message.setRecipient(RecipientType.TO, new InternetAddress(email.getTo()));
+			message.setText(email.getMessage(), session.getEncoding());
+			if(StringUtil.notEmpty(email.getCc())) {
+				message.setRecipient(RecipientType.CC, new InternetAddress(email.getCc()));
+			}
+			if(StringUtil.notEmpty(email.getBcc())) {
+				message.setRecipient(RecipientType.BCC, new
+					InternetAddress(email.getBcc()));
+			}
+			message.setSentDate(new Date());
+			return message;
+		}
+
+		adds public void send(EmailMessage email) throws EmailException {
+			List<String> errorMessages = validateEmailMessage(email);
+			if(errorMessages.isEmpty()) {
+				try {
+					final Message message = createMessage(email);
+					message.saveChanges();
+					send(message);
+				}
+				catch(final UnsupportedEncodingException e) {
+					throw new EmailException(MessageBundle.message("error.invalid.encoding",
+							e.getMessage()));
+				}
+				catch(final MessagingException e) {
+					throw new EmailException(MessageBundle.message("error.send.email",
+							e.getMessage()));
+				}
+			}
+			else {
+				throw new EmailMessageValidationException(errorMessages);
+			}
+		}
+
+		adds public void send(Message message) throws EmailException {
+			try {
+				Transport transport = createTransport();
+				session.connect(transport, provider.getTransportHost(),
+					provider.getTransportPort());
+				System.out.println("Sending message ...");
+				transport.sendMessage(message, message.getAllRecipients());
+				transport.close();
+			}
+			catch(Exception e) {
+				throw new EmailException(MessageBundle.message("error.send.email",
+						e.getMessage()));
+			}
+		}
+
+		adds public void send(EmailMessage msg, List<SecurityType> types) throws
+		EmailException {
+			PgpManager pgpManager = PgpManager.instance();
+			try {
+				MimeMessage emailMessage = createMessage(msg);
+
+				if(types != null) {
+					for(SecurityType type : types) {
+						if(SecurityType.ENCRYPT == type) {
+							System.out.println("encrypted to: " + msg.getTo());
+							emailMessage = pgpManager.encrypt(session.getSession(), emailMessage,
+								msg.getTo());
+						}
+						if(SecurityType.SIGN == type) {
+							emailMessage = pgpManager.sign(session.getSession(), emailMessage,
+								msg.getFrom());
+						}
+					}
+				}
+
+				send(emailMessage);
+			}
+			catch(Exception e) {
+				throw new EmailException(MessageBundle.message("error.send.email",
+						e.getMessage()));
+			}
+
+		}
+	}
+	adds {
+		package br.unb.cic.iris.util;
+
+		import java.io.BufferedReader;
+		import java.io.IOException;
+		import java.io.InputStream;
+		import java.io.InputStreamReader;
+		import java.util.StringTokenizer;
+
+		//NOVO
+		public class MessageUtils {
+
+			public static String getMimeType(String contentType) {
+				String str = "unknown";
+				StringTokenizer st = new StringTokenizer(contentType.trim(), ";");
+				if(st.hasMoreTokens()) {
+					str = st.nextToken();
+					// str should look like:
+					// text/plain, text/html, multipart/mixed, multipart/alternative,
+					// multipart/related, or application/octec-stream, etc.
+
+				}
+
+				return str.toLowerCase();
+			}
+
+			public static String getStringFromInputStream(InputStream is) {
+				BufferedReader br = null;
+				StringBuilder sb = new StringBuilder();
+
+				String line;
+				try {
+					br = new BufferedReader(new InputStreamReader(is));
+					while((line = br.readLine()) != null) {
+						sb.append(line);
+					}
+				}
+				catch(IOException e) {
+					e.printStackTrace();
+				}
+				finally {
+					if(br != null) {
+						try {
+							br.close();
+						}
+						catch(IOException e) {
+							e.printStackTrace();
+						}
+					}
+				}
+
+				return sb.toString();
+
+			}
+		}
+
+	}
+
+	modifies br.unb.cic.iris.mail.IEmailClient {
+		adds import br.unb.cic.iris.mail.pgp.SecurityType;
+		removes send(EmailMessage message);
+		//TODO: add or not add the import of class List here? If the modified class removes the 
+		// the import we are broken...What is better?
+		adds public void send(EmailMessage message, List<SecurityType> types) throws
+		EmailException;
+	}
+
+	modifies br.unb.cic.iris.mail.EmailClient {
+		adds import br.unb.cic.iris.mail.pgp.SecurityType;
+		removes send(EmailMessage email);
+
+		adds public void send(EmailMessage msg, List<SecurityType> types) throws
+		EmailException {
+			sender.send(msg, types);
+		}
+	}
+}

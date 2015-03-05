@@ -203,9 +203,7 @@ delta dBaseMail {
 		import br.unb.cic.iris.core.model.EmailMessage;
 		
 		public class EmailSender implements TransportListener {
-			// private static final Logger log =
-			// Logger.getLogger(EmailSender.class.getName());
-		
+			
 			private EmailSession session;
 			private EmailProvider provider;
 		

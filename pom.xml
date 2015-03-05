@@ -17,6 +17,7 @@
 		<iris.main.class>irisdeltaj.${iris.product}.br.unb.cic.iris.MainProgram</iris.main.class>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 		<maven.surefire.plugin.version>2.12.3</maven.surefire.plugin.version>
+		<bouncycastle.version>1.51</bouncycastle.version>
 	</properties>
 	<issueManagement>
 		<system>GitHub Issues</system>
@@ -136,18 +137,44 @@
 			<artifactId>lucene-queryparser</artifactId>
 			<version>4.10.2</version>
 		</dependency>
+		<!-- Log4j -->
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.16</version>
 		</dependency>
-
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
 			<version>1.6.4</version>
 		</dependency>
-
+		<!-- javamail-crypto http://javamail-crypto.sourceforge.net/ -->
+		<dependency>
+			<groupId>net.suberic.crypto</groupId>
+			<artifactId>javamail-crypto</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<dependency>
+			<groupId>net.suberic.crypto</groupId>
+			<artifactId>javamail-crypto-cryptix-openpgp</artifactId>
+			<version>1.0</version>
+		</dependency>
+		<!--bouncy castle -->
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-jdk15on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcprov-ext-jdk15on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.bouncycastle</groupId>
+			<artifactId>bcpg-jdk15on</artifactId>
+			<version>${bouncycastle.version}</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<finalName>${iris.jar.name}</finalName>
@@ -158,99 +185,117 @@
 		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
 
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-enforcer-plugin</artifactId>
-				<version>1.4</version>
-				<executions>
-					<execution>
-						<id>enforce-property</id>
-						<goals>
-							<goal>enforce</goal>
-						</goals>
-						<configuration>
-							<rules>
-								<requireProperty>
-									<property>iris.product</property>
-									<message>You must set a product with iris.product property!</message>
-								</requireProperty>
-							</rules>
-							<fail>true</fail>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-enforcer-plugin</artifactId>
+					<version>1.4</version>
+					<executions>
+						<execution>
+							<id>enforce-property</id>
+							<goals>
+								<goal>enforce</goal>
+							</goals>
+							<configuration>
+								<rules>
+									<requireProperty>
+										<property>iris.product</property>
+										<message>You must set a product with iris.product property!</message>
+									</requireProperty>
+								</rules>
+								<fail>true</fail>
+							</configuration>
+						</execution>
+					</executions>
+				</plugin>
 
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<version>2.4.1</version>
-				<executions>
-					<execution>
-						<id>make-assembly</id>
-						<phase>package</phase>
-						<goals>
-							<goal>single</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<encoding>${iris.encoding}</encoding>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>${iris.main.class}</mainClass>
-							<addClasspath>true</addClasspath>
-						</manifest>
-					</archive>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-antrun-plugin</artifactId>
-				<executions>
-					<execution>
-						<id>move_tests</id>
-						<phase>generate-sources</phase>
-						<configuration>
-							<tasks>
-								<echo>Moving generated test classes ... ${basedir}</echo>
-								<echo>From: ${basedir}/src-gen</echo>
-								<echo>To: ${basedir}/src/test/java</echo>
-								<move todir="${basedir}/src/test/java" overwrite="true"
-									verbose="true">
-									<fileset dir="${basedir}/src-gen">
-										<include name="**/test/**/*.java" />
-									</fileset>
-								</move>
-							</tasks>
-						</configuration>
-						<goals>
-							<goal>run</goal>
-						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.2</version>
-				<configuration>
-					<encoding>${iris.encoding}</encoding>
-					<source>${compiler.version}</source>
-					<target>${compiler.version}</target>
-					<optimize>true</optimize>
-					<showDeprecation>false</showDeprecation>
-					<showWarnings>false</showWarnings>
-					<verbose>false</verbose>
-					<debug>false</debug>
-				</configuration>
-			</plugin>
-		</plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4.1</version>
+					<executions>
+						<execution>
+							<id>make-assembly</id>
+							<phase>package</phase>
+							<goals>
+								<goal>single</goal>
+							</goals>
+						</execution>
+					</executions>
+					<configuration>
+						<encoding>${iris.encoding}</encoding>
+						<descriptorRefs>
+							<descriptorRef>jar-with-dependencies</descriptorRef>
+						</descriptorRefs>
+						<archive>
+							<manifest>
+								<mainClass>${iris.main.class}</mainClass>
+								<addClasspath>true</addClasspath>
+							</manifest>
+						</archive>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-antrun-plugin</artifactId>
+					<executions>
+						<execution>
+							<id>move_tests</id>
+							<phase>generate-sources</phase>
+							<configuration>
+								<tasks>
+									<echo>Moving generated test classes ... ${basedir}</echo>
+									<echo>From: ${basedir}/src-gen</echo>
+									<echo>To: ${basedir}/src/test/java</echo>
+									<move todir="${basedir}/src/test/java" overwrite="true"
+										verbose="true">
+										<fileset dir="${basedir}/src-gen">
+											<include name="**/test/**/*.java" />
+										</fileset>
+									</move>
+								</tasks>
+							</configuration>
+							<goals>
+								<goal>run</goal>
+							</goals>
+						</execution>
+					</executions>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.2</version>
+					<configuration>
+						<encoding>${iris.encoding}</encoding>
+						<source>${compiler.version}</source>
+						<target>${compiler.version}</target>
+						<optimize>true</optimize>
+						<showDeprecation>false</showDeprecation>
+						<showWarnings>false</showWarnings>
+						<verbose>false</verbose>
+						<debug>false</debug>
+					</configuration>
+				</plugin>
+			</plugins>
 	</build>
+	<repositories>
+		<repository>
+			<id>phtcosta</id>
+			<name>phtcosta</name>
+			<url>http://phtcosta.5gbfree.com/m2/</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+		<repository>
+			<id>repo2</id>
+			<url>http://repo2.maven.org/maven2/</url>
+		</repository>
+	</repositories>
+
 	<reporting>
 		<plugins>
 			<plugin>
