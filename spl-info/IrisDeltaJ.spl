@@ -10,8 +10,9 @@ SPL IrisDeltaJ {
 	       dGmailProvider, dPersistenceRelational, dPersistenceLucene, dAddressBook, dAddressBookRelational, 
 	       dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO, dTestFolderDAO, 
 	       dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole, dTagLucene, dSearchConsole, 
-	       dSearchFacade, dSimpleSearch, dAdvancedSearch, dSecurityPgp, dSecurityCommand, dSecurityBaseMail, 
-	       dSecurityFacade, dSecuritySign, dSecurityVerify, dSecurityEncrypt, dSecurityDecrypt}
+	       dSearchFacade, dSimpleSearch, dAdvancedSearch, dSecurityPgp, dSecurityCommandSendEncrypt, 
+	       dSecurityCommandSendSign, dSecurityCommandSendSignEncrypt, dSecurityBaseMail, dSecurityFacade, 
+	       dSecuritySign, dSecurityVerify, dSecurityEncrypt, dSecurityDecrypt}
 
 	Constraints {
 		services AND persistence AND ui OR addressBook OR tagging OR search OR security;
@@ -25,7 +26,7 @@ SPL IrisDeltaJ {
 	}
 
 	Partitions {
-
+		// The order of application comes from here.
 		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail, dGmailProvider, dBaseFacade} 
 		when (services & sendMessage & receiveMessage);
 
@@ -57,8 +58,8 @@ SPL IrisDeltaJ {
 		when (console);
 
 		/* console must come after before security */
-		{dSecurityPgp, dSecurityCommand, dSecurityBaseMail, dSecurityFacade} 
-		when (security);
+		{dSecurityPgp, dSecurityBaseMail, dSecurityFacade} 
+		when (security AND (sign OR verify OR encrypt OR decrypt));
 
 		{dSecuritySign, dSecurityVerify} 
 		when (security & sign & verify);
@@ -66,6 +67,14 @@ SPL IrisDeltaJ {
 		{dSecurityEncrypt, dSecurityDecrypt} 
 		when (security & encrypt & decrypt);
 
+		{dSecurityCommandSendSign}
+		when (~encrypt & sign);
+		
+		{dSecurityCommandSendEncrypt}
+		when (~sign & encrypt);
+
+		{dSecurityCommandSendSignEncrypt, dSecurityCommandSendSign, dSecurityCommandSendEncrypt}
+		when ((encrypt & decrypt) AND (sign & verify));
 	}
 
 	Products {
@@ -87,6 +96,9 @@ SPL IrisDeltaJ {
 		/* 14*/ SimpleLuceneSearchAddressBook = {services, sendMessage, receiveMessage, nonRelational, advancedSearch, console};	
 		/* 15*/ CompleteLucene = {services, sendMessage, receiveMessage, nonRelational, addressBook, tagging, console, advancedSearch};
 		
-		SimpleRelationalSecurity = {services, sendMessage, receiveMessage, relational, console, security};
+		SimpleRelationalSecuritySignVerify = {services, sendMessage, receiveMessage, relational, console, security, sign, verify};
+		SimpleRelationalSecurityEncryptDecrypt = {services, sendMessage, receiveMessage, relational, console, security, encrypt, decrypt};
+		SimpleRelationalSecurityComplete = {services, sendMessage, receiveMessage, relational, addressBook, tagging, console, security, sign, verify, encrypt, decrypt};
+
 	} 
 } 

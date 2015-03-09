@@ -1,2 +1,35 @@
 delta dSecurityDecrypt {
+	modifies br.unb.cic.iris.mail.EmailReceiver {
+		modifies getText(MimeMessage msg) throws Exception {
+			String contentType = MessageUtils.getMimeType(msg.getContentType());		
+			if(contentType.contains("multipart/encrypted")) {
+				return getText(decrypt(msg).getContent());
+			}
+			return original(msg);
+		}			
+		adds private MimeMessage decrypt(MimeMessage m) throws Exception {
+			return PgpManager.instance().decrypt(session.getSession(), m);
+		}
+	}
+	modifies br.unb.cic.iris.mail.pgp.PgpManager {		
+		adds public MimeMessage decrypt(MimeMessage msg, String privateKeyAlias, Session mailSession) throws Exception {
+				System.out.println("Decrypting message: " + privateKeyAlias);
+				java.security.Key pgpPrivateKey =
+				keyManager.getPrivateKey(privateKeyAlias);
+				return cryptoUtils.decryptMessage(mailSession, msg, pgpPrivateKey);
+			}
+
+		adds public MimeMessage decrypt(Session mailSession, MimeMessage msg) throws Exception {
+				String to = msg.getRecipients(RecipientType.TO)[0].toString();
+				to = to.substring(to.indexOf('<') + 1);
+				to = to.substring(0, to.length() - 1);
+				
+				//TODO: change this, do not access the facade.
+				to = SystemFacade.instance().getProvider().getUsername();
+				System.out.println("TO: " + to);
+				return decrypt(msg, to, mailSession);
+			}
+			
+		
+	}
 }

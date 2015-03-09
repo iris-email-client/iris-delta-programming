@@ -1,2 +1,17 @@
 delta dSecuritySign {
+	modifies br.unb.cic.iris.mail.EmailSender {
+		modifies outgoing(MimeMessage msg, List<SecurityType> types) {
+			msg = PgpManager.instance().sign(session.getSession(), msg, msg.getFrom().toString());
+			return original(msg,types);
+		}
+	}
+	modifies br.unb.cic.iris.mail.pgp.PgpManager {
+			adds public MimeMessage sign(Session mailSession, MimeMessage msg, String alias) throws Exception {
+				System.out.println("Signing message: " + alias);
+				Key privateKey = keyManager.getPrivateKey(alias);
+				System.out.println("privateKey=" + privateKey);
+				return cryptoUtils.signMessage(mailSession, msg, privateKey);
+			}
+		
+	}	
 }

@@ -1,2 +1,18 @@
 delta dSecurityEncrypt {
+	modifies br.unb.cic.iris.mail.EmailSender {
+		modifies outgoing(MimeMessage msg, List<SecurityType> types) {			
+			msg = PgpManager.instance().encrypt(session.getSession(), msg, msg.getFrom().toString());
+			return original(msg,types);
+		}
+	}
+	modifies br.unb.cic.iris.mail.pgp.PgpManager {
+		
+			adds public MimeMessage encrypt(Session mailSession, MimeMessage msg, String
+				publicKeyAlias) throws Exception {
+				System.out.println("Encrypting message to: " + publicKeyAlias);
+				java.security.Key pgpPublicKey = keyManager.getPublicKey(publicKeyAlias);
+				System.out.println("pgpPublicKey: " + pgpPublicKey);
+				return cryptoUtils.encryptMessage(mailSession, msg, pgpPublicKey);
+			}
+	}	
 }

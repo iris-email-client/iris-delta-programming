@@ -1,7 +1,5 @@
-delta dSecurityCommand {
+delta dSecurityCommandSendSignEncrypt {
 
-	removes br.unb.cic.iris.command.console.ConsoleSendMessageCommand;
-	
 	adds {
 		package br.unb.cic.iris.command.console;
 
@@ -15,13 +13,13 @@ delta dSecurityCommand {
 		import br.unb.cic.iris.core.model.EmailMessage;
 		import br.unb.cic.iris.mail.pgp.SecurityType;
 
-		public class ConsoleSendSecurityMessageCommand extends AbstractMailCommand {
-			public static final String COMMAND_SEND = "sendc";
+		public class ConsoleSendSecuritySignEncryptMessageCommand extends AbstractMailCommand {
+			public static final String COMMAND_SEND = "send_sign_encrypt";
 
 			@Override
 			public void explain() {
 				System.out.printf("(%s) - %s %n", COMMAND_SEND,
-					message("command.sendc.explain"));
+					message("command.sendse.explain"));
 			}
 
 			@Override

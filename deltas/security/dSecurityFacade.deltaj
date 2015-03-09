@@ -3,9 +3,9 @@ delta dSecurityFacade {
 	modifies br.unb.cic.iris.core.SystemFacade {
 		adds import br.unb.cic.iris.mail.pgp.SecurityType;
 				
-		removes send(EmailMessage message);				
-		adds public void send(EmailMessage message, List<SecurityType> types) throws
-		EmailException {
+		//removes send(EmailMessage message);			
+			
+		adds public void send(EmailMessage message, List<SecurityType> types) throws EmailException {
 			verifyConnection();
 			client.send(message, types);
 			message.setDate(new Date());

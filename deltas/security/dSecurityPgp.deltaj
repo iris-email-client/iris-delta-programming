@@ -3,171 +3,11 @@ delta dSecurityPgp {
 	adds {
 		package br.unb.cic.iris.mail.pgp;
 
+		//TODO: Featurize this? 
 		public enum SecurityType {
-			SIGN, ENCRYPT;
+			SIGN, 
+			ENCRYPT;
 		}
-	}
-
-	adds {
-		package br.unb.cic.iris.mail.pgp;
-
-		import java.io.BufferedInputStream;
-		import java.io.ByteArrayOutputStream;
-		import java.io.File;
-		import java.io.FileInputStream;
-		import java.io.IOException;
-		import java.io.InputStream;
-		import java.security.NoSuchProviderException;
-		import java.util.Iterator;
-
-		import org.bouncycastle.openpgp.PGPCompressedDataGenerator;
-		import org.bouncycastle.openpgp.PGPException;
-		import org.bouncycastle.openpgp.PGPLiteralData;
-		import org.bouncycastle.openpgp.PGPPrivateKey;
-		import org.bouncycastle.openpgp.PGPPublicKey;
-		import org.bouncycastle.openpgp.PGPPublicKeyRing;
-		import org.bouncycastle.openpgp.PGPPublicKeyRingCollection;
-		import org.bouncycastle.openpgp.PGPSecretKey;
-		import org.bouncycastle.openpgp.PGPSecretKeyRing;
-		import org.bouncycastle.openpgp.PGPSecretKeyRingCollection;
-		import org.bouncycastle.openpgp.PGPUtil;
-		import org.bouncycastle.openpgp.operator.jcajce.JcaKeyFingerprintCalculator;
-		import
-		org.bouncycastle.openpgp.operator.jcajce.JcePBESecretKeyDecryptorBuilder;
-
-		@SuppressWarnings("rawtypes")
-		public class PgpUtils {
-
-			static byte [] compressFile(String fileName, int algorithm) throws
-			IOException {
-				ByteArrayOutputStream bOut = new ByteArrayOutputStream();
-				PGPCompressedDataGenerator comData = new
-				PGPCompressedDataGenerator(algorithm);
-				PGPUtil.writeFileToLiteralData(comData.open(bOut), PGPLiteralData.BINARY,
-					new File(fileName));
-				comData.close();
-				return bOut.toByteArray();
-			}
-
-			/**
-			 * Search a secret key ring collection for a secret key corresponding to keyID if it exists.
-			 * 
-			 * @param pgpSec
-			 *            a secret key ring collection.
-			 * @param keyID
-			 *            keyID we want.
-			 * @param pass
-			 *            passphrase to decrypt secret key with.
-			 * @return the private key.
-			 * @throws PGPException
-			 * @throws NoSuchProviderException
-	 		*/
-			static PGPPrivateKey findSecretKey(PGPSecretKeyRingCollection pgpSec, long
-				keyID, char [] pass) throws PGPException, NoSuchProviderException {
-				PGPSecretKey pgpSecKey = pgpSec.getSecretKey(keyID);
-
-				if(pgpSecKey == null) {
-					return null;
-				}
-
-				return pgpSecKey.extractPrivateKey(new
-					JcePBESecretKeyDecryptorBuilder().setProvider("BC").build(pass));
-			}
-
-			public static PGPPublicKey readPublicKey(String fileName) throws
-			IOException, PGPException {
-				InputStream keyIn = new BufferedInputStream(new FileInputStream(fileName));
-				PGPPublicKey pubKey = readPublicKey(keyIn);
-				keyIn.close();
-				return pubKey;
-			}
-
-			/**
-			 * A simple routine that opens a key ring file and loads the first available key suitable for encryption.
-			 * 
-			 * @param input
-			 *            data stream containing the public key data
-			 * @return the first public key found.
-			 * @throws IOException
-			 * @throws PGPException
-	 		*/
-			public static PGPPublicKey readPublicKey(InputStream input) throws
-			IOException, PGPException {
-				PGPPublicKeyRingCollection pgpPub = new
-				PGPPublicKeyRingCollection(PGPUtil.getDecoderStream(input), new
-					JcaKeyFingerprintCalculator());
-
-				//
-				// we just loop through the collection till we find a key suitable for encryption, in the real
-				// world you would probably want to be a bit smarter about this.
-				//
-
-				Iterator keyRingIter = pgpPub.getKeyRings();
-				while(keyRingIter.hasNext()) {
-					PGPPublicKeyRing keyRing = (PGPPublicKeyRing) keyRingIter.next();
-
-					Iterator keyIter = keyRing.getPublicKeys();
-					while(keyIter.hasNext()) {
-						PGPPublicKey key =  (PGPPublicKey) keyIter.next();
-
-						if(key.isEncryptionKey()) {
-							return key;
-						}
-					}
-				}
-
-				throw new
-				IllegalArgumentException("Can't find encryption key in key ring.");
-			}
-
-			static PGPSecretKey readSecretKey(String fileName) throws IOException,
-			PGPException {
-				InputStream keyIn = new BufferedInputStream(new FileInputStream(fileName));
-				PGPSecretKey secKey = readSecretKey(keyIn);
-				keyIn.close();
-				return secKey;
-			}
-
-			/**
-			 * A simple routine that opens a key ring file and loads the first available key suitable for signature generation.
-			 * 
-			 * @param input
-			 *            stream to read the secret key ring collection from.
-			 * @return a secret key.
-			 * @throws IOException
-			 *             on a problem with using the input stream.
-			 * @throws PGPException
-			 *             if there is an issue parsing the input stream.
-			 */
-			static PGPSecretKey readSecretKey(InputStream input) throws IOException,
-			PGPException {
-				PGPSecretKeyRingCollection pgpSec = new
-				PGPSecretKeyRingCollection(PGPUtil.getDecoderStream(input), new
-					JcaKeyFingerprintCalculator());
-
-					//
-				// we just loop through the collection till we find a key suitable for encryption, in the real
-				// world you would probably want to be a bit smarter about this.
-				//
-
-				Iterator keyRingIter = pgpSec.getKeyRings();
-				while(keyRingIter.hasNext()) {
-					PGPSecretKeyRing keyRing = (PGPSecretKeyRing) keyRingIter.next();
-
-					Iterator keyIter = keyRing.getSecretKeys();
-					while(keyIter.hasNext()) {
-						PGPSecretKey key = (PGPSecretKey) keyIter.next();
-
-						if(key.isSigningKey()) {
-							return key;
-						}
-					}
-				}
-
-				throw new IllegalArgumentException("Can't find signing key in key ring.");
-			}
-		}
-
 	}
 
 	adds {
@@ -217,13 +57,12 @@ delta dSecurityPgp {
 			private EncryptionUtils pgpUtils;
 
 			static {
-			// Security.addProvider(new BouncyCastleProvider());
+				// Security.addProvider(new BouncyCastleProvider());
 				Security.insertProviderAt(new BouncyCastleProvider(), 0);
 				System.out.println("Adding Bouncy Castle Provider ...");
 			}
 
-			public PgpKeyManager() throws FileNotFoundException, IOException,
-			NoSuchProviderException {
+			public PgpKeyManager() throws FileNotFoundException, IOException, NoSuchProviderException {
 				Properties props = new Properties();
 				props.load(new FileInputStream(new
 						File(Configuration.accountPropertyFile())));
@@ -278,8 +117,7 @@ delta dSecurityPgp {
 					". Please, install the public key.");
 			}
 
-			private EncryptionUtils getEncryptionUtils() throws NoSuchProviderException
-			{
+			private EncryptionUtils getEncryptionUtils() throws NoSuchProviderException {
 				return EncryptionManager.getEncryptionUtils(EncryptionManager.PGP);
 			}
 
@@ -310,7 +148,6 @@ delta dSecurityPgp {
 		import br.unb.cic.iris.core.SystemFacade;
 		import br.unb.cic.iris.core.exception.EmailUncheckedException;
 
-		@SuppressWarnings("rawtypes")
 		public class PgpManager {
 			private static final PgpManager instance = new PgpManager();
 
@@ -340,76 +177,7 @@ delta dSecurityPgp {
 				return instance;
 			}
 
-			public MimeMessage encrypt(Session mailSession, MimeMessage msg, String
-				publicKeyAlias) throws Exception {
-				System.out.println("Encrypting message to: " + publicKeyAlias);
-				java.security.Key pgpPublicKey = keyManager.getPublicKey(publicKeyAlias);
-				System.out.println("pgpPublicKey: " + pgpPublicKey);
-				return cryptoUtils.encryptMessage(mailSession, msg, pgpPublicKey);
-			}
-
-			public MimeMessage decrypt(MimeMessage msg, String privateKeyAlias, Session
-				mailSession) throws Exception {
-				System.out.println("Decrypting message: " + privateKeyAlias);
-				java.security.Key pgpPrivateKey =
-				keyManager.getPrivateKey(privateKeyAlias);
-				return cryptoUtils.decryptMessage(mailSession, msg, pgpPrivateKey);
-			}
-
-			public MimeMessage decrypt(Session mailSession, MimeMessage msg) throws
-			Exception {
-				String to = msg.getRecipients(RecipientType.TO)[0].toString();
-				to = to.substring(to.indexOf('<') + 1);
-				to = to.substring(0, to.length() - 1);
-
-				//TODO: change this, do not access the facade.
-				to = SystemFacade.instance().getProvider().getUsername();
-				System.out.println("TO: " + to);
-				return decrypt(msg, to, mailSession);
-			}
-
-			public MimeMessage sign(Session mailSession, MimeMessage msg, String alias)
-			throws Exception {
-				System.out.println("Signing message: " + alias);
-				Key privateKey = keyManager.getPrivateKey(alias);
-				System.out.println("privateKey=" + privateKey);
-				return cryptoUtils.signMessage(mailSession, msg, privateKey);
-			}
-
-			public boolean verifySignature(Session mailSession, MimeMessage signedMsg)
-			throws Exception {
-				System.out.println("Verify signature ...");
-				String from = signedMsg.getFrom()[0].toString();
-				from = from.substring(from.indexOf('<') + 1);
-				from = from.substring(0, from.length() - 1);
-				System.out.println("FROM: " + from);
-
-				Key publicKey = keyManager.getPublicKey(from);
-				System.out.println("PUBLIC KEY: " + publicKey);
-
-				return cryptoUtils.checkSignature(signedMsg, publicKey);
-			}
-
-			public boolean verifySignature(Session mailSession, MimePart part, String
-				from) throws Exception {
-				System.out.println("Verify signature ...");
-				System.out.println("FROM: " + from);
-				Key publicKey = keyManager.getPublicKey(from);
-				System.out.println("PUBLIC KEY: " + publicKey);
-				return cryptoUtils.checkSignature(part, publicKey);
-			}
-
-			public boolean verifySignature(Session session, MimeMultipart multi, String
-				from) throws Exception {
-				System.out.println("Verify signature ...");
-				System.out.println("FROM: " + from);
-				Key publicKey = keyManager.getPublicKey(from);
-				System.out.println("PUBLIC KEY: " + publicKey);
-				return cryptoUtils.checkSignature(multi, publicKey);
-			}
-
-			private EncryptionUtils getEncryptionUtils() throws NoSuchProviderException
-			{
+			private EncryptionUtils getEncryptionUtils() throws NoSuchProviderException {
 				return EncryptionManager.getEncryptionUtils(EncryptionManager.PGP);
 			}
 

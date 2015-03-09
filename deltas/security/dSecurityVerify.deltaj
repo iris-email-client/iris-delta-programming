@@ -1,2 +1,84 @@
 delta dSecurityVerify {
+	modifies br.unb.cic.iris.mail.EmailReceiver {	
+		
+		modifies getText(MimeMessage msg) throws Exception {
+			String contentType = MessageUtils.getMimeType(msg.getContentType());
+			if(contentType.contains("multipart/signed")) {
+				boolean signatureVerified = verifySignature(msg);
+				if(signatureVerified) {
+					return getText(msg.getContent());
+				}
+				else {
+					throw new EmailException("Invalid signature");
+				}
+			}
+			return original(msg);
+		}		
+		
+		modifies getText(javax.mail.internet.MimeMultipart multi) throws Exception {
+			String contentType = MessageUtils.getMimeType(multi.getContentType());
+			if(contentType.contains("multipart/signed")) {
+				return getText(verifySignature(multi));
+			}
+			return original(multi);			
+		}
+		
+		adds private boolean verifySignature(MimeMessage msg) throws Exception {
+			return PgpManager.instance().verifySignature(session.getSession(), msg);
+		}
+
+		adds private String verifySignature(MimeBodyPart part) throws Exception {
+			boolean signatureVerified =
+			PgpManager.instance().verifySignature(session.getSession(), part, from);
+			if(signatureVerified) {
+				return getText(part.getContent());
+			}
+			throw new EmailException("Invalid signature");
+		}
+
+		adds private String verifySignature(MimeMultipart multi) throws Exception {
+			boolean signatureVerified =
+			PgpManager.instance().verifySignature(session.getSession(), multi, from);
+			if(signatureVerified) {
+				return getText(( Multipart ) multi);
+			}
+			throw new EmailException("Invalid signature");
+		}
+	}
+
+	modifies br.unb.cic.iris.mail.pgp.PgpManager {
+
+			adds public boolean verifySignature(Session mailSession, MimeMessage signedMsg)
+			throws Exception {
+				System.out.println("Verify signature ...");
+				String from = signedMsg.getFrom()[0].toString();
+				from = from.substring(from.indexOf('<') + 1);
+				from = from.substring(0, from.length() - 1);
+				System.out.println("FROM: " + from);
+
+				Key publicKey = keyManager.getPublicKey(from);
+				System.out.println("PUBLIC KEY: " + publicKey);
+
+				return cryptoUtils.checkSignature(signedMsg, publicKey);
+			}
+
+			adds public boolean verifySignature(Session mailSession, MimePart part, String
+				from) throws Exception {
+				System.out.println("Verify signature ...");
+				System.out.println("FROM: " + from);
+				Key publicKey = keyManager.getPublicKey(from);
+				System.out.println("PUBLIC KEY: " + publicKey);
+				return cryptoUtils.checkSignature(part, publicKey);
+			}
+
+			adds public boolean verifySignature(Session session, MimeMultipart multi, String
+				from) throws Exception {
+				System.out.println("Verify signature ...");
+				System.out.println("FROM: " + from);
+				Key publicKey = keyManager.getPublicKey(from);
+				System.out.println("PUBLIC KEY: " + publicKey);
+				return cryptoUtils.checkSignature(multi, publicKey);
+			}
+		
+	}
 }

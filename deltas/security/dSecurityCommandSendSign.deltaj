@@ -1,0 +1,62 @@
+delta dSecurityCommandSendSign {
+
+	adds {
+		package br.unb.cic.iris.command.console;
+
+		import java.util.Scanner;
+		import java.util.ArrayList;
+		import java.util.List;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.SystemFacade;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.mail.pgp.SecurityType;
+
+		public class ConsoleSendSecuritySignMessageCommand extends AbstractMailCommand {
+			public static final String COMMAND_SEND = "send_sign";
+
+			@Override
+			public void explain() {
+				System.out.printf("(%s) - %s %n", COMMAND_SEND,
+					message("command.sends.explain"));
+			}
+
+			@Override
+			public void handleExecute() throws EmailException {
+				EmailMessage m = createMessage();
+				List<SecurityType> types = new ArrayList();
+				types.add(SecurityType.SIGN);
+				SystemFacade.instance().send(m, types);
+			}
+
+			private EmailMessage createMessage() {
+				Scanner sc = new Scanner(System.in);
+				String from = SystemFacade.instance().getProvider().getUsername();
+				System.out.printf("%s: %s%n", message("command.send.label.from"), from);
+				String to = read(sc, "command.send.label.to");
+				String cc = read(sc, "command.send.label.cc");
+				String bcc = read(sc, "command.send.label.bcc");
+				String subject = read(sc, "command.send.label.subject");
+				String content = read(sc, "command.send.label.content");
+
+				return new EmailMessage(from, to, cc, bcc, subject, content);
+			}
+
+			private static String read(Scanner sc, String question) {
+				askQuestion(question);
+				return sc.nextLine();
+			}
+
+			private static void askQuestion(String message) {
+				System.out.printf("%s: ", message(message));
+			}
+
+			@Override
+			public String getCommandName() {
+				return COMMAND_SEND;
+			}
+		}
+	}
+
+}
