@@ -1,7 +1,10 @@
 delta dSecurityEncrypt {
 	modifies br.unb.cic.iris.mail.EmailSender {
-		modifies outgoing(MimeMessage msg, List<SecurityType> types) {			
-			msg = PgpManager.instance().encrypt(session.getSession(), msg, msg.getFrom().toString());
+		adds import javax.mail.Address;
+		modifies outgoing(MimeMessage msg, List<SecurityType> types) {
+			Address[] froms = msg.getFrom();
+			String email = froms == null ? null : ((InternetAddress) froms[0]).getAddress();							
+			msg = PgpManager.instance().encrypt(session.getSession(), msg, email);
 			return original(msg,types);
 		}
 	}

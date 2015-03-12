@@ -1,7 +1,10 @@
 delta dSecuritySign {
 	modifies br.unb.cic.iris.mail.EmailSender {
+		adds import javax.mail.Address;
 		modifies outgoing(MimeMessage msg, List<SecurityType> types) {
-			msg = PgpManager.instance().sign(session.getSession(), msg, msg.getFrom().toString());
+			Address[] froms = msg.getFrom();
+			String email = froms == null ? null : ((InternetAddress) froms[0]).getAddress();			
+			msg = PgpManager.instance().sign(session.getSession(), msg, email);
 			return original(msg,types);
 		}
 	}
