@@ -280,15 +280,9 @@
 	</build>
 	<repositories>
 		<repository>
-			<id>phtcosta</id>
-			<name>phtcosta</name>
-			<url>http://phtcosta.5gbfree.com/m2/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
+		    <id>git-iris-email-client</id>
+		    <name>iris-email-client's Git based repo</name>
+		    <url>https://github.com/iris-email-client/mvn-repo/raw/master/</url>
 		</repository>
 		<repository>
 			<id>repo2</id>
