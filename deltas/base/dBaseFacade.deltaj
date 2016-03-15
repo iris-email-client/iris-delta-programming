@@ -158,11 +158,11 @@ delta dBaseFacade {
 			public List<EmailMessage> getCurrentMessages(){
 				return currentMessages;
 			}
-			public void changeToFolder(Integer folderId) throws EmailException {
-				changeToFolder(folderId+"");
-			}
-			public void changeToFolder(String folderId) throws EmailException {
-				IrisFolder folder = FolderDAO.instance().findById(folderId);
+			//public void changeToFolder(Integer folderId) throws EmailException {
+			//	changeToFolder(folderId+"");
+			//}
+			public void changeToFolder(String folderName) throws EmailException {
+				IrisFolder folder = FolderDAO.instance().findByName(folderName);
 				if(folder != null) {
 					currentFolder = folder;
 					currentMessages = new java.util.ArrayList<EmailMessage>();

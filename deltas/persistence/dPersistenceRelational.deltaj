@@ -315,119 +315,103 @@ delta dPersistenceRelational {
 		public abstract class AbstractDAO<T> {
 			private Class<T> clazz;
 			protected Session session;
-
+		
 			public AbstractDAO() {
-				clazz = ( Class<T> )(( ParameterizedType )
-					getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+				clazz = (Class<T>) ((ParameterizedType) getClass().getGenericSuperclass()).getActualTypeArguments()[0];
 			}
-
+		
 			public void saveOrUpdate(T obj) throws DBException {
 				try {
-					startSession();
+					startSession(true);
 					session.saveOrUpdate(obj);
-					//session.getTransaction().commit();
-
-				}
-				catch(HibernateException e) {
+				} catch (HibernateException e) {
 					handleException(e);
-				}
-				finally {
+				} finally {
 					closeSession();
 				}
 			}
-
+		
 			public void delete(T t) throws DBException {
 				try {
-					startSession();
+					startSession(true);
 					session.delete(t);
-				}
-				catch(HibernateException e) {
+				} catch (HibernateException e) {
 					handleException(e);
-				}
-				finally {
+				} finally {
 					closeSession();
 				}
 			}
-
+		
 			public T findById(String uuid) throws DBException {
 				T obj = null;
 				try {
-					startSession();
-					obj = ( T ) session.load(clazz, uuid);
-				}
-				catch(HibernateException e) {
+					startSession(false);
+					obj = (T) session.load(clazz, uuid);
+				} catch (HibernateException e) {
 					handleException(e);
-				}
-				finally {
+				} finally {
 					closeSession();
 				}
 				return obj;
 			}
-			
+		
 			public List<T> findAll() throws DBException {
 				List<T> objects = null;
 				try {
-					startSession();
+					startSession(false);
 					Query query = session.createQuery("from " + clazz.getName());
 					objects = query.list();
-				}
-				catch(HibernateException e) {
+				} catch (HibernateException e) {
 					handleException(e);
-				}
-				finally {
+				} finally {
 					closeSession();
 				}
 				return objects;
 			}
-
-			public List<T> findByExample(T filtro, MatchMode matchMode, boolean
-				ignoreCase) throws DBException {
+		
+			public List<T> findByExample(T filtro, MatchMode matchMode, boolean ignoreCase) throws DBException {
 				try {
-					startSession();
-					org.hibernate.criterion.Example example =
-					org.hibernate.criterion.Example.create(filtro);
-
-					if(matchMode != null) {
+					startSession(false);
+					org.hibernate.criterion.Example example = org.hibernate.criterion.Example.create(filtro);
+					if (matchMode != null) {
 						example = example.enableLike(matchMode);
 					}
-
-					if(ignoreCase) {
+					if (ignoreCase) {
 						example = example.ignoreCase();
 					}
-
 					return session.createCriteria(clazz).add(example).list();
-				}
-				catch(HibernateException e) {
+				} catch (HibernateException e) {
 					handleException(e);
-				}
-				finally {
+				} finally {
 					closeSession();
 				}
 				return new java.util.ArrayList<T>();
 			}
-
+		
 			protected void handleException(Exception e) throws DBException {
-				session.getTransaction().rollback();
+				if (session.getTransaction().isActive()) {
+					session.getTransaction().rollback();
+				}
 				throw new DBException(e.getMessage(), e);
 			}
-
-			protected void startSession() throws HibernateException {
+		
+			protected void startSession(boolean transactional) throws HibernateException {
 				session = HibernateUtil.getSessionFactory().openSession();
-				session.beginTransaction();
-				/*if(session == null){
-					session = HibernateUtil.getSessionFactory().getCurrentSession();
+				if (transactional) {
 					session.beginTransaction();
-				}*/
+				}
 			}
+		
 			protected void closeSession() {
 				try {
-					if(session != null && session.isOpen()) {
-						session.getTransaction().commit();
+					if (session != null && session.isOpen()) {
+						if (session.getTransaction().isActive()) {
+							session.getTransaction().commit();
+						}
 						session.flush();
 						session.close();
 					}
-				}
-				finally {
+				} finally {
 					session = null;
 				}
 			}
@@ -478,7 +462,7 @@ delta dPersistenceRelational {
 			public Date lastMessageReceived() throws DBException {
 				Date date = null;
 				try {
-					startSession();
+					startSession(false);
 					date = ( Date ) session.createQuery(FIND_MAX_DATE).uniqueResult();
 				}
 				finally {
@@ -489,7 +473,7 @@ delta dPersistenceRelational {
 			public EmailMessage findById(String id) throws DBException {
 				EmailMessage obj = null;
 				try {
-					startSession();
+					startSession(false);
 					obj = populate(( EmailMessage ) session.load(EmailMessage.class, id));
 				}
 				catch(Exception e) {
@@ -504,7 +488,7 @@ delta dPersistenceRelational {
 			public List<EmailMessage> listMessages(String idFolder) throws DBException {
 				List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
 				try {
-					startSession();
+					startSession(false);
 					Criteria criteria =
 					session.createCriteria(EmailMessage.class).createCriteria("folder").add(Restrictions.idEq(idFolder));
 					messages = populate(( List<EmailMessage> ) criteria.list());
@@ -582,7 +566,7 @@ delta dPersistenceRelational {
 			public IrisFolder findById(String id) throws DBException {
 				IrisFolder obj = null;
 				try {
-					startSession();
+					startSession(false);
 					obj = populate(( IrisFolder ) session.load(IrisFolder.class, id));
 				}
 				catch(Exception e) {
@@ -596,7 +580,7 @@ delta dPersistenceRelational {
 
 			public IrisFolder findByName(String folderName) throws DBException {
 				try {
-					startSession();
+					startSession(false);
 					Criteria criteria = session.createCriteria(IrisFolder.class);
 					criteria.add(Restrictions.eq("name", folderName));
 					return populate(( IrisFolder ) criteria.uniqueResult());

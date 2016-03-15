@@ -7,8 +7,9 @@ SPL IrisDeltaJ {
 
 	Deltas = 
 	       {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence, dBaseMail, dBaseFacade, 
-	       dGmailProvider, dYahooProvider, dOutlookProvider, dPersistenceRelational, dPersistenceLucene, dAddressBook, dAddressBookRelational, 
-	       dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO, dTestFolderDAO, 
+	       dGmailProvider, dYahooProvider, dOutlookProvider, dPersistenceRelational, dPersistenceLucene, 
+	       dAddressBook, dAddressBookRelational, dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO, 
+	       dTestFolderDAO, 
 	       dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole, dTagLucene, dSearchConsole, 
 	       dSearchFacade, dSimpleSearch, dAdvancedSearch, dSecurityPgp, dSecurityCommandSendEncrypt, 
 	       dSecurityCommandSendSign, dSecurityCommandSendSignEncrypt, dSecurityBaseMail, dSecurityFacade, 
