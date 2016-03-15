@@ -103,7 +103,7 @@ delta dAddressBookRelational {
 			@Override
 			public AddressBookEntry find(String nick) throws DBException {
 				try {
-					startSession();
+					startSession(false);
 					List<AddressBookEntry> entries =
 					session.createQuery(FIND_BY_NICK_NAME).setParameter("pNick",
 						nick).setCacheable(false).list();

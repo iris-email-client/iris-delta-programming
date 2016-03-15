@@ -11,7 +11,7 @@ delta dTagRelational {
 		public List<EmailMessage> listMessagesByTag(String tag) throws DBException {
 			List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
 			try {
-				startSession();
+				startSession(false);
 				Criteria criteria =
 				session.createCriteria(EmailMessage.class).createCriteria("tags").add(Restrictions.eq("name",
 						tag));
@@ -147,7 +147,7 @@ delta dTagRelational {
 			}
 			public Tag findByName(String tagName) throws DBException {
 				try {
-					startSession();
+					startSession(false);
 					Criteria criteria = session.createCriteria(Tag.class);
 					criteria.add(Restrictions.eq("name", tagName));
 					return ( Tag ) criteria.uniqueResult();

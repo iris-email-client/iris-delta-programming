@@ -14,7 +14,7 @@ delta dSimpleSearch {
 			"select e FROM EmailMessage e where e.from like :text or e.to like :text or e.cc like :text or e. cc like :text or e.subject like :text or e.message like :text";
 			List<EmailMessage> result = new ArrayList<EmailMessage>();
 			try {
-				startSession();
+				startSession(false);
 				result = session.createQuery(FIND).setParameter("text", "%" + queryStr +
 					"%").list();
 			}
