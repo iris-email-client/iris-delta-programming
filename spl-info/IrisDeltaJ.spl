@@ -7,7 +7,7 @@ SPL IrisDeltaJ {
 
 	Deltas = 
 	       {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence, dBaseMail, dBaseFacade, 
-	       dGmailProvider, dPersistenceRelational, dPersistenceLucene, dAddressBook, dAddressBookRelational, 
+	       dGmailProvider, dYahooProvider, dOutlookProvider, dPersistenceRelational, dPersistenceLucene, dAddressBook, dAddressBookRelational, 
 	       dAddressBookLucene, dAddressBookConsole, dAddressBookFacade, dTestAddressBookDAO, dTestFolderDAO, 
 	       dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole, dTagLucene, dSearchConsole, 
 	       dSearchFacade, dSimpleSearch, dAdvancedSearch, dSecurityPgp, dSecurityCommandSendEncrypt, 
@@ -27,7 +27,7 @@ SPL IrisDeltaJ {
 
 	Partitions {
 		// The order of application comes from here.
-		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail, dGmailProvider, dBaseFacade} 
+		{dBase, dBaseCommand, dBaseException, dBaseModel, dBasePersistence, dBaseMail, dGmailProvider, dYahooProvider, dOutlookProvider, dBaseFacade} 
 		when (services & sendMessage & receiveMessage);
 
 		{dPersistenceRelational, dTestFolderDAO} 
