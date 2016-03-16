@@ -11,7 +11,7 @@
 	<url>https://github.com/iris-email-client/iris-delta-programming</url>
 	<properties>
 		<skipTests>true</skipTests>
-		<compiler.version>1.8</compiler.version>
+		<compiler.version>1.7</compiler.version>
 		<iris.encoding>UTF-8</iris.encoding>
 		<iris.jar.name>iris-${iris.product}</iris.jar.name>
 		<iris.main.class>irisdeltaj.${iris.product}.br.unb.cic.iris.MainProgram</iris.main.class>

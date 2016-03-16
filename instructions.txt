@@ -1,0 +1,45 @@
+Instructions to use the security delta
+
+# 1 - create gpg keys
+# - https://help.ubuntu.com/community/GnuPrivacyGuardHowto
+# - http://www.spywarewarrior.com/uiuc/gpg/gpg-com-4.htm#4-1
+
+
+# 2 - install Unlimited Strength Java(TM) Cryptography Extension Policy Files
+# - http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
+
+
+# 3 - install cryptix provider
+# the jar file is declared as dependency in pom.xml and it is available on mvn-repo (inside pom) 
+cp ~/.m2/repository/cryptix/cryptix-jce-provider/1.0/cryptix-jce-provider-1.0.jar $JAVA_HOME/jre/lib/ext
+
+
+# 4 - configure/declare cryptix provider
+# - http://www.informit.com/articles/article.aspx?p=170967&seqNum=2
+# edit file: $JAVA_HOME/jre/lib/security/java.security
+# add a new provider:
+security.provider.6=cryptix.jce.provider.CryptixCrypto
+
+
+
+###########################################################################
+There is no need to sign jar file, but if you want to:
+
+#create the selfsigned certificate
+keytool -genkey -dname "CN=iris, OU=cic, O=unb, L=bsb, S=df, C=br" -alias iris -keyalg RSA -keystore keystore.jks -keysize 2048 -storepass iris123 -validity 360
+
+#export x509 certificate
+keytool -export -alias iris -file iris.crt -keystore keystore.jks -storepass iris123
+
+#import into iris certificate into cacerts. Default password: changeit
+keytool -import -trustcacerts -alias iris -file iris.crt -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit
+
+#check entry
+keytool -list -v -keystore $JAVA_HOME/jre/lib/security/cacerts -storepass changeit -alias iris
+
+#sign jar
+jarsigner -keystore keystore.jks -storepass iris123 -verbose iris-simplerelationalsecuritycomplete-jar-with-dependencies.jar iris
+
+
+
+https://www.sslshopper.com/article-most-common-java-keytool-keystore-commands.html
