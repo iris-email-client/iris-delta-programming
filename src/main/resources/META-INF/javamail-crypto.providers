@@ -1,0 +1,2 @@
+protocol=PGP; class=net.suberic.crypto.cryptix.CryptixEncryptionUtils
+protocol=PGP; class=net.suberic.crypto.PGPEncryptionUtils
