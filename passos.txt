@@ -1,0 +1,82 @@
+
+
+* Instalar o Java: eu uso o java 8 mas o plugin do maven está configurado para compilar com java 7, além do deltaj não "entender" coisas do java 8.
+http://www.oracle.com/technetwork/pt/java/javase/downloads/jdk8-downloads-2133151.html
+
+
+* Instalar a extensão do java que permite usar chaves criptográficas grandes/fortes.
+Unlimited Strength Java(TM) Cryptography Extension Policy Files
+http://www.oracle.com/technetwork/java/javase/downloads/jce8-download-2133166.html
+"
+Due to import control restrictions of some countries, the version of
+the JCE policy files that are bundled in the Java Runtime Environment,
+or JRE(TM), 8 environment allow "strong" but limited cryptography to be
+used. This download bundle (the one including this README file)
+provides "unlimited strength" policy files which contain no
+restrictions on cryptographic strengths...
+"
+
+
+* Instalar o eclipse. Eu preferi instalar o "Eclipse IDE for Java and DSL Developers" 
+https://eclipse.org/downloads/
+
+
+* Instalar o deltaj 1.5
+https://www.tu-braunschweig.de/isf/research/deltas/
+Eclipse update site for DeltaJ 1.5 plug-in: https://www.isf.cs.tu-bs.de/cms/research/deltas/downloads/plug-in/
+
+
+* Baixar o projeto (dentro do eclipse)
+https://github.com/iris-email-client/iris-delta-programming
+
+
+* Configurar o banco de dados, se for caso:
+- alterar o arquivo: src/main/resources/hibernate.cfg.xml
+
+
+* Criar o arquivo de propriedades do iris. Esse arquivo deve ficar no home do usuário, no diretório .iris: 
+~/.iris/account.properties
+--> EXEMPLO de conteúdo:
+provider.user=XXX@gmail.com
+provider.password=XXX
+##TODO: arrumar uma forma de nao duplicar, 
+## mas tratando diversos tipos de protocolos de transporte
+mail.smtp.user=XXX@gmail.com
+mail.smtp.password=XXX
+##security keys
+##https://help.ubuntu.com/community/GnuPrivacyGuardHowto
+gpg.file.private=/home/pedro/.gnupg/secring.gpg
+gpg.file.public=/home/pedro/.gnupg/pubring.gpg
+gpg.file.secret=123
+
+
+* Gerar os produtos a partir dos deltas. Para selecionar os produtos a serem gerados basta salvar o arquivo IrisDelta.spl (spl-info/IrisDelta.spl). Com isso irá aparecer um dialog com os nomes dos produtos, bastando selecionar e mandar gerar. 
+
+
+* Compilar e empacotar os produtos. O maven está configurado para gerar um jar executável contendo todas as dependências necessárias. A forma mais simples é executar o script: build_products.sh
+Por exemplo: para o produto simplerelationalsecuritycomplete é gerado o jar iris-simplerelationalsecuritycomplete-jar-with-dependencies.jar que é executável (java -jar iris-simplerelationalsecuritycomplete-jar-with-dependencies.jar)
+- É possível tratar apenas um produto específico se for o caso:
+mvn package -Diris.product=simplerelationalsecuritycomplete
+
+
+* Gerar as chaves GPG (remetente e destinatário). Hoje, para teste, as chaves são geradas na mesma máquina. Mas se for usar em produção as chaves devem ser criadas e armazenadas num keyserver (EX: keyserver.ubuntu.com) e o programa buscar as chaves nos keyservers ... mas isso não foi implementado (e nem tenho certeza se será)
+https://help.ubuntu.com/community/GnuPrivacyGuardHowto
+http://www.spywarewarrior.com/uiuc/gpg/gpg-com-4.htm#4-1
+
+
+* É necessário instalar o provider do cryptix. Eu faço estaticamente mas é possível fazer dinamicamente no código java...
+
+--> Para instalar ESTATICAMENTE:
+- o jar do cryptix está declarado como dependência no pom.xml do projeto e está disponível no repositório criado para o projeto (mvn-repo). Basta rodar o mvn para baixar as dependências
+cp ~/.m2/repository/cryptix/cryptix-jce-provider/1.0/cryptix-jce-provider-1.0.jar $JAVA_HOME/jre/lib/ext
+- editar o arquivo: 
+$JAVA_HOME/jre/lib/security/java.security
+- adicionar um novo provider:
+security.provider.6=cryptix.jce.provider.CryptixCrypto
+OBS:. alterar o número do provider de acordo com os providers já declarados. No exemplo acima já haviam 5 e o cryptix é o sexto
+
+--> Para instalar DINAMICAMENTE: atualmente não está implementado desta forma (eu uso a instalação acima)
+- alterar o dSecurityPgp.deltaj e incluir o provider (cryptix.jce.provider.CryptixCrypto), tipo: Security.insertProviderAt(...);
+
+
+
