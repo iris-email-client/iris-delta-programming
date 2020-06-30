@@ -1,0 +1,68 @@
+delta dCategoryConsole {
+	adds {
+		package br.unb.cic.iris.command.console;
+
+		import java.text.DateFormat;
+		import java.text.SimpleDateFormat;
+		import java.util.List;
+
+		import br.unb.cic.iris.command.AbstractMailCommand;
+		import br.unb.cic.iris.core.CategoryManager;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.Category;
+
+		public class CategoryConsoleCommand extends AbstractMailCommand {
+			DateFormat formatter = new SimpleDateFormat("dd/MMM/yy 'at' HH:mm");
+
+			public void explain() {
+				System.out.println("(category list) - Show existing categories");
+				System.out.println("(category list <category>) - messages containing specified category");
+			}
+
+			@Override
+			public String getCommandName() {
+				return "category";
+			}
+
+			@Override
+			protected void handleExecute() throws EmailException {
+				switch(parameters.get(0)) {
+					case "list" : list();
+					break;
+					default : throw new EmailException(parameters.get(0) +
+						" is an invalid command");
+				}
+			}
+
+			private void list() throws EmailException {
+				if(parameters.size() == 2) {
+					String category = parameters.get(1);
+					List<EmailMessage> messages =
+					CategoryManager.instance().listMessagesByCategory(category);
+					for(EmailMessage msg : messages) {
+						System.out.printf("%s - %s - %s \t- %s%n", msg.getId(),
+							formatter.format(msg.getDate()), msg.getFrom(), msg.getSubject());
+					}
+				}
+				else {
+					listAll();
+				}
+			}
+
+			private void listAll() throws EmailException {
+				List<Category> categories = CategoryManager.instance().findAll();
+				System.out.println("-----------------------------------------------------");
+				System.out.println("CATEGORIES:");
+				System.out.println("-----------------------------------------------------");
+				String separator = "";
+				for(Category t : categories) {
+					System.out.print(separator + t.getName());
+					separator = ", ";
+				}
+				System.out.println("\n-----------------------------------------------------");
+			}
+		}
+
+	}
+}

@@ -1,0 +1,176 @@
+delta dCategoryRelational {
+	modifies br.unb.cic.iris.persistence.relational.HibernateUtil {
+		adds import br.unb.cic.iris.core.model.Category;
+
+		modifies configureClasses() {
+			classList.add(Category.class);
+			original();
+		}
+	}
+
+	modifies br.unb.cic.iris.persistence.relational.EmailDAO {
+		adds import org.hibernate.Query;
+		
+		adds @Override
+		public List<EmailMessage> listMessagesByCategory(String category) throws
+		DBException {
+			List<EmailMessage> messages = new java.util.ArrayList<EmailMessage>();
+			try {
+				startSession(false);
+				Query query =
+				session.createQuery("SELECT e FROM EmailMessage e WHERE e.category.name = :name");
+				query.setParameter("name", category.toUpperCase());
+				messages = populate(( List<EmailMessage> ) query.list());
+				System.out.println("messages: " + messages);
+			}
+			catch(Exception e) {
+				handleException(new DBException("Error listing messages with category: " +
+						category.toUpperCase(), e));
+			}
+			finally {
+				closeSession();
+			}
+			return messages;
+		}
+	}
+
+	modifies br.unb.cic.iris.core.model.EmailMessage {
+		adds @ManyToOne(fetch = FetchType.LAZY)
+		@JoinColumn(name = "CATEGORY_ID", nullable = false)
+		private Category category;
+
+		adds public Category getCategory() {
+			return category;
+		}
+
+		adds public void setCategory(Category category) {
+			this.category = category;
+		}
+	}
+
+	modifies br.unb.cic.iris.core.CategoryManager {
+		adds import br.unb.cic.iris.persistence.relational.CategoryDAO;
+		adds import br.unb.cic.iris.persistence.relational.EmailDAO;
+		adds import br.unb.cic.iris.persistence.ICategoryDAO;
+
+		modifies getCategoryDAO() throws EmailException {
+			return CategoryDAO.instance();
+		}
+	}
+
+	adds {
+		package br.unb.cic.iris.persistence.relational;
+
+		import br.unb.cic.iris.core.exception.DBException;
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.Category;
+		import br.unb.cic.iris.persistence.ICategoryDAO;
+		import org.hibernate.Criteria;
+		import org.hibernate.criterion.Restrictions;
+
+		public class CategoryDAO extends AbstractDAO<Category> implements
+		ICategoryDAO {
+			private static CategoryDAO instance;
+
+			private CategoryDAO() {
+			}
+
+			public static CategoryDAO instance() throws EmailException {
+				if(instance == null) {
+					instance = new CategoryDAO();
+					ensureIsCreated(Category.FORUMS);
+					ensureIsCreated(Category.PRIMARY);
+					ensureIsCreated(Category.PROMOTIONS);
+					ensureIsCreated(Category.SOCIAL);
+					ensureIsCreated(Category.UPDATES);
+				}
+				return instance;
+			}
+
+			private static void ensureIsCreated(String category) throws EmailException {
+				Category folder = instance.findByName(category);
+				if(folder == null) {
+					instance.saveOrUpdate(new Category(category));
+					System.out.printf("%s category created.\n", category);
+				}
+			}
+
+			public Category findByName(String categoryName) throws DBException {
+				try {
+					startSession(false);
+					Criteria criteria = session.createCriteria(Category.class);
+					criteria.add(Restrictions.eq("name", categoryName));
+					return ( Category ) criteria.uniqueResult();
+				}
+				catch(Exception e) {
+					handleException(new DBException("Category not found: " + categoryName,
+							e));
+				}
+				finally {
+					closeSession();
+				}
+				return null;
+			}
+		}
+	}
+	
+	adds {
+		package br.unb.cic.iris.core.model;
+
+		import javax.persistence.Column;
+		import javax.persistence.Entity;
+		import javax.persistence.GeneratedValue;
+		import javax.persistence.Id;
+		import javax.persistence.Table;
+
+		import org.hibernate.annotations.GenericGenerator;
+
+		@Entity
+		@Table(name = "TB_CATEGORY")
+		public class Category {
+			public static final String PRIMARY = "PRIMARY";
+			public static final String SOCIAL = "SOCIAL";
+			public static final String PROMOTIONS = "PROMOTIONS";
+			public static final String UPDATES = "UPDATES";
+			public static final String FORUMS = "FORUMS";
+
+			@Id
+			@GeneratedValue(generator = "uuid")
+			@Column(name = "CATEGORY_ID", nullable = false, updatable = false)
+			@GenericGenerator(name = "uuid", strategy = "uuid2")
+			private String id;
+			@Column(unique = true)
+			private String name;
+
+			public Category() {
+				this(null);
+			}
+
+			public Category(String name) {
+				this(null, name);
+			}
+
+			public Category(String id, String name) {
+				super();
+				this.id = id;
+				this.name = name;
+			}
+
+			public String getId() {
+				return id;
+			}
+
+			public void setId(String id) {
+				this.id = id;
+			}
+
+			public String getName() {
+				return name;
+			}
+
+			public void setName(String name) {
+				this.name = name;
+			}
+		}
+	}
+}

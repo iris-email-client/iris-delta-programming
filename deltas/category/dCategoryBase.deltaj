@@ -1,0 +1,82 @@
+delta dCategoryBase {
+	modifies br.unb.cic.iris.persistence.IEmailDAO {
+		adds public List<EmailMessage> listMessagesByCategory(String category) throws
+		EmailException;
+	}
+
+	modifies br.unb.cic.iris.core.SystemFacade {
+		adds import br.unb.cic.iris.util.CategoryUtil;
+		adds import br.unb.cic.iris.persistence.relational.CategoryDAO;
+		adds import br.unb.cic.iris.core.model.Category;
+
+		modifies saveMessage(EmailMessage message, String folderName) throws
+		EmailException {
+			IEmailDAO dao = EmailDAO.instance();
+			IrisFolder folder = FolderDAO.instance().findByName(folderName);
+
+			CategoryDAO daoCategory = CategoryDAO.instance();
+			String categoryName = CategoryUtil.defineCategory(message.getMessage(),
+				message.getSubject(), message.getFrom());
+			Category category = daoCategory.findByName(categoryName);
+			message.setCategory(category);
+
+			message.setFolder(folder);
+			dao.saveMessage(message);
+		}
+	}
+
+	adds {
+		package br.unb.cic.iris.persistence;
+
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.Category;
+
+		public interface ICategoryDAO {
+			public Category findById(String id) throws EmailException;
+			public Category findByName(String name) throws EmailException;
+			public java.util.List<Category> findAll() throws EmailException;
+		}
+	}
+
+	adds {
+		package br.unb.cic.iris.core;
+
+		import br.unb.cic.iris.core.exception.EmailException;
+		import br.unb.cic.iris.core.model.EmailMessage;
+		import br.unb.cic.iris.core.model.Category;
+
+		public final class CategoryManager {
+			private static final CategoryManager instance = new CategoryManager();
+
+			private CategoryManager() {
+			}
+
+			public static CategoryManager instance() {
+				return instance;
+			}
+
+			public ICategoryDAO getCategoryDAO() throws EmailException {
+				throw new
+				EmailUncheckedException("Not implemented: CategoryManager.getCategoryDAO");
+			}
+
+			public Category findById(String id) throws EmailException {
+				return getCategoryDAO().findById(id);
+			}
+
+			public Category findByName(String name) throws EmailException {
+				return getCategoryDAO().findByName(name);
+			}
+
+			public java.util.List<Category> findAll() throws EmailException {
+				return getCategoryDAO().findAll();
+			}
+
+			public java.util.List<EmailMessage> listMessagesByCategory(String category)
+			throws EmailException {
+				return EmailDAO.instance().listMessagesByCategory(category);
+			}
+		}
+	}
+
+} 

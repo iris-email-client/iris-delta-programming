@@ -3,7 +3,8 @@ SPL IrisDeltaJ {
 	Features = 
 		 {services, sendMessage, receiveMessage, persistence, relational, 
 		 nonRelational, ui, console, gui, addressBook, tagging, search, 
-		 simpleSearch, advancedSearch, security, sign, verify, encrypt, decrypt}
+		 simpleSearch, advancedSearch, security, sign, verify, encrypt, decrypt,
+		 category}
 
 	Deltas = 
 	       {dBase, dBaseException, dBaseCommand, dBaseModel, dBasePersistence, dBaseMail, dBaseFacade, 
@@ -13,10 +14,11 @@ SPL IrisDeltaJ {
 	       dTagBase, dTagRelational, dTestRelationalTagDAO, dTagConsole, dConsole, dTagLucene, dSearchConsole, 
 	       dSearchFacade, dSimpleSearch, dAdvancedSearch, dSecurityPgp, dSecurityCommandSendEncrypt, 
 	       dSecurityCommandSendSign, dSecurityCommandSendSignEncrypt, dSecurityBaseMail, dSecurityFacade, 
-	       dSecuritySign, dSecurityVerify, dSecurityEncrypt, dSecurityDecrypt}
+	       dSecuritySign, dSecurityVerify, dSecurityEncrypt, dSecurityDecrypt,
+	       dCategoryBase, dCategoryConsole, dCategoryRelational, dCategoryUtil}
 
 	Constraints {
-		services AND persistence AND ui OR addressBook OR tagging OR search OR security;
+		services AND persistence AND ui OR addressBook OR tagging OR search OR security OR category;
 		services AND (sendMessage AND receiveMessage);  
 		persistence AND (relational XOR nonRelational);
 		search AND (simpleSearch XOR advancedSearch);
@@ -51,6 +53,9 @@ SPL IrisDeltaJ {
 		
 		{dTagBase, dTagRelational, dTagConsole, dTestRelationalTagDAO} 
 		when (relational & tagging);
+		
+		{dCategoryBase, dCategoryRelational, dCategoryConsole, dCategoryUtil} 
+		when (relational & category);
 		
 		{dTagBase, dTagLucene, dTagConsole} 
 		when (nonRelational & tagging);
@@ -101,5 +106,7 @@ SPL IrisDeltaJ {
 		SimpleRelationalSecurityEncryptDecrypt = {services, sendMessage, receiveMessage, relational, console, security, encrypt, decrypt};
 		SimpleRelationalSecurityComplete = {services, sendMessage, receiveMessage, relational, addressBook, tagging, console, security, sign, verify, encrypt, decrypt};
 
+		SimpleRelationalCategory = {services, sendMessage, receiveMessage, relational, category, console};
+		CompleteRelationalCategory = {services, sendMessage, receiveMessage, relational, addressBook, tagging, category, simpleSearch, console};
 	} 
 } 
