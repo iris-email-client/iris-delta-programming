@@ -1,4 +1,5 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>br.unb.cic.iris</groupId>
@@ -110,8 +111,8 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
-			<version>4.12-beta-2</version>
-			<scope>test</scope>
+			<version>4.11</version>
+			<!-- <scope>test</scope> -->
 		</dependency>
 		<!-- postgresql -->
 		<dependency>
@@ -210,105 +211,106 @@
 		<sourceDirectory>src-gen/irisdeltaj/${iris.product}</sourceDirectory>
 		<scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
 		<testSourceDirectory>src/test/java</testSourceDirectory>
+		<!-- <pluginManagement> -->
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-enforcer-plugin</artifactId>
+				<version>1.4</version>
+				<executions>
+					<execution>
+						<id>enforce-property</id>
+						<goals>
+							<goal>enforce</goal>
+						</goals>
+						<configuration>
+							<rules>
+								<requireProperty>
+									<property>iris.product</property>
+									<message>completerelational</message>
+								</requireProperty>
+							</rules>
+							<fail>true</fail>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
 
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-enforcer-plugin</artifactId>
-					<version>1.4</version>
-					<executions>
-						<execution>
-							<id>enforce-property</id>
-							<goals>
-								<goal>enforce</goal>
-							</goals>
-							<configuration>
-								<rules>
-									<requireProperty>
-										<property>iris.product</property>
-										<message>You must set a product with iris.product property!</message>
-									</requireProperty>
-								</rules>
-								<fail>true</fail>
-							</configuration>
-						</execution>
-					</executions>
-				</plugin>
-
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-assembly-plugin</artifactId>
-					<version>2.4.1</version>
-					<executions>
-						<execution>
-							<id>make-assembly</id>
-							<phase>package</phase>
-							<goals>
-								<goal>single</goal>
-							</goals>
-						</execution>
-					</executions>
-					<configuration>
-						<encoding>${iris.encoding}</encoding>
-						<descriptorRefs>
-							<descriptorRef>jar-with-dependencies</descriptorRef>
-						</descriptorRefs>
-						<archive>
-							<manifest>
-								<mainClass>${iris.main.class}</mainClass>
-								<addClasspath>true</addClasspath>
-							</manifest>
-						</archive>
-					</configuration>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-antrun-plugin</artifactId>
-					<executions>
-						<execution>
-							<id>move_tests</id>
-							<phase>generate-sources</phase>
-							<configuration>
-								<tasks>
-									<echo>Moving generated test classes ... ${basedir}</echo>
-									<echo>From: ${basedir}/src-gen</echo>
-									<echo>To: ${basedir}/src/test/java</echo>
-									<move todir="${basedir}/src/test/java" overwrite="true"
-										verbose="true">
-										<fileset dir="${basedir}/src-gen">
-											<include name="**/test/**/*.java" />
-										</fileset>
-									</move>
-								</tasks>
-							</configuration>
-							<goals>
-								<goal>run</goal>
-							</goals>
-						</execution>
-					</executions>
-				</plugin>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-compiler-plugin</artifactId>
-					<version>3.2</version>
-					<configuration>
-						<encoding>${iris.encoding}</encoding>
-						<source>${compiler.version}</source>
-						<target>${compiler.version}</target>
-						<optimize>true</optimize>
-						<showDeprecation>false</showDeprecation>
-						<showWarnings>false</showWarnings>
-						<verbose>false</verbose>
-						<debug>false</debug>
-					</configuration>
-				</plugin>
-			</plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.4.1</version>
+				<executions>
+					<execution>
+						<id>make-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+				<configuration>
+					<encoding>${iris.encoding}</encoding>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<mainClass>${iris.main.class}</mainClass>
+							<addClasspath>true</addClasspath>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>move_tests</id>
+						<phase>generate-sources</phase>
+						<configuration>
+							<tasks>
+								<echo>Moving generated test classes ... ${basedir}</echo>
+								<echo>From: ${basedir}/src-gen</echo>
+								<echo>To: ${basedir}/src/test/java</echo>
+								<move todir="${basedir}/src/test/java" overwrite="true"
+									verbose="true">
+									<fileset dir="${basedir}/src-gen">
+										<include name="**/test/**/*.java" />
+									</fileset>
+								</move>
+							</tasks>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<version>3.2</version>
+				<configuration>
+					<encoding>${iris.encoding}</encoding>
+					<source>${compiler.version}</source>
+					<target>${compiler.version}</target>
+					<optimize>true</optimize>
+					<showDeprecation>false</showDeprecation>
+					<showWarnings>false</showWarnings>
+					<verbose>false</verbose>
+					<debug>false</debug>
+				</configuration>
+			</plugin>
+		</plugins>
+		<!-- </pluginManagement> -->
 	</build>
 	<repositories>
 		<repository>
-		    <id>git-iris-email-client</id>
-		    <name>iris-email-client's Git based repo</name>
-		    <url>https://github.com/iris-email-client/mvn-repo/raw/master/</url>
+			<id>git-iris-email-client</id>
+			<name>iris-email-client's Git based repo</name>
+			<url>https://github.com/iris-email-client/mvn-repo/raw/master/</url>
 		</repository>
 		<repository>
 			<id>repo2</id>
