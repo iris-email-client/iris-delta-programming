@@ -18,7 +18,7 @@
 		<iris.main.class>irisdeltaj.${iris.product}.br.unb.cic.iris.MainProgram</iris.main.class>
 		<project.build.sourceEncoding>${iris.encoding}</project.build.sourceEncoding>
 		<maven.surefire.plugin.version>2.12.3</maven.surefire.plugin.version>
-		<bouncycastle.version>1.51</bouncycastle.version>
+		<bouncycastle.version>1.67</bouncycastle.version>
 	</properties>
 	<issueManagement>
 		<system>GitHub Issues</system>
